@@ -1,0 +1,12 @@
+---
+globs: '**/*.svelte,**/*.css'
+---
+
+# Tailwind rules
+
+Never write custom CSS classes or selectors. Always use Tailwind utility classes to construct visuals.
+
+- Build all visual styling with Tailwind classes directly in markup.
+- If a visual pattern is reusable, extract it into a Svelte component instead of a CSS class.
+- The only acceptable custom CSS in the root CSS file is theme configuration (`@theme`), base layer resets (`@layer base`), and `@font-face` declarations.
+- Use Svelte 5 `class={[...]}` arrays of literal class strings; do not build class strings via concatenation or template literals.
