@@ -1,0 +1,22 @@
+# default settings for linking
+- defaults:
+    link:
+      create: true
+      force: true
+      relink: true
+
+# start by cleaning existing configurations
+- clean:
+    - '~/.cursor'
+
+# update git submodules
+- shell:
+    - [git submodule update --init --recursive, Installing submodules]
+
+# link configuration files
+- link:
+    # cursor
+    ~/.cursor/skills: skills
+    ~/.cursor/commands: commands
+    ~/.cursor/agents: agents
+    ~/.cursor/rules: rules
