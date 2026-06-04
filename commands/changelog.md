@@ -1,4 +1,4 @@
-# changelog
+# Update changelog
 
 Update the CHANGELOG.md file in the project with the changes implemented on the current feature branch. If the user is on `master`, do not do anything and report that this only works on feature branches. Similarly, stop and report if the `CHANGELOG.md` file is missing.
 
