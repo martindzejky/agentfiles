@@ -21,4 +21,6 @@ description: Defines git commit messages style. Use when writing git commit mess
 
 ## Ticket
 
-If we are on a feature branch and this branch contains a ticket number, prefix it to the commit message. For example, on a branch named `EPIK-552-settings-view`, commits should be `EPIK-552 commit message`. Do NOT use unnecessary parentheses like `[EPIK-552] commit message`.
+If we are on a feature branch and this branch contains a Jira ticket number, prefix it to the commit message. For example, on a branch named `EPIK-552-settings-view`, commits should be `EPIK-552 commit message`. Do NOT use unnecessary parentheses like `[EPIK-552] commit message`.
+
+This does not apply to GitHub issues. Do not prefix commits with GitHub issue numbers (e.g. `#42`); link the issue in the pull request instead.
