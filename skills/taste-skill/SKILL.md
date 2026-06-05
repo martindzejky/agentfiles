@@ -29,13 +29,13 @@ Before any code, state in one line: **"Reading this as: \<page kind> for \<audie
 
 Example reads:
 
-- _"Reading this as: B2B SaaS landing for technical buyers, with a Linear-style minimalist language, leaning toward Tailwind utilities + Geist + restrained motion."_
+- _"Reading this as: B2B SaaS landing for technical buyers, with a Linear-style minimalist language, leaning toward standalone HTML + inline CSS + restrained motion."_
 - _"Reading this as: solo designer portfolio for hiring managers, with an editorial / kinetic-type language, leaning toward native CSS + scroll-driven animation + custom typography."_
 - _"Reading this as: redesign of a public-sector service site, with a trust-first language, leaning toward GOV.UK Frontend or USWDS."_
 
 ### 0.C If the brief is ambiguous, ask one question, do not guess
 
-Ask exactly **one** clarifying question - never a multi-question dump - and only when the design read genuinely diverges. Example: _"Should this feel closer to Linear-clean or Awwwards-experimental?"_
+Unless you have previous instructions, ask exactly **one** clarifying question - never a multi-question dump - and only when the design read genuinely diverges. Example: _"Should this feel closer to Linear-clean or Awwwards-experimental?"_
 
 If you can confidently infer from context, **do not ask**. Just declare the design read and proceed.
 
@@ -114,7 +114,7 @@ Once you have the design read (Section 0) and dials (Section 1), pick the right 
 
 ### 2.B When the brief is an aesthetic, not a system
 
-For these directions, there is **no single official package**. Build with native CSS + Tailwind + a maintained component library. Be honest in code comments about what is borrowed inspiration vs. official material.
+For these directions, there is **no single official package**. Default to standalone HTML + inline CSS + vanilla JS; add Tailwind and Motion when the brief or repo needs them. Be honest in code comments about what is borrowed inspiration vs. official material.
 
 | Aesthetic                       | Honest implementation                                                                                                                                                                                                      |
 | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -135,13 +135,17 @@ Unless the design read picks a real design system (Section 2.A), these are the d
 
 ### 3.A Stack
 
-- **Framework:** React or Next.js. Default to Server Components (RSC).
-  - **RSC SAFETY:** Global state works ONLY in Client Components. In Next.js, wrap providers in a `"use client"` component.
-  - **INTERACTIVITY ISOLATION:** Any component using Motion, scroll listeners, or pointer physics MUST be an isolated leaf with `'use client'` at the top. Server Components render static layouts only.
-- **Styling:** **Tailwind v4** (default). Tailwind v3 only if the existing project demands it.
-  - For v4: do NOT use `tailwindcss` plugin in `postcss.config.js`. Use `@tailwindcss/postcss` or the Vite plugin.
-- **Animation:** **Motion** (the library formerly known as Framer Motion). Import from `motion/react` (`import { motion } from "motion/react"`). The `framer-motion` package still works as a legacy alias - prefer `motion/react` in new code.
-- **Fonts:** Always use `next/font` (Next.js) or self-host with `@font-face` + `font-display: swap`. Never link Google Fonts via `<link>` in production.
+- **Default:** standalone HTML + inline CSS + vanilla JS. Zero build step; openable in any browser.
+- **Styling add-ons:** Tailwind v4 when the brief or repo needs utility styling. Tailwind v3 only if the existing project demands it. For v4: use `@tailwindcss/postcss` or the Vite plugin — not `tailwindcss` in `postcss.config.js`.
+- **Animation add-ons:** CSS animations first; **Motion** (`motion/react`) when richer interaction is needed. In Svelte, use Motion when available.
+- **Framework fallback:** if a framework is required, default to **Svelte + SvelteKit** unless the repo or brief clearly points elsewhere (e.g. an existing React app).
+- **Figma target:** when an explicit Figma link is given, build on that canvas instead of emitting HTML.
+- **Fonts:** self-host with `@font-face` + `font-display: swap`, or framework font loaders (`next/font`, SvelteKit font patterns). Never link Google Fonts via `<link>` in production.
+
+**When building in React/Next.js** (existing project only):
+
+- Default to Server Components (RSC). Global state works ONLY in Client Components.
+- Any component using Motion, scroll listeners, or pointer physics MUST be an isolated `'use client'` leaf.
 
 ### 3.B State
 

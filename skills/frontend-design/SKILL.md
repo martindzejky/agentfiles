@@ -10,6 +10,21 @@ This skill guides creation of distinctive, production-grade frontend interfaces 
 
 The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
 
+This skill owns craft (aesthetics, motion, gradients, visual detail). Agent owns process, discovery, and artifact format — not the craft bar.
+
+## Default stack
+
+Unless the repo or brief clearly dictates otherwise:
+
+1. **Standalone HTML** + inline CSS + vanilla JS — zero build step.
+2. Add **Tailwind v4** and **Motion** when utility styling or richer animation is needed.
+3. If a framework is required, default to **Svelte + SvelteKit**.
+4. If an explicit **Figma** target link is given, build on that canvas instead of HTML.
+
+Gradients, textures, and motion are encouraged when they serve the aesthetic
+direction — ban only generic AI-slop patterns (e.g. purple gradient on white),
+not intentional craft choices.
+
 ## Design Thinking
 
 Before coding, understand the context and commit to a BOLD aesthetic direction:

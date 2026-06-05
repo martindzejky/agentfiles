@@ -18,12 +18,6 @@ brief is literally a web page. Decide the persona _before_ you write any CSS.
   palette, typography, spacing, layout posture. Bind every color/type/spacing
   decision to a named token from it — never invent a parallel theme or raw hex
   that contradicts it.
-- **`skills/`** is a library of design patterns and workflows. When a task
-  matches one (a deck skill, a prototype seed, a color/critique skill), pull it
-  in on your own and use its seed template, layout references, and checklist
-  instead of re-deriving good defaults from scratch. Borrow its thinking; read
-  its `assets/template.html`, `references/layouts.md`, and
-  `references/checklist.md` in that order before writing.
 
 ## The process — follow it in order
 
@@ -49,16 +43,16 @@ palette construction is the hard part.
 **Visual dimension audit** — before locking direction, every brief must resolve
 these eight (parse my words for them; ask only about what's still open):
 
-| Dimension    | Resolves                                                                  |
-| ------------ | ------------------------------------------------------------------------- |
-| Palette      | Canvas mood — dark, light, warm, neutral                                  |
-| Accent       | The one color that earns attention                                        |
-| Body type    | Reading face + weight/line-height posture                                 |
-| Display type | Headline face (or same-as-body if utilitarian)                            |
-| Layout       | Column model, max width, grid posture                                     |
-| Mood         | professional_minimal · playful · brutalist · editorial · luxury · utility |
-| Density      | compact · balanced · spacious                                             |
-| Exclude      | Hard nos — animations, gradients, stock photos, carousel, parallax        |
+| Dimension    | Resolves                                                                    |
+| ------------ | --------------------------------------------------------------------------- |
+| Palette      | Canvas mood — dark, light, warm, neutral                                    |
+| Accent       | The one color that earns attention                                          |
+| Body type    | Reading face + weight/line-height posture                                   |
+| Display type | Headline face (or same-as-body if utilitarian)                              |
+| Layout       | Column model, max width, grid posture                                       |
+| Mood         | professional_minimal · playful · brutalist · editorial · luxury · utility   |
+| Density      | compact · balanced · spacious                                               |
+| Exclude      | Hard nos the user states — e.g. no animations, no stock photos, no carousel |
 
 If `DESIGN.md` is already active, treat palette through density as locked — only
 confirm **exclude** and artifact-specific constraints for this piece.
@@ -66,8 +60,8 @@ confirm **exclude** and artifact-specific constraints for this piece.
 **Vague phrase hints** — map fuzzy language to dimensions instead of treating it
 as done ("clean dark landing" → mood + palette + layout, not just "got it"):
 dark/light/warm → palette; pop of color/subtle accent → accent; clean/minimal →
-mood; playful/brutalist/editorial → mood; spacious/compact → density; no
-animations/gradients/stock photos → exclude; single page/sidebar → layout.
+mood; playful/brutalist/editorial → mood; spacious/compact → density;
+no animations/stock photos/carousel → exclude; single page/sidebar → layout.
 
 Ask even when the brief looks complete — a rich brief still leaves tone, color
 stance, scale, and direction open, and I pick radios faster than I re-do a wrong
@@ -125,7 +119,8 @@ passes is normal):
 2. **Hierarchy** — does the eye land in one obvious place per screen?
 3. **Execution** — typography, spacing, alignment, contrast: right, not just close?
 4. **Specificity** — is every word/number/image specific to _this_ brief?
-5. **Restraint** — one accent used ≤ twice, one decisive flourish — not three competing?
+5. **Intent** — does ornament serve the aesthetic direction (maximal or minimal),
+   not generic AI defaults?
 
 ## Specialist personas (pick one per artifact)
 
