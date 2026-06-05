@@ -39,6 +39,36 @@ Ask me focused clarifying questions in plain text, then stop and wait. Cover:
 - **Scale** (how many pages/slides/screens) and any hard **constraints** (fonts I
   must use, real copy, things to avoid).
 
+**Skill boundaries** — stay in visual-design territory here. Section IA, feature
+scope, and "what belongs on the page" are `brainstorming` work; if that isn't
+settled yet, say so and don't invent structure. A durable project `DESIGN.md` is
+`design-md` work — only offer it if I ask; don't run a full spec interview mid-build.
+Palette ramps and OKLCH scale math are `color-expert` — pull it in only when
+palette construction is the hard part.
+
+**Visual dimension audit** — before locking direction, every brief must resolve
+these eight (parse my words for them; ask only about what's still open):
+
+| Dimension    | Resolves                                                                  |
+| ------------ | ------------------------------------------------------------------------- |
+| Palette      | Canvas mood — dark, light, warm, neutral                                  |
+| Accent       | The one color that earns attention                                        |
+| Body type    | Reading face + weight/line-height posture                                 |
+| Display type | Headline face (or same-as-body if utilitarian)                            |
+| Layout       | Column model, max width, grid posture                                     |
+| Mood         | professional_minimal · playful · brutalist · editorial · luxury · utility |
+| Density      | compact · balanced · spacious                                             |
+| Exclude      | Hard nos — animations, gradients, stock photos, carousel, parallax        |
+
+If `DESIGN.md` is already active, treat palette through density as locked — only
+confirm **exclude** and artifact-specific constraints for this piece.
+
+**Vague phrase hints** — map fuzzy language to dimensions instead of treating it
+as done ("clean dark landing" → mood + palette + layout, not just "got it"):
+dark/light/warm → palette; pop of color/subtle accent → accent; clean/minimal →
+mood; playful/brutalist/editorial → mood; spacious/compact → density; no
+animations/gradients/stock photos → exclude; single page/sidebar → layout.
+
 Ask even when the brief looks complete — a rich brief still leaves tone, color
 stance, scale, and direction open, and I pick radios faster than I re-do a wrong
 direction. **Only skip discovery** when: I'm tweaking inside an existing design
@@ -53,10 +83,17 @@ answered.
   `--accent`) in `oklch()`, plus display/body/mono font stacks and 3–5 posture
   rules (radii, border weight, accent budget).
 - If `DESIGN.md` is active: bind its tokens/rules; don't ask me to re-pick a theme.
-- Otherwise: pick the best-fitting direction yourself and bind it.
+- Otherwise: pick the best-fitting direction yourself and bind it. When inferring
+  unspecified dimensions, use mood as anchor: editorial → light canvas + serif
+  display; brutalist → dark canvas + geometric display; else light canvas, cool
+  accent on light / warm accent on dark, same-as-body display, single_column
+  layout, professional_minimal mood, balanced density, no exclude unless stated.
 - **Vocalize the system in one sentence** before building ("deep navy canvas,
   single electric-cyan accent, geometric display + system body") so I can
   redirect cheaply.
+- **Report assumptions** — if any of the eight dimensions above were inferred
+  rather than stated, list them in a short bullet block with the rule that picked
+  each default. Silent guesses are worse than visible ones.
 
 ### 3. Plan with a todo list
 
