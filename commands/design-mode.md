@@ -38,24 +38,28 @@ scope, and "what belongs on the page" are `brainstorming` work; if that isn't
 settled yet, say so and don't invent structure. A durable project `DESIGN.md` is
 `design-md` work — only offer it if I ask; don't run a full spec interview mid-build.
 Palette ramps and OKLCH scale math are `color-expert` — pull it in only when
-palette construction is the hard part.
+palette construction is the hard part. Brand definition and `BRAND.md` is `brand-md` work.
 
 **Visual dimension audit** — before locking direction, every brief must resolve
 these eight (parse my words for them; ask only about what's still open):
 
-| Dimension    | Resolves                                                                    |
-| ------------ | --------------------------------------------------------------------------- |
-| Palette      | Canvas mood — dark, light, warm, neutral                                    |
-| Accent       | The one color that earns attention                                          |
-| Body type    | Reading face + weight/line-height posture                                   |
-| Display type | Headline face (or same-as-body if utilitarian)                              |
-| Layout       | Column model, max width, grid posture                                       |
-| Mood         | professional_minimal · playful · brutalist · editorial · luxury · utility   |
-| Density      | compact · balanced · spacious                                               |
-| Exclude      | Hard nos the user states — e.g. no animations, no stock photos, no carousel |
+| Dimension    | Resolves                                                                                     |
+| ------------ | -------------------------------------------------------------------------------------------- |
+| Palette      | Canvas mood — dark, light, warm, neutral                                                     |
+| Accent       | The one color that earns attention                                                           |
+| Body type    | Reading face + weight/line-height posture                                                    |
+| Display type | Headline face (or same-as-body if utilitarian)                                               |
+| Layout       | Column model, max width, grid posture                                                        |
+| Mood         | professional_minimal · playful · brutalist · editorial · luxury · utility                    |
+| Density      | compact · balanced · spacious                                                                |
+| Exclude      | Hard nos the user states — e.g. no animations, no stock photos, no carousel, no gradients... |
 
 If `DESIGN.md` is already active, treat palette through density as locked — only
 confirm **exclude** and artifact-specific constraints for this piece.
+
+If a `BRAND.md` is present, always use it as the source for brand voice, tone, and
+personality — never improvise or ignore its rules. If missing, clarify whether to
+invent a temporary style or pause for real brand direction.
 
 **Vague phrase hints** — map fuzzy language to dimensions instead of treating it
 as done ("clean dark landing" → mood + palette + layout, not just "got it"):
@@ -105,12 +109,7 @@ split CSS/JS out if larger. For significant revisions, copy to a versioned name
 (`landing.html` → `landing-v2.html`) so the prior version stays browsable. Tell
 me which file to open; don't paste the whole document into chat.
 
-### 5. Self-check against the checklist
-
-If the skill you used ships a `references/checklist.md` with P0/P1/P2 items, read
-it after building. **Every P0 must pass** before you call it done.
-
-### 6. Critique on five dimensions
+### 5. Critique on five dimensions
 
 Score yourself silently 1–5 on each, then fix anything under 3 and re-score (two
 passes is normal):
@@ -170,7 +169,8 @@ face with a quieter body face (the only exception is an intentionally utilitaria
 - If the work genuinely demands a framework or richer tech, **ask me what
   artifact and stack you should target** before committing — though the answer is
   often already clear from my prompt, the repo, or surrounding context, so infer
-  it when it is and only ask when it's genuinely ambiguous.
+  it when it is and only ask when it's genuinely ambiguous. Currently I default to
+  using SvelteKit and Tailwind.
 - Modern CSS is welcome: `text-wrap: pretty`, CSS Grid, container queries,
   `color-mix()`, `clamp()`, `@scope`, view transitions.
 - Use appropriate scales: 1920×1080 text ≥ 24px, mobile hit targets ≥ 44px,
@@ -179,7 +179,7 @@ face with a quieter body face (the only exception is an intentionally utilitaria
   artifact output inside that Figma design file (build it on the canvas using the
   file's existing design-system components, variables, and styles) instead of
   emitting a standalone HTML file. This applies only when an explicit Figma
-  target is given; otherwise default to plain HTML as above.
+  target is given; otherwise default to above.
 
 ## Working style
 

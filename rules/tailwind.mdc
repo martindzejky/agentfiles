@@ -1,5 +1,5 @@
 ---
-globs: '**/*.svelte,**/*.css'
+globs: '**/*.svelte,**/*.vue,**/*.css'
 ---
 
 # Tailwind rules
