@@ -2,8 +2,6 @@
 globs: '**/*.svelte,**/*.vue,**/*.css'
 ---
 
-# Tailwind rules
-
 Never write custom CSS classes or selectors. Always use Tailwind utility classes to construct visuals.
 
 - Build all visual styling with Tailwind classes directly in markup.
