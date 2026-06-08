@@ -139,29 +139,12 @@ Design beyond the happy path:
 
 ## AI tells (default traps)
 
-Avoid these **unless the brief explicitly asks for them**. They are what models reach for when not reading the room.
-
-### Visual and layout
-
-- Purple-gradient hero on dark mesh; three equal feature cards in a row
-- Decorative crosshair grids and hairlines with no organizing job
-- Custom mouse cursors; oversaturated accents; gradient text on huge headlines
-- Eyebrow on every section; section numbers as eyebrows (`06 · How it works`)
-- Third consecutive zigzag image/text row; duplicate section templates
-- Fake product UI in the hero (box-drawn dashboards, terminals, task lists)
-- Version badges in hero (`BETA`, `v0.6`) unless the brief is a launch
-- Scroll cues (`Scroll to explore`); locale/weather/time strips in nav or footer
-- Decoration strips (`DESIGN · BUILD · SHIP`) with no navigational purpose
-- Pills and tags overlaid on photos; photo-credit captions on stock placeholders
-- Progress bars with fat tracks for simple comparisons on marketing pages
-
-### Content signatures
-
-- Generic names and brands (Jane Doe, Acme, Nexus, SmartFlow)
-- Fake-precise stats (`92%`, `4.1×`, `5.8 mm`) without real data
-- Filler verbs (Elevate, Seamless, Unleash, Revolutionize)
-- Performative labels ("Field notes", "Quietly in use at", "From the bench")
-- Em-dash as stylistic crutch throughout visible copy
+See the `anti-ai-slop` skill for the full catalog of generic visual, layout, and
+copy tells to avoid **unless the brief explicitly asks for them**. The
+marketing-specific traps (purple-gradient hero on mesh, eyebrow on every section,
+third consecutive zigzag row, fake product UI in the hero, version badges, scroll
+cues, decoration strips, generic names, fake-precise stats, filler verbs) all
+live there. Audit against it before declaring a surface done.
 
 ## Pattern vocabulary
 
@@ -238,6 +221,6 @@ Run before declaring a marketing surface done. Skip items that do not apply to t
 - [ ] Loading, empty, and error states designed
 - [ ] Button contrast and one label per CTA intent
 - [ ] Both themes checked if consumer-facing and dual-mode
-- [ ] No top AI tells from the list above unless brief-justified
+- [ ] No AI tells from the `anti-ai-slop` skill unless brief-justified
 
 If a checkbox fails, fix it before delivering.
