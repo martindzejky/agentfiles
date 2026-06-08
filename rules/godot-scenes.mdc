@@ -1,0 +1,48 @@
+---
+globs: *.tscn
+---
+
+# Instructions
+
+- Use lowercase underscore naming for scene files.
+- Use lowercase underscore naming for node names and all resources.
+- Prefer simple node names: `sprite`, `shape`, `area`/`job_area`, `animation`, `shadow`.
+- Match node names to packed scene or component script names (e.g. `squash`, `shadow`, `mouse_events`).
+- When editing a scene, check a few existing scene files for patterns.
+- Signals are always connected in scene files rather than in code when it is possible.
+- Do not put `uid` references in the scene files you create, only add path references and let Godot hook up the correct uid later. When you need Godot to regenerate or assign scene/resource `uid` references, use the `godot-cli` skill instead of asking the user to open the editor manually.
+
+# Composition
+
+Here is how I compose the game: world > objects > components
+
+The world contains various autoloads and system objects in the root, then there's usually one main container with Y-sorting enabled which contains the game objects.
+
+# Game objects
+
+- Objects are made out of components.
+- Objects usually have one root script which defines the object for the others and exposes public state and functions.
+- Components are usually private and build the behaviour of the object. Objects usually don't interact with or know about internal components of other objects.
+- I prefer constructing game objects out of components declaratively, like making them from reusable well-defined lego pieces, instead of coding all behaviour in the root script.
+- Components encapsulate reusable behaviours. Object-specific logic should go into its root script.
+- Some object scenes are not valid in total isolation. They may expect runtime data, autoload state, or supporting nodes from the full world scene. When smoke-checking such scenes, expected context/setup errors do not automatically mean the object is broken.
+
+Usually a complete game object has these parts:
+
+- Sprites
+- Shadow
+- Sound effect players
+- Animation player
+- Squash component
+- Mouse interaction components
+- Flag (command) interaction components
+
+# Juice checklist for objects
+
+- Reacts to hover and clicks by the mouse
+- Reacts to interactions with other objects
+- Squash component, squishy reactions
+- Animations with scaling of the sprite for emphasis, random start for animations
+- White outline effect on hover
+- Sound effects for all interactions
+- Random timers for everything

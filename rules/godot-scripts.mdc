@@ -1,0 +1,185 @@
+---
+globs: *.gd,*.gdscript
+---
+
+# General approach
+
+Write stupidly simple code, not something too smart or complicated. Prefer easy solutions. Use Godot's and game dev's best practices and latest functions.
+
+Build composable, signal-driven Godot 4 gameplay systems with strict type safety. Enforce the "everything is a node" philosophy through correct scene and node composition. Design signal architectures that decouple systems without losing type safety. Apply static typing to eliminate silent runtime failures.
+
+Every variable, function parameter, and return type must be explicitly typed. Use `:=` for inferred types only when the type is unambiguous from the right-hand expression. Typed arrays (`Array[EnemyData]`, `Array[Node]`) must be used everywhere.
+
+Usually one root script is enough for simpler objects. Split functionality out into components once there's reusable functionality.
+
+Check a few existing scripts in the codebase to see the used syntax, patterns, and formatting. If anything is unclear or you need to learn more, consult the built-in Godot documentation context, and use the question tool to ask questions to the user.
+
+Use 2 spaces for indentation, don't use tabs.
+
+# Comments
+
+Use comments very sparingly and intentionaly. Only use them when a complex block needs further explanation and it is not clear from the code itself, or when a decision needs to be written down. Prefer single line comments in lowercase. When editing existing code, preserve existing comments that are still relevant, do not delete them.
+
+Here's how comments look:
+
+```
+# generic comment
+print('hello')
+
+## JSDoc-like comment for the thingie below
+@export var property: Type
+```
+
+# Naming and functions
+
+Use single quotes! Use underscore_case for all names, variable names, function names, and also file names. These functions should always start with a leading underscore:
+
+- built-in callbacks such as `_ready` or `_process`
+- script's private functions that should not be exposed to other scripts
+- signal callbacks
+
+If a function parameter is required but not used in the body, prefix it with an underscore:
+
+```gdscript
+func _process(_delta):
+  pass
+```
+
+This does not apply to for loops!
+
+# Signals
+
+Signals should always be hooked up in the scene files if possible and not in the scripts and `_ready` functions. The exception is for dynamically instantiated objects, those cannot be set up in the editor. Never connect a signal to a method that does not exist at connection time. Use `has_method()` checks or rely on static typing to validate at editor time.
+
+# Timers
+
+Timers are a deliberate exception to the usual editor-wired setup. If a timer is internal to a script's own behaviour, such as a state duration, cooldown, retry delay, repeating tick, or other encapsulated timing logic, create and own the `Timer` in code instead of exporting a `Timer` reference and wiring it in the editor.
+
+Export or define only the timing value the script needs, usually in seconds, and let the script create the child timer, configure it, connect `timeout`, and start or stop it as needed.
+
+Set up an internal timer only once and reuse it. Do not create multiple child timers by accident when re-entering a state or calling setup repeatedly.
+
+Keep editor-assigned references for actual external dependencies such as sprites, components, shapes, and other scene parts. This timer rule is about keeping self-contained script logic simple, not about avoiding scene composition in general.
+
+```gdscript
+@export var tick_interval_sec := 1.0
+
+var _tick_timer: Timer
+
+func _ready() -> void:
+  _tick_timer = Timer.new()
+  _tick_timer.wait_time = tick_interval_sec
+  _tick_timer.one_shot = false
+  _tick_timer.timeout.connect(_on_tick_timer_timeout)
+  add_child(_tick_timer)
+```
+
+# Setters
+
+Here's a common setter pattern used a lot in UI scenes but also elsewhere. Notice that you do not need a separate variable, assigning to the same name in the setter works correctly. Getter is often not even required since by default it just returns the inner value. Follow it in your code:
+
+```gdscript
+var structure_data: StructureData:
+  set(value):
+    structure_data = value
+    _update_ui()
+```
+
+# Signals over \_process
+
+Prefer reacting to signals over polling in `_process` whenever possible. If a value only changes in response to a discrete event (resource changed, tool switched, etc.), connect to that event's signal and update there. Reserve `_process` for things that genuinely need per-frame updates, like following the mouse cursor or running physics interpolation.
+
+# Exported properties
+
+Usually, all script's `@export` props must always be assigned in the object's scene file, and you can assume that (or assert when appropriate). It is part of setting up the object's scene properly. Only when a prop must obviously be optional, you have to check for its existince in code using `if`. Otherwise just assume that it exists.
+
+# Reparenting
+
+When moving a node that is already in a tree from one parent to another, this can be done easily using one command:
+
+```gdscript
+node.reparent(new_parent)
+```
+
+This keeps the global transform the same after reparenting. If that is not necessary, pass `false` as the second parameter.
+
+# Ternary operators
+
+Ternary operators in gdscript look like this:
+
+```gdscript
+y += 3 if y < 10 else -1
+
+var fruit = (
+  "apple" if count == 2
+  else "pear" if count == 1
+  else "banana" if count == 0
+  else "orange"
+)
+```
+
+# Required vs optional references
+
+Do not add conditionals for variables which are assumed to exist and are required. Only use conditional checking for stuff that is actually optional, i. e. some objects do have it set and some don't.
+
+As an example, the code below is not good. When the object enters tree, we get and assign the construction site and there's even an assertion for it, which means that we assume that this variable is set the whole time and is needed by the script. Therefore, the `if` check in the exit tree is not only redundant, it is dangerous! If a variable is required, let's not check it using `if`, it should always be set. And if it isn't for some reason, that's a bug and should crash the game so I can fix it.
+
+```gdscript
+func _enter_tree() -> void:
+  _construction_site = PlayerMouse.current_selected_structure as ConstructionSite
+  assert(_construction_site, 'Construction site not found in detail panel')
+  # ...
+
+
+func _exit_tree() -> void:
+  if _construction_site:
+    # ...
+```
+
+# File paths
+
+Never hard-code file paths! Instead use `@export var` and assign in scenes.
+
+# Global classes
+
+Prefer Godot global classes registered with `class_name` when extending project scripts. Do not extend scripts by `res://...` path.
+
+If you add, rename, or start using a new `class_name`, use the `godot-cli` skill to refresh Godot's editor-managed project state before relying on that class from other scripts or scenes. Do not "solve" missing registration by switching to path-based `extends`.
+
+# Isolation and composition
+
+Follow the "everything is a node" philosophy. Prefer composition over inheritance. Every scene must be independently instancable, no assumptions about parent node type or sibling existence.
+
+Use `_ready()` for initialization that requires the node to be in the scene tree. Disconnect signals in `_exit_tree()` or use `connect(..., CONNECT_ONE_SHOT)` for fire-and-forget connections. Use `queue_free()` for safe deferred node removal.
+
+Objects in the game are usually isolate from each other and only interact with each other by calling the other object's public methods (i.e. villager calls `work()` on a workbench).
+
+# Autoloads and global access
+
+Be careful with autoloads and do not overuse them. Introducing a new autoload must be justified and reviewed with the user.
+
+If you add or register a new autoload in the project, use the `godot-cli` skill to refresh Godot's editor-managed project state before relying on it elsewhere.
+
+Utilize one global event bus autoload for global game events and easy decoupling.
+
+Utilize Godot's node groups for reference-free announcements (all villagers should get hungry) and decoupled global access (the village center should update its state). This can be done easily in script:
+
+```gdscript
+get_tree().call_group('villager', 'tick_hunger', 1)
+```
+
+# Object logic
+
+## Simple objects
+
+Simple and small objects usually have one main script on the root node. This script contains both the public interface of the object (functions to interact with the object, signals, public state variables) as well the private implementation of the behaviour.
+
+Only small pieces of reusable behaviour is extracted into components of the object (such as squash, shake, wind sway, interaction effects, etc.).
+
+## Complex objects
+
+Bigger and more complex objects in the game usually have an internal state machine. In this case, the root script of the object only acts as the public interface of the object and defines its public type (i.e. `object is ResourceItem`). It can also contain public or shared state.
+
+Then the implementation of the behaviour of the object lives in the states. They interact with the main script as needed (i.e. set shared state variables). When something happens in the root script, it calls callback functions on the current state (`state_machine.get_current().on_work_performed()`).
+
+Tiny pieces of logic can live in the root script. For example, inside a public method which mutates a state variable (i.e. add work or collect item), there can directly be the logic which updates the variable, it might emit a signal, and then it calls a callback on the current state. But mostly the behaviour logic lives inside states. States drive the behaviour of these complex objects.
