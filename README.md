@@ -13,6 +13,12 @@ cd ~/.agentfiles
 ./install
 ```
 
+## Philosophy
+
+I try to keep my setup lean. I'm a professional engineer and I want to be behind the steering wheel when working, not just along for the ride. I view the setup in a few categories: reusable pieces, orchestration, and domain knowledge.
+
+In my experience, I don't think you need huge skill files or elaborate stacks. Modern AI models and editors are smart and don't need that much hand-holding. You just need to teach it how you like to work.
+
 ## Sources
 
 Most of the files in this repo come from my own work and experience. Some files like skills or rules were adapted from other repositories, and then I tweaked them to fit my own needs.
