@@ -519,6 +519,7 @@ When facing a marketing challenge, consider:
 
 ## Related Skills
 
+- **cro**: Apply these principles to page and form optimization
 - **copywriting**: Write copy using psychological principles
 - **copy-editing**: Sharpen existing copy
 - **marketing-surface-craft**: Apply these principles to landing-page layout and composition
