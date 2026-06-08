@@ -1,9 +1,9 @@
 ---
-name: unslop
-description: Cut AI tells from any writing. Must always apply when writing.
+name: unslop-prose
+description: Cut AI tells from prose and chat replies. Must always apply when writing.
 ---
 
-# Unslop
+# Unslop prose
 
 Edit text to remove AI patterns and add human voice.
 
