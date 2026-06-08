@@ -23,6 +23,8 @@ In my experience, I don't think you need huge skill files or elaborate stacks. M
 
 Most of the files in this repo come from my own work and experience. Some files like skills or rules were adapted from other repositories, and then I tweaked them to fit my own needs.
 
+There are a couple of "domain knowledge" style skills like marketing, color theory, and design, which I view as experts I can consult when doing such domain specific work. These come from the internet and are mostly blackboxes to me that I can consult.
+
 ## References
 
 - https://github.com/obra/superpowers
