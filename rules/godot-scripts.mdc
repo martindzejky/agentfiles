@@ -89,6 +89,10 @@ var structure_data: StructureData:
 
 Prefer reacting to signals over polling in `_process` whenever possible. If a value only changes in response to a discrete event (resource changed, tool switched, etc.), connect to that event's signal and update there. Reserve `_process` for things that genuinely need per-frame updates, like following the mouse cursor or running physics interpolation.
 
+# Distance comparisons
+
+Always prefer `distance_squared_to()` over `distance_to()` unless you really need the precise distance. For comparisons, sorting, and nearest-neighbor queries, compare squared distances instead — it's more performant and mathematically equivalent for ordering.
+
 # Exported properties
 
 Usually, all script's `@export` props must always be assigned in the object's scene file, and you can assume that (or assert when appropriate). It is part of setting up the object's scene properly. Only when a prop must obviously be optional, you have to check for its existince in code using `if`. Otherwise just assume that it exists.
