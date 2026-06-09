@@ -111,6 +111,7 @@ EOF
 )" \
   -b master \
   -a martindzejky \
+  --remove-source-branch=true \
   --yes
 ```
 
@@ -126,6 +127,7 @@ Do not use `--fill` when applying the title and description conventions above.
 - [ ] Description is short; bullets lowercase
 - [ ] Test plan included
 - [ ] Assignee set to martindzejky
+- [ ] `--remove-source-branch=true` passed on create
 - [ ] MR URL returned to user
 
 ## Pipeline Checks
