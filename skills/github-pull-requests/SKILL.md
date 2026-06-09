@@ -46,7 +46,7 @@ For CI triage loops, also use the `loop-on-ci` skill.
 
 ### Title
 
-- Start with a capital letter.
+- Start with a capital letter (unlike commits, which stay lowercase).
 - Keep it short and descriptive.
 - Do not prefix commits with GitHub issue numbers; link issues in the PR body instead (see Description).
 
@@ -59,18 +59,18 @@ Add Notion export settings page
 
 ### Description
 
-Keep it short and concise — bullet points when possible. Use prose only when the change is large, risky, or needs context that bullets would hide.
+Keep it short and concise — bullet points when possible. Start each bullet with a capital letter (unlike commits, which stay lowercase). Use prose only when the change is large, risky, or needs context that bullets would hide.
 
 Default structure:
 
 ```markdown
 ## Summary
 
-- {what changed}
+- {What changed}
 
 ## Test plan
 
-- [ ] {how to verify}
+- [ ] {How to verify}
 ```
 
 When work closes a GitHub issue, add a references section:
@@ -118,13 +118,13 @@ gh pr create \
   --body "$(cat <<'EOF'
 ## Summary
 
-- retry upload when the connection drops mid-transfer
-- surface a clearer error when all retries fail
+- Retry upload when the connection drops mid-transfer
+- Surface a clearer error when all retries fail
 
 ## Test plan
 
-- [ ] upload a recording on a throttled connection
-- [ ] confirm retry succeeds after a brief disconnect
+- [ ] Upload a recording on a throttled connection
+- [ ] Confirm retry succeeds after a brief disconnect
 
 ## References
 
@@ -142,7 +142,7 @@ Do not use `--fill` when applying the title and description conventions above.
 
 - [ ] Preflight complete (branch state, no duplicate PR, changelog handled)
 - [ ] Title starts with a capital letter
-- [ ] Description is short; bullets where appropriate
+- [ ] Description is short; bullets start with capitals
 - [ ] Test plan included
 - [ ] Issue linked in body with `Closes #N` when applicable
 - [ ] PR created as ready (not draft)
@@ -178,6 +178,7 @@ For summarizing feedback, use the `get-pr-comments` skill.
 - Looking up the PR number first when the current branch is already enough.
 - Using `gh pr list` for the active branch instead of `gh pr view`.
 - Using `--fill` when a custom title and description are required.
+- Lowercase titles or bullets copied from commit message style.
 - Prefixing commits with `#42` instead of linking the issue in the PR body.
 - Letting the PR description go stale as new commits land.
 - Using `gh run list` alone for PR CI status — prefer `gh pr checks`.

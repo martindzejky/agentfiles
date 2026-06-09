@@ -40,32 +40,32 @@ Use `glab`, not `gh`.
 ### Title
 
 - Include jira ticket number in title if you have any
-- Follow by MR name, all lowercase
+- After the ticket, start the MR name with a capital letter (unlike commits, which stay lowercase)
 
 **Good example:**
 
 ```
-EPIK-14400 overlapping user info max-width
+EPIK-14400 Overlapping user info max-width
 ```
 
-Pattern: `{JIRA-TICKET} {short mr name}` — ticket prefix when known, then lowercase words, no punctuation.
+Pattern: `{JIRA-TICKET} {Short mr name}` — ticket prefix when known, then title-case words after the ticket, no punctuation.
 
-Derive the name from branch name or commits when the ticket is already in the branch (e.g. `EPIK-14400-max-width-text` → `EPIK-14400 overlapping user info max-width`).
+Derive the name from branch name or commits when the ticket is already in the branch (e.g. `EPIK-14400-max-width-text` → `EPIK-14400 Overlapping user info max-width`).
 
 ### Description
 
-Keep it short and concise — bullet points, lowercase. Use prose only when the change is large, risky, or needs context that bullets would hide.
+Keep it short and concise — bullet points when possible. Start each bullet with a capital letter. Use prose only when the change is large, risky, or needs context that bullets would hide.
 
 Default structure:
 
 ```markdown
 ## Summary
 
-- {what changed, lowercase bullets}
+- {What changed}
 
 ## Test plan
 
-- [ ] {how to verify}
+- [ ] {How to verify}
 ```
 
 Use `[x]` for steps already verified before opening the MR. Skip filler.
@@ -97,16 +97,16 @@ Do not open the MR until preflight passes: changelog handled (updated + committe
 
 ```bash
 glab mr create \
-  -t "EPIK-1234 short mr name" \
+  -t "EPIK-1234 Short mr name" \
   -d "$(cat <<'EOF'
 ## Summary
 
-- change one
-- change two
+- Change one
+- Change two
 
 ## Test plan
 
-- [ ] verify thing
+- [ ] Verify thing
 EOF
 )" \
   -b master \
@@ -123,8 +123,8 @@ Do not use `--fill` when applying the title and description conventions above.
 
 - [ ] Preflight complete (branch state, no duplicate MR, changelog handled)
 - [ ] Title has Jira ticket when available
-- [ ] Title suffix is lowercase
-- [ ] Description is short; bullets lowercase
+- [ ] Title name starts with a capital letter after the ticket
+- [ ] Description is short; bullets start with capitals
 - [ ] Test plan included
 - [ ] Assignee set to martindzejky
 - [ ] `--remove-source-branch=true` passed on create
@@ -157,5 +157,6 @@ glab mr view --output json
 - Looking up the MR ID first when the current branch is already enough.
 - Using `glab mr list` for the active branch instead of `glab mr view`.
 - Using `--fill` when a custom title and description are required.
+- Lowercase titles or bullets copied from commit message style.
 - Assuming `glab mr note list` is fully stable; it is marked experimental.
 - Assuming `glab mr note -m` posts an in-thread reply. Check `glab mr note --help` first if thread-specific behavior matters.
