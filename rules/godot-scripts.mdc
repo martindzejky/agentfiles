@@ -126,17 +126,17 @@ var fruit = (
 
 Do not add conditionals for variables which are assumed to exist and are required. Only use conditional checking for stuff that is actually optional, i. e. some objects do have it set and some don't.
 
-As an example, the code below is not good. When the object enters tree, we get and assign the construction site and there's even an assertion for it, which means that we assume that this variable is set the whole time and is needed by the script. Therefore, the `if` check in the exit tree is not only redundant, it is dangerous! If a variable is required, let's not check it using `if`, it should always be set. And if it isn't for some reason, that's a bug and should crash the game so I can fix it.
+As an example, the code below is not good. When the object enters tree, we get and assign the target and there's even an assertion for it, which means that we assume that this variable is set the whole time and is needed by the script. Therefore, the `if` check in the exit tree is not only redundant, it is dangerous! If a variable is required, let's not check it using `if`, it should always be set. And if it isn't for some reason, that's a bug and should crash the game so I can fix it.
 
 ```gdscript
 func _enter_tree() -> void:
-  _construction_site = PlayerMouse.current_selected_structure as ConstructionSite
-  assert(_construction_site, 'Construction site not found in detail panel')
+  _target = get_parent() as Interactable
+  assert(_target, 'Target not found')
   # ...
 
 
 func _exit_tree() -> void:
-  if _construction_site:
+  if _target:
     # ...
 ```
 
@@ -156,7 +156,7 @@ Follow the "everything is a node" philosophy. Prefer composition over inheritanc
 
 Use `_ready()` for initialization that requires the node to be in the scene tree. Disconnect signals in `_exit_tree()` or use `connect(..., CONNECT_ONE_SHOT)` for fire-and-forget connections. Use `queue_free()` for safe deferred node removal.
 
-Objects in the game are usually isolate from each other and only interact with each other by calling the other object's public methods (i.e. villager calls `work()` on a workbench).
+Objects in the game are usually isolated from each other and only interact with each other by calling the other object's public methods (i.e. a unit calls `open()` on a door).
 
 # Autoloads and global access
 
@@ -166,10 +166,10 @@ If you add or register a new autoload in the project, use the `godot-cli` skill 
 
 Utilize one global event bus autoload for global game events and easy decoupling.
 
-Utilize Godot's node groups for reference-free announcements (all villagers should get hungry) and decoupled global access (the village center should update its state). This can be done easily in script:
+Utilize Godot's node groups for reference-free announcements (all units should receive a tick) and decoupled global access (a manager should update its state). This can be done easily in script:
 
 ```gdscript
-get_tree().call_group('villager', 'tick_hunger', 1)
+get_tree().call_group('units', 'tick', 1)
 ```
 
 # Object logic
@@ -182,7 +182,7 @@ Only small pieces of reusable behaviour is extracted into components of the obje
 
 ## Complex objects
 
-Bigger and more complex objects in the game usually have an internal state machine. In this case, the root script of the object only acts as the public interface of the object and defines its public type (i.e. `object is ResourceItem`). It can also contain public or shared state.
+Bigger and more complex objects in the game usually have an internal state machine. In this case, the root script of the object only acts as the public interface of the object and defines its public type (i.e. `object is PickupItem`). It can also contain public or shared state.
 
 Then the implementation of the behaviour of the object lives in the states. They interact with the main script as needed (i.e. set shared state variables). When something happens in the root script, it calls callback functions on the current state (`state_machine.get_current().on_work_performed()`).
 

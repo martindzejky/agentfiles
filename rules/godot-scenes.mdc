@@ -6,7 +6,7 @@ globs: *.tscn
 
 - Use lowercase underscore naming for scene files.
 - Use lowercase underscore naming for node names and all resources.
-- Prefer simple node names: `sprite`, `shape`, `area`/`job_area`, `animation`, `shadow`.
+- Prefer simple node names: `sprite`, `shape`, `area`/`interaction_area`, `animation`, `shadow`.
 - Match node names to packed scene or component script names (e.g. `squash`, `shadow`, `mouse_events`).
 - When editing a scene, check a few existing scene files for patterns.
 - Signals are always connected in scene files rather than in code when it is possible.
@@ -35,7 +35,7 @@ Usually a complete game object has these parts:
 - Animation player
 - Squash component
 - Mouse interaction components
-- Flag (command) interaction components
+- Interaction / click-target components
 
 # Juice checklist for objects
 
