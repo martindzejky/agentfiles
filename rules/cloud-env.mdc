@@ -28,4 +28,12 @@ Follow the project's `README.md` file.
 ## Verification gate
 
 Before commit/push/PR update, run the project's configured verification gates.
+Verify your own work using screenshots, videos, tests, or manual code checks as relevant.
 Attach verification artifacts (screenshots/recordings) to the PR for user-visible changes.
+
+## Browser use and videos
+
+In the cloud you have access to browser tools and screenshot and video recording and inspection tools.
+Use them to verify your work, and capture artifacts and proof for the user.
+
+**Note about animations, transitions, and motion:** the video inspection tools usually work with lower FPS, so you might not see quick animations or transitions. In that case, do not rely on video only and instead perform manual checks via code and logs.
