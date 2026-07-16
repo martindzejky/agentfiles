@@ -14,18 +14,20 @@ globs: *.tscn
 
 # Composition
 
-Here is how I compose the game: world > objects > components
+Here is how I compose the game: world > objects > components + glue
 
 The world contains various autoloads and system objects in the root, then there's usually one main container with Y-sorting enabled which contains the game objects.
 
 # Game objects
 
-- Objects are made out of components.
-- Objects usually have one root script which defines the object for the others and exposes public state and functions.
+- Objects are made out of reusable components.
+- Objects usually have one root script which defines the class/type of the object for the others and exposes public state, functions, and signals.
 - Components are usually private and build the behaviour of the object. Objects usually don't interact with or know about internal components of other objects.
 - I prefer constructing game objects out of components declaratively, like making them from reusable well-defined lego pieces, instead of coding all behaviour in the root script.
-- Components encapsulate reusable behaviours. Object-specific logic should go into its root script.
-- Some object scenes are not valid in total isolation. They may expect runtime data, autoload state, or supporting nodes from the full world scene. When smoke-checking such scenes, expected context/setup errors do not automatically mean the object is broken.
+- Components encapsulate reusable behaviours. Object-specific logic and glue should go into its root script.
+- The root script glues together the components. Components usually don't know about each other, unless one directly depends on another. There may also be some glue-like components which connect other components and are not reusable, but there are limited and well-scoped.
+- Some object scenes are not valid in total isolation. They may expect runtime data, autoload state, or supporting nodes from the full world scene. When smoke-checking such scenes, expected context/setup errors do not automatically mean the object is broken. At the same time, try to create object scenes that are as independant from external environment as possible, which is generally a good design practice.
+- Separate simulation/game/logic/data pieces of an object from visual pieces. Simulation pieces are components which run the game and don't know about visuals. Visuals derive their state from the simulation. For example: sprite updates based on the state of the object or a component, instead of the state imperatively updating the sprite.
 
 Usually a complete game object has these parts:
 
@@ -33,9 +35,11 @@ Usually a complete game object has these parts:
 - Shadow
 - Sound effect players
 - Animation player
-- Squash component
+- Squash or shake component
 - Mouse interaction components
 - Interaction / click-target components
+- State machine
+- Glue
 
 # Juice checklist for objects
 
