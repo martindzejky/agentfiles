@@ -85,9 +85,13 @@ var structure_data: StructureData:
     _update_ui()
 ```
 
-# Signals over \_process
+# Signals over `_process`
 
 Prefer reacting to signals over polling in `_process` whenever possible. If a value only changes in response to a discrete event (resource changed, tool switched, etc.), connect to that event's signal and update there. Reserve `_process` for things that genuinely need per-frame updates, like following the mouse cursor or running physics interpolation.
+
+# Updates as needed instead of `_process`
+
+Do **not** use `_process` / `_physics_process` to "keep things in sync." Prefer `_ready`, signals, or explicit on-change calls. Parent transforms already move children. Reserve per-frame updates for things that actually change every frame (mouse follow, script-driven animation, interpolation). If you're about to sync in `_process`, stop and justify why.
 
 # Distance comparisons
 
