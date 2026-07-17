@@ -1,6 +1,6 @@
 ---
 name: godot-input
-description: Handle Godot 4 input — discrete `_unhandled_input` vs poll in `_physics_process`, Input Map, rebinding, deadzone, joy hotplug, and DEVICE_ID caveats. 2D only; no C#.
+description: Handle Godot 4 input — discrete `_unhandled_input` vs poll in `_physics_process`, Input Map, rebinding, deadzone, joy hotplug, and DEVICE_ID caveats.
 ---
 
 # Godot Input

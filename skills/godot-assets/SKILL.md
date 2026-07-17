@@ -5,8 +5,6 @@ description: Import and manage 2D assets — .import commit, compression, Fix Al
 
 # Godot Assets (2D)
 
-3D scene/mesh import: not used — 2D project.
-
 ## Import rules
 
 ```

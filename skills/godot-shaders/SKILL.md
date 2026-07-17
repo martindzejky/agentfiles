@@ -5,7 +5,7 @@ description: Write canvas_item shaders for 2D — builtins, uniforms, shared Sha
 
 # Godot Shaders (2D)
 
-`canvas_item` only. Spatial / compositor / stencil deep dives: not used — 2D project.
+This skill covers `canvas_item` shaders.
 
 ## Shader vs material
 

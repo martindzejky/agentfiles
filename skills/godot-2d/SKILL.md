@@ -1,11 +1,11 @@
 ---
 name: godot-2d
-description: 2D footguns only — TileMapLayer vs legacy TileMap, CanvasLayer vs z_index, Parallax2D, pixel snap / subpixel jitter. Use when fixing draw order, tiling, parallax, or pixel-art shimmer.
+description: 2D cheatsheet — TileMapLayer, CanvasLayer, Parallax2D, pixel snap, draw order, tiling, parallax. Use when working with 2D nodes, draw order, tiling, parallax, or pixel-art.
 ---
 
-# Godot 2D (footguns)
+# Godot 2D
 
-Not a full 2D tutorial — traps that waste time. See **godot-ui**, **godot-shaders**, **godot-assets** for related topics.
+Quick reference for common 2D nodes and pitfalls. See **godot-ui**, **godot-shaders**, **godot-assets** for related topics.
 
 ## TileMapLayer
 

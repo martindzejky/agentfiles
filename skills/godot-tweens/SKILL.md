@@ -1,6 +1,6 @@
 ---
 name: godot-tweens
-description: Code-driven Tweens in Godot 4 — create_tween lifecycle, kill before recreate, parallel/chain, pause modes, property paths, relative loop drift. 2D; no C#.
+description: Code-driven Tweens in Godot 4 — create_tween lifecycle, kill before recreate, parallel/chain, pause modes, property paths, relative loop drift.
 ---
 
 # Godot Tweens

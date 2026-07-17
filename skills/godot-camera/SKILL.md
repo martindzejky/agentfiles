@@ -1,6 +1,6 @@
 ---
 name: godot-camera
-description: Camera2D only — limits, smoothing/follow, trauma² screen shake, room zones, make_current after transitions. No Camera3D; no C#.
+description: Camera2D — limits, smoothing/follow, trauma² screen shake, room zones, make_current after transitions.
 ---
 
 # Godot Camera2D
@@ -13,7 +13,6 @@ description: Camera2D only — limits, smoothing/follow, trauma² screen shake, 
 - Prefer `Area2D` camera zones for room bounds; wire `body_entered` in the scene when static.
 - After a tweened handoff, call `next_cam.make_current()` only when the tween finishes.
 - Follow/shake run in `_process` (visual), not `_physics_process`.
-- No Camera3D / SpringArm3D.
 
 ## Limits and basics
 

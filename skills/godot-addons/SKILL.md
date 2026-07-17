@@ -1,11 +1,11 @@
 ---
 name: godot-addons
-description: Quick reference for EditorPlugin addons — plugin.cfg, @tool, custom types, inspector plugins, docks, configuration warnings. Use when building or editing editor extensions (2D-focused).
+description: Quick reference for EditorPlugin addons — plugin.cfg, @tool, custom types, inspector plugins, docks, configuration warnings. Use when building or editing editor extensions.
 ---
 
 # Godot Addons
 
-Future reference for editor extensions. GDScript only; skip `EditorNode3DGizmo`.
+Future reference for editor extensions.
 
 ## Layout
 

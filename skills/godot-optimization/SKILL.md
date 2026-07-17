@@ -61,5 +61,3 @@ See [references/pools.md](references/pools.md).
 | Unique material per instance | Shared material + uniforms |
 | `load()` / `instantiate()` in hot path | `preload` + pool |
 | Legacy `TileMap` | `TileMapLayer` + single atlas |
-
-3D physics/mesh LOD: not used — 2D project.

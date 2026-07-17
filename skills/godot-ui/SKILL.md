@@ -5,7 +5,7 @@ description: Build Control UI — containers, anchors, themes, focus, pause menu
 
 # Godot UI
 
-2D Control layout and scaling. GDScript only; 2-space indent; single quotes; lowercase node names.
+Control layout and scaling. 2-space indent; single quotes; lowercase node names.
 
 ## Controls vs Node2D
 

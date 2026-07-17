@@ -1,6 +1,6 @@
 ---
 name: godot-animation
-description: 2D animation with AnimationPlayer, AnimationTree, AnimatedSprite2D, Call Method tracks, and SpriteFrames. No 3D, Skeleton, or IK. No C#.
+description: 2D animation with AnimationPlayer, AnimationTree, AnimatedSprite2D, Call Method tracks, and SpriteFrames.
 ---
 
 # Godot Animation (2D)
@@ -11,7 +11,6 @@ description: 2D animation with AnimationPlayer, AnimationTree, AnimatedSprite2D,
 - Prefer `AnimationTree` when you need blends or state transitions; keep clips on a sibling `AnimationPlayer`.
 - Prefer lowercase node names: `sprite`, `animation`. Prefer scene-wired `animation_finished` when the connection is static.
 - Prefer Call Method tracks for frame-accurate gameplay (enable hitbox, spawn projectile). Prefer past-tense signals from root scripts (`attack_finished`), not command-style.
-- Do not use Skeleton/IK/3D modifiers. This skill is 2D only.
 
 ## AnimationPlayer vs Tree
 

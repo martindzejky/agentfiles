@@ -1,6 +1,6 @@
 ---
 name: godot-audio
-description: 2D audio in Godot 4 — buses, linear_to_db, stream looping, WAV SFX vs OGG music, AudioStreamPlayer2D, SFX pool, music autoload. No 3D; no C#.
+description: 2D audio in Godot 4 — buses, linear_to_db, stream looping, WAV SFX vs OGG music, AudioStreamPlayer2D, SFX pool, music autoload.
 ---
 
 # Godot Audio (2D)
@@ -13,7 +13,6 @@ description: 2D audio in Godot 4 — buses, linear_to_db, stream looping, WAV SF
 - Use `linear_to_db` / `db_to_linear` for volume sliders. Mute near-zero instead of `linear_to_db(0)` (`-inf`).
 - Prefer scene-local `AudioStreamPlayer` / `AudioStreamPlayer2D` for object SFX. Justify a music autoload — music must survive scene changes; review with the user before adding.
 - Prefer an SFX pool (or `max_polyphony`) over spawning players every shot.
-- 2D only — no `AudioStreamPlayer3D` / `AudioListener3D`.
 
 ## Buses and volume
 

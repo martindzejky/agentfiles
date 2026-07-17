@@ -7,7 +7,7 @@ description: Review GDScript/Godot 2D code for Godot-specific footguns. Use when
 
 Review against `godot-scripts` and `godot-scenes`. Do not restate naming/composition/event-bus policy at length — flag violations and point at those rules.
 
-2D + GDScript only. Output findings as **Critical** / **Important** / **Suggestions**.
+Review GDScript gameplay code and 2D scenes. Output findings as **Critical** / **Important** / **Suggestions**.
 
 ## Critical / Important: frame loops
 
