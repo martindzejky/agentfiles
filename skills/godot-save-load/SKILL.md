@@ -1,6 +1,6 @@
 ---
 name: godot-save-load
-description: Persist Godot 4 data with ConfigFile and JSON on user://. Never load user .tres saves (script exec risk). Version migration, Vector2 as dict, DirAccess.
+description: Persist Godot data with ConfigFile and JSON on user://. Never load user .tres saves (script exec risk). Version migration, Vector2 as dict, DirAccess.
 ---
 
 # Godot Save / Load

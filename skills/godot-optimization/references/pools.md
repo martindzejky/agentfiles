@@ -1,11 +1,13 @@
 # Pools (thin)
 
 ```gdscript
+@export var bullet_scene: PackedScene
+
 var _pool: Array[Node2D] = []
 
 func _ready() -> void:
   for i in 32:
-    var bullet: Node2D = preload('res://objects/bullet.tscn').instantiate()
+    var bullet: Node2D = bullet_scene.instantiate() as Node2D
     bullet.visible = false
     bullet.set_process(false)
     add_child(bullet)

@@ -1,6 +1,6 @@
 ---
 name: godot-state-machine
-description: Implement Godot FSMs for complex objects — enum, node, and resource patterns; hierarchical/parallel when needed. Use when behaviour has clear states with enter/exit.
+description: Implement Godot finite state machines for complex objects — enum, node, and resource patterns; hierarchical/parallel when needed. Use when behaviour has clear states with enter/exit.
 ---
 
 # Godot State Machine

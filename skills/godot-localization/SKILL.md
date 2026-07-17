@@ -1,6 +1,6 @@
 ---
 name: godot-localization
-description: Godot 4 i18n — tr(), Control auto-translate, semantic keys, CSV vs PO, format after tr, RTL, NOTIFICATION_TRANSLATION_CHANGED.
+description: Godot i18n — tr(), Control auto-translate, semantic keys, CSV vs PO, format after tr, RTL, NOTIFICATION_TRANSLATION_CHANGED.
 ---
 
 # Godot Localization

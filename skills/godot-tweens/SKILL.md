@@ -1,6 +1,6 @@
 ---
 name: godot-tweens
-description: Code-driven Tweens in Godot 4 — create_tween lifecycle, kill before recreate, parallel/chain, pause modes, property paths, relative loop drift.
+description: Code-driven Tweens in Godot — create_tween lifecycle, kill before recreate, parallel/chain, pause modes, property paths, relative loop drift, Control offset transforms.
 ---
 
 # Godot Tweens
@@ -12,6 +12,30 @@ description: Code-driven Tweens in Godot 4 — create_tween lifecycle, kill befo
 - Prefer `TRANS_CUBIC` + `EASE_OUT` for UI; avoid default linear unless intentional.
 - Use `:` paths for components: `'modulate:a'`, `'position:x'`.
 - Prefer absolute targets for looping tweens; `as_relative()` drifts across loops.
+- For UI inside containers, prefer `offset_transform_*` over `position` / `scale` / `rotation` — container layout resets those on resort.
+
+## Control offset transforms
+
+`Control` nodes in containers lose `position` / `scale` / `rotation` tweaks when the container resorts. Use offset transforms instead:
+
+1. Set `offset_transform_enabled = true`
+2. Tween `offset_transform_position`, `offset_transform_rotation`, or `offset_transform_scale`
+3. Set `offset_transform_pivot` / `offset_transform_pivot_ratio` for scale/rotate origin
+
+By default `offset_transform_visual_only = true` — the transform is visual only and does not move hit areas (buttons keep hover). Set to `false` when input should follow the offset.
+
+```gdscript
+@onready var panel: PanelContainer = $panel
+
+func slide_in() -> void:
+  panel.offset_transform_enabled = true
+  panel.offset_transform_position = Vector2(-200, 0)
+  var tween := create_tween()
+  tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+  tween.tween_property(panel, 'offset_transform_position', Vector2.ZERO, 0.35)
+```
+
+See **godot-ui** for layout/containers; use **AnimationPlayer** when many properties need authored keyframes.
 
 ## Create and bind
 
@@ -115,3 +139,4 @@ An empty running tween can error; kill if nothing was appended.
 | relative loop drifts | use absolute values |
 | path not found | `'property:component'` spelling |
 | slow-mo UI | `set_ignore_time_scale()` |
+| container resets tween | use `offset_transform_*`, not `position`/`scale` |

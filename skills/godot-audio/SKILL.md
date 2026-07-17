@@ -1,6 +1,6 @@
 ---
 name: godot-audio
-description: 2D audio in Godot 4 — buses, linear_to_db, stream looping, WAV SFX vs OGG music, AudioStreamPlayer2D, SFX pool, music autoload.
+description: 2D audio in Godot — buses, linear_to_db, stream looping, WAV SFX vs OGG music, AudioStreamPlayer2D, SFX pool, music autoload.
 ---
 
 # Godot Audio (2D)

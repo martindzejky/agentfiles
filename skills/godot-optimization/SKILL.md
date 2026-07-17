@@ -3,7 +3,7 @@ name: godot-optimization
 description: Profile and fix 2D performance — Self vs Total, CanvasGroup batching, unique materials, VisibleOnScreenNotifier2D, pools, typed/Packed/StringName. Use when FPS drops, draw calls spike, or hot paths allocate.
 ---
 
-# Godot Optimization (2D)
+# Godot Optimization
 
 Profile before changing code. Budget ≈ 16.6 ms/frame at 60 fps.
 

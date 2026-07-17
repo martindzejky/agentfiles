@@ -32,7 +32,7 @@ extends Resource
 @export var max_stack: int = 1
 ```
 
-Wire with `@export var item: ItemData` for scene-assigned data. `preload` of owned project constants is fine per `godot-scripts`.
+Wire with `@export var item: ItemData` for scene-assigned data.
 
 ## Share vs unique
 
