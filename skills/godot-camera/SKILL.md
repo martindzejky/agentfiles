@@ -1,6 +1,6 @@
 ---
 name: godot-camera
-description: Camera2D — limits, smoothing/follow, trauma² screen shake, room zones, make_current after transitions.
+description: Camera2D — limits, smoothing/follow, screen shake, room zones, make_current after transitions.
 ---
 
 # Godot Camera2D
@@ -9,7 +9,7 @@ description: Camera2D — limits, smoothing/follow, trauma² screen shake, room 
 
 - Prefer one active `Camera2D` (`make_current()`). Set `limit_*` to level bounds so the view never shows empty world.
 - Prefer built-in `position_smoothing_enabled` for simple follow; use a small follow script when you need look-ahead.
-- Prefer trauma² shake on `offset` / `rotation`, decaying over time — not endless sine on `position`.
+- Prefer screen shake on `offset` / `rotation`, with intensity squared for a quick decay feel — not endless sine on `position`.
 - Prefer `Area2D` camera zones for room bounds; wire `body_entered` in the scene when static.
 - After a tweened handoff, call `next_cam.make_current()` only when the tween finishes.
 - Follow/shake run in `_process` (visual), not `_physics_process`.
@@ -63,7 +63,7 @@ func _process(delta: float) -> void:
 
 Assume required `@export` targets are assigned in the scene.
 
-## Trauma² shake
+## Screen shake
 
 ```gdscript
 extends Camera2D
@@ -72,20 +72,20 @@ extends Camera2D
 @export var max_roll_deg := 3.0
 @export var decay_rate := 1.5
 
-var _trauma := 0.0
+var _shake_intensity := 0.0
 
 
-func add_trauma(amount: float) -> void:
-  _trauma = minf(_trauma + amount, 1.0)
+func add_shake(amount: float) -> void:
+  _shake_intensity = minf(_shake_intensity + amount, 1.0)
 
 
 func _process(delta: float) -> void:
-  if _trauma <= 0.0:
+  if _shake_intensity <= 0.0:
     offset = Vector2.ZERO
     rotation = 0.0
     return
-  _trauma = maxf(_trauma - decay_rate * delta, 0.0)
-  var shake := _trauma * _trauma
+  _shake_intensity = maxf(_shake_intensity - decay_rate * delta, 0.0)
+  var shake := _shake_intensity * _shake_intensity
   offset = Vector2(
     max_offset.x * shake * randf_range(-1.0, 1.0),
     max_offset.y * shake * randf_range(-1.0, 1.0)
@@ -93,13 +93,13 @@ func _process(delta: float) -> void:
   rotation = deg_to_rad(max_roll_deg) * shake * randf_range(-1.0, 1.0)
 ```
 
-Optional: drive offset with `FastNoiseLite` instead of `randf_range` for smoother shake. Reset offset/rotation when trauma hits 0.
+Optional: drive offset with `FastNoiseLite` instead of `randf_range` for smoother shake. Reset offset/rotation when intensity hits 0.
 
 ```gdscript
 func on_explosion() -> void:
   var cam := get_viewport().get_camera_2d()
   if cam is GameCamera:
-    (cam as GameCamera).add_trauma(0.6)
+    (cam as GameCamera).add_shake(0.6)
 ```
 
 Prefer typed `is` / cast over `has_method` when the project owns the type.
@@ -143,6 +143,6 @@ func transition_to(next_cam: Camera2D, duration := 0.5) -> void:
 | Symptom | Fix |
 |---------|-----|
 | shows outside level | set all four limits |
-| shake leaves offset | clear when trauma == 0 |
+| shake leaves offset | clear when intensity == 0 |
 | cut mid-blend | `make_current` only after tween |
 | zone triggers wrong bodies | collision masks / player group |

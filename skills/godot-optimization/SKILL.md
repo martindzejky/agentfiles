@@ -40,7 +40,7 @@ See [references/draw-calls.md](references/draw-calls.md).
 - No `Array` / `Dictionary` / `String` alloc in `_process` / `_physics_process`
 - Compare with `StringName` (`&'enemies'`)
 - Prefer typed `Array[T]` and `Packed*Array`
-- `preload` at class scope — never `load()` per frame
+- `@export` scene/resources at class scope — never `load()` per frame
 - Prefer signals over per-frame polling
 
 See [references/cpu.md](references/cpu.md).
@@ -59,5 +59,5 @@ See [references/pools.md](references/pools.md).
 |---|---|
 | Alloc in `_process` | Cache / mutate in place |
 | Unique material per instance | Shared material + uniforms |
-| `load()` / `instantiate()` in hot path | `preload` + pool |
+| `load()` / `instantiate()` in hot path | `@export` scene + pool |
 | Legacy `TileMap` | `TileMapLayer` + single atlas |

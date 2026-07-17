@@ -4,10 +4,13 @@
 
 ```gdscript
 # bad — unique material per sprite
+@export var sprite: Sprite2D
+@export var tint_shader: Shader
+
 func _ready() -> void:
   var mat := ShaderMaterial.new()
-  mat.shader = preload('res://shaders/tint.gdshader')
-  $sprite.material = mat
+  mat.shader = tint_shader
+  sprite.material = mat
 
 # better — share material; duplicate only when uniforms must diverge
 @export var shared_material: ShaderMaterial
@@ -15,7 +18,7 @@ func _ready() -> void:
 func _ready() -> void:
   var mat: ShaderMaterial = shared_material.duplicate()
   mat.set_shader_parameter('tint', Color(randf(), randf(), randf()))
-  $sprite.material = mat
+  sprite.material = mat
 ```
 
 Atlas pack sprites/UI icons. Prefer one TileSet atlas per `TileMapLayer`.

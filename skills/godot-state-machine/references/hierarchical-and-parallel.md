@@ -1,4 +1,4 @@
-# Hierarchical and parallel FSMs
+# Hierarchical and parallel state machines
 
 Back to [SKILL.md](../SKILL.md).
 

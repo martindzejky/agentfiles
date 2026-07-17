@@ -14,7 +14,7 @@ Related: `godot-components`, `godot-scene-organization`.
 | Approach | Use when |
 |----------|----------|
 | Enum + `match` | ≤ ~5 states, little enter/exit logic |
-| Node-based FSM | Characters / complex objects (default for this project) |
+| Node-based finite state machine | Characters / complex objects (default for this project) |
 | Resource-configured | Designers tune transitions/params in Inspector without new scripts |
 
 Upgrade off enums when enter/exit duplicates, animation sync needs hooks, or the match block sprawls.
@@ -27,7 +27,7 @@ Inspector-tunable AI data?       → resource-configured
 Otherwise                        → node-based
 ```
 
-## Node FSM (preferred for complex objects)
+## Node finite state machine (preferred for complex objects)
 
 ```
 entity (root script = public API)
@@ -58,7 +58,7 @@ Internal timers for state duration/cooldowns: create in code per `godot-scripts`
 
 ## Hierarchical / parallel
 
-Flat FSM exploding (movement × combat × …) → split:
+Flat state machine exploding (movement × combat × …) → split:
 
 - **Hierarchical** — parent states own sub-machines (`on_ground` → idle/walk/run)
 - **Parallel** — separate machines per concern (movement + combat); one owner per writable field (e.g. only movement sets `velocity`)
@@ -75,5 +75,5 @@ Export `Array[StateData]` (name, animation, speed, allowed transitions). Runtime
 - Logic still piled on root while "having" a state machine
 - Parallel machines fighting over the same property
 - Unjustified `_process` in every state — prefer signals/input hooks; physics update only when movement needs it
-- Enum FSM that grew past its complexity budget without extracting states
+- Enum state machine that grew past its complexity budget without extracting states
 - Forgetting `exit` before `enter` on transition (leaked timers/tweens/anim state)

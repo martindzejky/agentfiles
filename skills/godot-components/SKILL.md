@@ -14,7 +14,7 @@ Related: `godot-scene-organization`, `godot-dependency-injection`, `godot-resour
 1. **One responsibility** per component scene/script.
 2. **No sibling fishing** — do not `get_parent().get_node('other_component')`. Emit signals or take an `@export` ref wired by the root/glue.
 3. **Root glues** — root script (or a scoped glue component) injects exports and scene-wires signals.
-4. **`@export` for configuration and deps** — assume required exports are set in the scene; only `if` optional ones (`godot-scripts`).
+4. **`@export` for configuration, deps, and components** — root scripts too. Wire refs in the Inspector; never rely on `$child` paths that break when the scene tree changes.
 5. Prefer **scene-wired signals**; connect in code only for dynamic instances.
 6. Save reusable pieces as their own `.tscn`.
 
@@ -55,9 +55,10 @@ func take_damage(amount: int) -> void:
 
 | Pattern | When |
 |---------|------|
-| `@export var health: Health` | Cross-child or configurable deps (preferred) |
-| Root assigns in `_ready` | Dynamic spawn / programmatic scenes |
-| `$child` on root only | Direct known children of the same scene |
+| `@export var health: Health` | Cross-child, component, or configurable deps (preferred) |
+| Root assigns in `_ready` | Dynamic spawn / programmatic scenes only |
+
+Root and child scripts both use `@export` for component refs — not `$sprite`, `$health`, etc.
 
 ```gdscript
 # hurtbox — required dep, no defensive if
@@ -83,5 +84,5 @@ Keep tiny one-off helpers on the root until reuse is real. Simple objects often 
 - Components calling into foreign objects' private components
 - Optional-style null checks on required exports
 - Logic that belongs on the object root living half-in a "reusable" component
-- Deep NodePaths instead of exports
+- Deep NodePaths or `$child` paths instead of exports
 - Component that assumes a specific parent type — prefer injected refs / signals

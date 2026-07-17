@@ -50,6 +50,18 @@ See [references/theme.md](references/theme.md).
 - Wire `focus_neighbor_*` when spatial auto-nav fails
 - Call `grab_focus()` on the first control when a menu opens
 
+## Offset transforms (container-safe animation)
+
+Containers reset child `position` / `scale` / `rotation` when they resort. For slide-in panels, pop effects, or other motion inside a container, use `offset_transform_*` instead:
+
+1. Set `offset_transform_enabled = true`
+2. Animate `offset_transform_position`, `offset_transform_rotation`, or `offset_transform_scale`
+3. Set `offset_transform_pivot` / `offset_transform_pivot_ratio` for scale/rotate origin
+
+By default `offset_transform_visual_only = true` — visual only; hit areas stay put (buttons keep hover). Set to `false` when input should follow the offset.
+
+For tweening or animating controls, see **godot-tweens** (`offset_transform_*` section).
+
 ## Pause menu
 
 ```gdscript
@@ -97,3 +109,4 @@ See [references/pixel-art.md](references/pixel-art.md).
 - Pause UI: `PROCESS_MODE_ALWAYS`
 - Stretch mode/aspect chosen deliberately
 - No UI state polling in `_process` — use signals
+- Container resets motion tweens — use `offset_transform_*`, not `position`/`scale`

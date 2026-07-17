@@ -48,7 +48,7 @@ var health: int:
 | Signals connected in code when they could be scene-wired | Prefer editor connections | Important |
 | Defensive `if` on required `@export` / deps | Required means assume present; optional gets `if` | Important |
 | Missing static types on vars / params / returns | Silent runtime failures | Important |
-| Hard-coded paths for scene-assigned deps (use `@export`) | Fragile wiring — `preload`/`load` of owned constants is fine | Important |
+| Hard-coded `res://` paths or `$` / `get_node` for scene deps | Fragile wiring — use `@export` refs assigned in the scene | Important |
 | New Autoload without justification | Scope creep — scripts rule | Important |
 | `distance_to` in tight comparisons | Prefer `distance_squared_to` | Suggestions / Important if hot |
 | Sibling fishing / `get_parent()` chains | Breaks composition | Important |
