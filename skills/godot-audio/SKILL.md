@@ -100,15 +100,18 @@ Only when tracks must outlive the current scene. Dual `AudioStreamPlayer` + volu
 func play_music(stream: AudioStream) -> void:
   if _active.stream == stream and _active.playing:
     return
+  var outgoing := _active
   var next := _player_b if _active == _player_a else _player_a
   next.stream = stream
   next.volume_db = -80.0
   next.play()
   var tween := create_tween().set_parallel(true)
-  tween.tween_property(_active, 'volume_db', -80.0, crossfade_sec)
+  tween.tween_property(outgoing, 'volume_db', -80.0, crossfade_sec)
   tween.tween_property(next, 'volume_db', 0.0, crossfade_sec)
-  tween.chain().tween_callback(_active.stop)
-  _active = next
+  tween.chain().tween_callback(func() -> void:
+    outgoing.stop()
+    _active = next
+  )
 ```
 
 After registering a new autoload, refresh editor state with the `godot-cli` skill (`godot --headless --import`).
@@ -122,3 +125,4 @@ After registering a new autoload, refresh editor state with the `godot-cli` skil
 | 2D pan missing | need current Camera2D / listener |
 | slider feels wrong | use `linear_to_db` |
 | click/pop | tiny fade on WAV edges |
+| crossfade glitches | swap `_active` only after fade callback |

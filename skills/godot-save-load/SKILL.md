@@ -81,9 +81,10 @@ func load_game(slot: String) -> bool:
     push_error('invalid save: %s' % path)
     return false
   var data: Dictionary = _migrate(parsed)
-  var pos: Dictionary = data['player']['position']
+  var player_data: Dictionary = data['player']
+  var pos: Dictionary = player_data['position']
   player.global_position = Vector2(pos['x'], pos['y'])
-  player.health = data['player']['health']
+  player.health = player_data['health']
   return true
 ```
 
@@ -96,10 +97,14 @@ func _migrate(data: Dictionary) -> Dictionary:
   var player: Dictionary = data['player']
   var version: int = data.get('version', 0)
   if version < 1:
-    player['inventory'] = []
+    if not player.has('position'):
+      player['position'] = { 'x': 0.0, 'y': 0.0 }
+    if not player.has('health'):
+      player['health'] = 100
+    player['inventory'] = player.get('inventory', [])
     version = 1
   if version < 2:
-    player['stamina'] = 100
+    player['stamina'] = player.get('stamina', 100)
     version = 2
   data['player'] = player
   data['version'] = CURRENT_VERSION
@@ -122,6 +127,7 @@ func list_slots() -> PackedStringArray:
     if not dir.current_is_dir() and name.ends_with('.json'):
       slots.append(name.trim_suffix('.json'))
     name = dir.get_next()
+  dir.list_dir_end()
   return slots
 
 
@@ -135,5 +141,6 @@ func delete_save(slot: String) -> void:
 |---------|-----|
 | save works in editor, fails export | use `user://` |
 | Vector2 becomes string/null | store x/y dict |
-| old saves crash | version + `_migrate` |
+| old saves crash | version + `_migrate` with defaults for every loaded field |
+| list_slots fails on repeat | call `list_dir_end()` after `get_next()` loop |
 | “convenient” Resource save | do not — script exec risk |
