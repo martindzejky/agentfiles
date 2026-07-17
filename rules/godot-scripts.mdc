@@ -107,6 +107,19 @@ When creating nodes in code, set name, transforms, exports, and other initial va
 
 Always prefer `distance_squared_to()` over `distance_to()` unless you really need the precise distance. For comparisons, sorting, and nearest-neighbor queries, compare squared distances instead — it's more performant and mathematically equivalent for ordering.
 
+# Math footguns
+
+- Prefer `move_toward(current, target, delta * speed)` over `lerp(current, target, speed * delta)` when you need to actually reach the target. `lerp` with a delta factor never fully arrives.
+- Use `lerp_angle()` / `rotate_toward()` for angles so you don't take the long way around.
+- Guard `normalized()` on near-zero vectors (length checks / `is_zero_approx`) before using the result.
+
+# Await and callables
+
+- After `await`, the node may be gone. Guard with `is_instance_valid(self)` (or the awaited target) before touching the tree again.
+- Do not `await` in `_ready()` when child order / sibling readiness matters — prefer signals, `call_deferred`, or explicit setup from the parent.
+- Lambdas in loops capture by reference. Bind the loop value: `callable.bind(i)` (or pass it as an argument) instead of closing over `i`.
+- Static variables on a script persist across scene changes; they are not reset like an autoload free/recreate. Don't use them as a substitute for scene or autoload state.
+
 # Exported properties
 
 Usually, all script's `@export` props must always be assigned in the object's scene file, and you can assume that (or assert when appropriate). It is part of setting up the object's scene properly. Only when a prop must obviously be optional, you have to check for its existince in code using `if`. Otherwise just assume that it exists.
