@@ -97,14 +97,16 @@ func _migrate(data: Dictionary) -> Dictionary:
   var player: Dictionary = data['player']
   var version: int = data.get('version', 0)
   if version < 1:
-    if not player.has('position'):
+    if not player.has('position') or typeof(player['position']) != TYPE_DICTIONARY:
       player['position'] = { 'x': 0.0, 'y': 0.0 }
-    if not player.has('health'):
+    if not player.has('health') or typeof(player['health']) not in [TYPE_INT, TYPE_FLOAT]:
       player['health'] = 100
-    player['inventory'] = player.get('inventory', [])
+    if not player.has('inventory') or typeof(player['inventory']) != TYPE_ARRAY:
+      player['inventory'] = []
     version = 1
   if version < 2:
-    player['stamina'] = player.get('stamina', 100)
+    if not player.has('stamina') or typeof(player['stamina']) not in [TYPE_INT, TYPE_FLOAT]:
+      player['stamina'] = 100
     version = 2
   data['player'] = player
   data['version'] = CURRENT_VERSION
