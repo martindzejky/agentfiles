@@ -20,7 +20,13 @@ Run this first when you need Godot to pick up project changes such as:
 - regenerated or newly assigned scene/resource `uid`s
 
 ```bash
-godot --import --headless .
+godot --headless --import
+```
+
+If you are not already in the project root, set the project path explicitly:
+
+```bash
+godot --path /path/to/project --headless --import
 ```
 
 ## Verify a specific script
@@ -33,7 +39,7 @@ godot --headless --script path/to/file.gd --check-only
 
 The path is interpreted as relative to the project's root.
 
-Use this second, after `godot --import --headless .`, when the change depends on editor-managed project state. You can also use this check on its own if you did not change anything needing a full editor refresh and just want to verify your changes in scripts.
+Use this second, after `godot --headless --import`, when the change depends on editor-managed project state. You can also use this check on its own if you did not change anything needing a full editor refresh and just want to verify your changes in scripts.
 
 ## Smoke-check a scene
 
@@ -81,8 +87,10 @@ Notes:
 
 - `<preset>` must exactly match a preset name from `export_presets.cfg`.
 - `<path>` should include the output filename, not just the directory, i.e. `dist/web/index.html`.
+- Relative export paths are relative to the project directory (`project.godot`), not the shell cwd. Create the target directory first; it must already exist.
 - Use `--headless` for CLI exports so no window is spawned.
 - Godot must be an editor build, and export templates must be installed.
+- Export already waits for import; a separate `--import` beforehand is usually unnecessary.
 
 ## Notes
 

@@ -10,7 +10,9 @@ globs: *.tscn
 - Match node names to packed scene or component script names (e.g. `squash`, `shadow`, `mouse_events`).
 - When editing a scene, check a few existing scene files for patterns.
 - Signals are always connected in scene files rather than in code when it is possible.
-- Do not put `uid` references in the scene files you create, only add path references and let Godot hook up the correct uid later. When you need Godot to regenerate or assign scene/resource `uid` references, use the `godot-cli` skill instead of asking the user to open the editor manually.
+- Prefer export variables for nodes the root or sibling scripts must find; avoid using node paths or scene unique names, those would be fragile hidden external dependencies of the script.
+- Siblings should not hard-wire each other. The parent/root (or a glue component) injects refs, connects signals, or calls methods.
+- New scenes: path-only `ext_resource`s; do not invent `uid://` values. When editing existing scenes, preserve existing `uid=` (and node `unique_id=` if present). Use the `godot-cli` skill to assign or refresh UIDs instead of asking the user to open the editor manually.
 
 # Composition
 
@@ -26,7 +28,7 @@ The world contains various autoloads and system objects in the root, then there'
 - I prefer constructing game objects out of components declaratively, like making them from reusable well-defined lego pieces, instead of coding all behaviour in the root script.
 - Components encapsulate reusable behaviours. Object-specific logic and glue should go into its root script.
 - The root script glues together the components. Components usually don't know about each other, unless one directly depends on another. There may also be some glue-like components which connect other components and are not reusable, but there are limited and well-scoped.
-- Some object scenes are not valid in total isolation. They may expect runtime data, autoload state, or supporting nodes from the full world scene. When smoke-checking such scenes, expected context/setup errors do not automatically mean the object is broken. At the same time, try to create object scenes that are as independant from external environment as possible, which is generally a good design practice.
+- Some object scenes are not valid in total isolation. They may expect runtime data, autoload state, or supporting nodes from the full world scene. When smoke-checking such scenes, expected context/setup errors do not automatically mean the object is broken. At the same time, try to create object scenes that are as independent from external environment as possible, which is generally a good design practice.
 - Separate simulation/game/logic/data pieces of an object from visual pieces. Simulation pieces are components which run the game and don't know about visuals. Visuals derive their state from the simulation. For example: sprite updates based on the state of the object or a component, instead of the state imperatively updating the sprite.
 
 Usually a complete game object has these parts:

@@ -6,7 +6,7 @@ globs: *.gd,*.gdscript
 
 Write stupidly simple code, not something too smart or complicated. Prefer easy solutions. Use Godot's and game dev's best practices and latest functions.
 
-Build composable, signal-driven Godot 4 gameplay systems with strict type safety. Enforce the "everything is a node" philosophy through correct scene and node composition. Design signal architectures that decouple systems without losing type safety. Apply static typing to eliminate silent runtime failures.
+Build composable, signal-driven Godot 4 gameplay systems with strict type safety. Enforce the "everything is a node" philosophy through correct scene and node composition. Prefer nodes for behaviour and scene structure. Put pure data on Resources/RefCounted, not on nodes. Design signal architectures that decouple systems without losing type safety. Apply static typing to eliminate silent runtime failures.
 
 Every variable, function parameter, and return type must be explicitly typed. Use `:=` for inferred types only when the type is unambiguous from the right-hand expression. Typed arrays (`Array[EnemyData]`, `Array[Node]`) must be used everywhere.
 
@@ -32,7 +32,7 @@ print('hello')
 
 # Naming and functions
 
-Use single quotes! Use underscore_case for all names, variable names, function names, and also file names. These functions should always start with a leading underscore:
+Use single quotes! Use underscore_case for file names, variables, functions, and signals. Use PascalCase for `class_name` / type names. Use CONSTANT_CASE for constants and enum members. Node names follow `godot-scenes` (lowercase underscore). These functions should always start with a leading underscore:
 
 - built-in callbacks such as `_ready` or `_process`
 - script's private functions that should not be exposed to other scripts
@@ -49,7 +49,9 @@ This does not apply to for loops!
 
 # Signals
 
-Signals should always be hooked up in the scene files if possible and not in the scripts and `_ready` functions. The exception is for dynamically instantiated objects, those cannot be set up in the editor. Never connect a signal to a method that does not exist at connection time. Use `has_method()` checks or rely on static typing to validate at editor time.
+Name signals in past tense for events that already happened: `door_opened`, `health_changed`, `item_collected`, not commands like `open_door` or `on_hit`.
+
+Signals should always be hooked up in the scene files if possible and not in the scripts and `_ready` functions. The exception is for dynamically instantiated objects, those cannot be set up in the editor. Never connect a signal to a method that does not exist at connection time. Prefer typed Callables / `is Type` checks over `has_method()` for gameplay APIs.
 
 # Timers
 
@@ -92,6 +94,14 @@ Prefer reacting to signals over polling in `_process` whenever possible. If a va
 # Updates as needed instead of `_process`
 
 Do **not** use `_process` / `_physics_process` to "keep things in sync." Prefer `_ready`, signals, or explicit on-change calls. Parent transforms already move children. Reserve per-frame updates for things that actually change every frame (mouse follow, script-driven animation, interpolation). If you're about to sync in `_process`, stop and justify why.
+
+# Input and physics
+
+Prefer `_unhandled_input` (or `_input` when you must run before UI) for discrete actions such as jump, interact, or pause. Prefer `Input` polling in `_physics_process` for held / analog movement, and call `move_and_slide()` there — not in `_process`. Do not rely on `is_action_just_pressed` only inside `_process` / `_physics_process` when a one-shot must not be missed; handle it from an input callback (or buffer a flag there).
+
+# Runtime node setup
+
+When creating nodes in code, set name, transforms, exports, and other initial values _before_ `add_child()`, unless the property truly requires the node to already be in the tree (for example some global-position cases).
 
 # Distance comparisons
 
@@ -148,6 +158,12 @@ func _exit_tree() -> void:
 
 Never hard-code file paths! Instead use `@export var` and assign in scenes.
 
+# Resources for data
+
+Node composition is for behaviour and scene structure, not for pure data. Prefer `class_name X extends Resource` for defs, stats, tables, and tunables. Keep logic on nodes, keep data on resources.
+
+Exported resources are shared by path. If an instance needs its own mutable copy, `duplicate()` (or deep-duplicate) before mutating — never write runtime state into a shared `.tres` used by many scenes.
+
 # Global classes
 
 Prefer Godot global classes registered with `class_name` when extending project scripts. Do not extend scripts by `res://...` path.
@@ -156,9 +172,9 @@ If you add, rename, or start using a new `class_name`, use the `godot-cli` skill
 
 # Isolation and composition
 
-Follow the "everything is a node" philosophy. Prefer composition over inheritance. Every scene must be independently instancable, no assumptions about parent node type or sibling existence.
+Follow the "everything is a node" philosophy. Prefer composition over inheritance. Design scenes to be as independently instantiable as possible: no hard assumptions about parent node type or sibling existence. When a scene needs external setup, expose `@export`s / signals for the parent to inject.
 
-Use `_ready()` for initialization that requires the node to be in the scene tree. Disconnect signals in `_exit_tree()` or use `connect(..., CONNECT_ONE_SHOT)` for fire-and-forget connections. Use `queue_free()` for safe deferred node removal.
+Use `_ready()` for initialization that requires the node to be in the scene tree. Disconnect signals in `_exit_tree()` when the emitter can outlive the receiver (for example autoload / event-bus listeners), or use `connect(..., CONNECT_ONE_SHOT)` for fire-and-forget connections. Use `queue_free()` for safe deferred node removal.
 
 Objects in the game are usually isolated from each other and only interact with each other by calling the other object's public methods (i.e. a unit calls `open()` on a door).
 
@@ -168,7 +184,7 @@ Be careful with autoloads and do not overuse them. Introducing a new autoload mu
 
 If you add or register a new autoload in the project, use the `godot-cli` skill to refresh Godot's editor-managed project state before relying on it elsewhere.
 
-Utilize one global event bus autoload for global game events and easy decoupling.
+Utilize one global event bus autoload for distant / cross-scene game events. Prefer scene-local signal wiring or parent mediation inside a single scene.
 
 Utilize Godot's node groups for reference-free announcements (all units should receive a tick) and decoupled global access (a manager should update its state). This can be done easily in script:
 
