@@ -26,15 +26,31 @@ world.add_child.call_deferred(enemy)
 
 Prefer for short parallel jobs. **Always** `wait_for_task_completion` / `wait_for_group_task_completion` or resources leak.
 
-```gdscript
-func _process(_delta: float) -> void:
-  var task_id := WorkerThreadPool.add_group_task(_process_enemy_ai, enemies.size())
-  # ... other main-thread work ...
-  WorkerThreadPool.wait_for_group_task_completion(task_id)
+Workers must operate on plain data (positions, ids, numbers) — never live Nodes. Snapshot on the main thread, compute off-thread, apply on the main thread.
 
-func _process_enemy_ai(enemy_index: int) -> void:
-  var enemy = enemies[enemy_index]
-  # pure CPU — no scene-tree mutation
+```gdscript
+# main thread: snapshot data only
+var snapshots: Array[Dictionary] = []
+for enemy in enemies:
+  snapshots.append({
+    'id': enemy.get_instance_id(),
+    'pos': enemy.global_position,
+  })
+
+var results: Array[Dictionary] = []
+results.resize(snapshots.size())
+
+var task_id := WorkerThreadPool.add_group_task(
+  func(i: int) -> void:
+    var snap: Dictionary = snapshots[i]
+    # pure CPU on snap data — no Node access
+    var desired: Vector2 = snap['pos'] + Vector2.RIGHT
+    results[i] = {'id': snap['id'], 'pos': desired}
+  ,
+  snapshots.size()
+)
+WorkerThreadPool.wait_for_group_task_completion(task_id)
+# main thread: apply results to nodes
 ```
 
 Do not wait on a pool task from inside another pool task (`ERR_BUSY` deadlock risk).
@@ -50,7 +66,7 @@ ResourceLoader.load_threaded_request(path)
 # poll load_threaded_get_status each frame; only then load_threaded_get
 ```
 
-Statuses: `IN_PROGRESS` / `LOADED` / `FAILED` / `INVALID_RESOURCE`.
+Statuses: `THREAD_LOAD_IN_PROGRESS` / `THREAD_LOAD_LOADED` / `THREAD_LOAD_FAILED` / `THREAD_LOAD_INVALID_RESOURCE`.
 
 ## Pitfalls
 

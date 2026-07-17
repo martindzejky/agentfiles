@@ -21,7 +21,7 @@ Monitors: FPS, Process, Physics Process, Total Draw Calls, Video RAM, Object Cou
 
 ## Draw calls / batching
 
-- Wrap shared-texture siblings in `CanvasGroup`
+- Wrap related siblings in `CanvasGroup` when you need one composite draw (especially overlapping translucency)
 - Atlas sprites; one atlas per tile layer
 - Unique `ShaderMaterial` / `material = Material.new()` breaks batches — share materials; vary uniforms
 - Cull off-screen work with `VisibleOnScreenNotifier2D`

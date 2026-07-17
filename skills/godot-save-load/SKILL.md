@@ -91,18 +91,22 @@ func load_game(slot: String) -> bool:
 
 ```gdscript
 func _migrate(data: Dictionary) -> Dictionary:
+  if not data.has('player') or typeof(data['player']) != TYPE_DICTIONARY:
+    data['player'] = {}
+  var player: Dictionary = data['player']
   var version: int = data.get('version', 0)
   if version < 1:
-    data['player']['inventory'] = []
+    player['inventory'] = []
     version = 1
   if version < 2:
-    data['player']['stamina'] = 100
+    player['stamina'] = 100
     version = 2
+  data['player'] = player
   data['version'] = CURRENT_VERSION
   return data
 ```
 
-Migrate `v1 → v2 → … → current` in order. Never require players to delete old slots.
+Ensure nested dicts exist before writing keys. Migrate `v1 → v2 → … → current` in order. Never require players to delete old slots.
 
 ## Slots
 

@@ -94,7 +94,7 @@ anim_tree['parameters/BlendSpace2D/blend_position'] = input_dir
 ## SpriteFrames pitfalls
 
 - Loop idle/walk; leave attack/death non-looping.
-- Godot 4.7+: prefer `set_animation_loop_mode` (`LOOP_NONE` / `LOOP_LINEAR` / `LOOP_PINGPONG`) over deprecated bool loop setters.
+- Prefer `set_animation_loop_mode` (`LOOP_NONE` / `LOOP_LINEAR` / `LOOP_PINGPONG`) over deprecated `set_animation_loop(bool)`.
 - Wrong track node path → animation “plays” but sprite never changes. Fix paths after renames.
 - Non-looping clip + `play()` every physics frame can look stuck at frame 0 if you force-restart; same-name no-op is fine — guard only if you intentionally restarts.
 

@@ -46,4 +46,4 @@ Input.start_joy_vibration(device, weak_magnitude, strong_magnitude, duration)
 Input.stop_joy_vibration(device)
 ```
 
-Do not assume device `0` is keyboard/mouse — joypads often use `0`. See SKILL.md for 4.7 `DEVICE_ID_*` constants.
+Do not assume device `0` is keyboard/mouse — joypads often use `0`. See SKILL.md for `DEVICE_ID_*` constants.

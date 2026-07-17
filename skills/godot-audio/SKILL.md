@@ -61,7 +61,7 @@ Positional SFX relative to the current `Camera2D` (or an `AudioListener2D` if yo
 | `max_polyphony` | overlapping plays on one node |
 | `bus` | usually `'SFX'` |
 
-Godot 4.7+: default `area_mask` is `0` (Area2D bus override off). Set mask to layer 1 if you use underwater-style bus overrides.
+Default `area_mask` is `0` (Area2D bus override off). Set mask to the Area2D layer bit if you use bus-override zones.
 
 ## SFX pool idea
 

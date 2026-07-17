@@ -18,10 +18,10 @@ description: Handle Godot 4 input — discrete `_unhandled_input` vs poll in `_p
 ## Callback order
 
 ```
-_input → _shortcut_input → UI Controls → _unhandled_key_input → _unhandled_input
+_input → UI Controls → _shortcut_input → _unhandled_key_input → _unhandled_input
 ```
 
-Input walks the tree deepest-child-first. UI consumes focus/clicks before gameplay `_unhandled_input`.
+Input walks the tree deepest-child-first. UI consumes focus/clicks before `_shortcut_input` and gameplay `_unhandled_input`.
 
 ## Discrete vs poll
 
@@ -79,9 +79,9 @@ func _on_joy_connection_changed(device: int, connected: bool) -> void:
 
 See [references/rebinding.md](references/rebinding.md).
 
-## Godot 4.7 DEVICE_ID
+## Keyboard / mouse device IDs
 
-Mouse/keyboard device ids are no longer `0`. Prefer `event is InputEventKey` (or type checks) over `event.device == 0`. Constants: `InputEvent.DEVICE_ID_KEYBOARD` (16), `InputEvent.DEVICE_ID_MOUSE` (32). Joypads may use device `0`.
+Keyboard/mouse events use `InputEvent.DEVICE_ID_KEYBOARD` (16) and `InputEvent.DEVICE_ID_MOUSE` (32), not `0`. Joypads may use device `0`. Prefer `event is InputEventKey` (or type checks) over `event.device == 0`.
 
 ## Pitfalls
 

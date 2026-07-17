@@ -28,7 +28,7 @@ func _physics_process(_delta: float) -> void:
 
 - Create animations in the SpriteFrames resource on the node.
 - Mark locomotion loops; one-shots stay non-looping.
-- Godot 4.7+: `sprite.sprite_frames.set_animation_loop_mode(&'sway', SpriteFrames.LOOP_PINGPONG)`.
+- `sprite.sprite_frames.set_animation_loop_mode(&'sway', SpriteFrames.LOOP_PINGPONG)`.
 
 ## Sync with gameplay
 

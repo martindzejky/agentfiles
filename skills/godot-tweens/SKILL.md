@@ -94,7 +94,7 @@ Signals: `finished`, `step_finished`, `loop_finished`. Prefer scene wiring when 
 
 **Relative drift:** `as_relative()` adds every loop — fine for one-shots, bad for infinite loops. Prefer absolute from/to for cycles.
 
-## Empty tween (4.7+)
+## Empty tween
 
 ```gdscript
 var tween := create_tween()

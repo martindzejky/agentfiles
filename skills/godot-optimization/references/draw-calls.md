@@ -1,6 +1,6 @@
 # Draw calls (2D thin)
 
-`CanvasGroup` batches children when they share texture, blend mode, and shader. Clip children / occluders between them break batches.
+`CanvasGroup` renders all child `CanvasItem`s as one draw (backbuffer composite). Use for correct translucency stacking and fewer draw passes. Clip children / occluders between groups break batching. Automatic 2D batching (same texture, blend mode, shader) applies separately without `CanvasGroup`.
 
 ```gdscript
 # bad — unique material per sprite

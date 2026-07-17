@@ -34,7 +34,7 @@ void fragment() {
 | `SCREEN_UV` | Screen-space |
 | `VERTEX` | In `vertex()` |
 
-Screen read (Godot 4 — `SCREEN_TEXTURE` removed):
+Screen read (`SCREEN_TEXTURE` removed; use a uniform):
 
 ```glsl
 uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;

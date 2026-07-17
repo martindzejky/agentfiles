@@ -21,7 +21,7 @@ description: Build Control UI — containers, anchors, themes, focus, pause menu
 | `PanelContainer` | Background + children |
 | `ScrollContainer` | Overflow lists |
 | `TabContainer` | Settings sections |
-| `FoldableContainer` | Accordion sections (4.5+) |
+| `FoldableContainer` | Accordion sections |
 
 - Expand fillers: `size_flags_horizontal = SIZE_EXPAND_FILL`
 - Prevent collapse: `custom_minimum_size`
@@ -84,7 +84,7 @@ See [references/adaptive-layouts.md](references/adaptive-layouts.md).
 
 ## Pixel art & DPI
 
-- Pixel art: stretch `viewport`, filter `Nearest`, integer `content_scale_factor`
+- Pixel art: stretch `viewport`, aspect `keep`, stretch scale_mode `integer`, filter `Nearest`
 - High-DPI: scale from `DisplayServer.screen_get_dpi()` via `content_scale_factor`
 
 See [references/pixel-art.md](references/pixel-art.md).

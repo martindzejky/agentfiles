@@ -21,7 +21,7 @@ Isolated object scenes may error from missing world context — distinguish that
 | Tool | Use |
 |------|-----|
 | `print` / `print_rich` | Values / colour-coded logs |
-| `print_debug` | Debug-only noise (stripped from release) |
+| `print_debug` | Like `print()`, plus stack frame when debugger is attached (still prints in release) |
 | `push_warning` / `push_error` | Recoverable vs programmer errors (stack traces) |
 | `breakpoint` | Pause in debugger |
 | Remote scene tree | Live node Inspector while running |

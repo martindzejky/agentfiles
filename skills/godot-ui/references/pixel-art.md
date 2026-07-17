@@ -3,18 +3,22 @@
 ## Project
 
 - Stretch mode: `viewport`
-- Aspect: `keep` (or integer scale script)
+- Aspect: `keep`
+- Stretch scale mode: `integer`
 - `Rendering → Textures → Canvas Textures → Default Texture Filter` → `Nearest`
 
 ## Integer scale
 
-```gdscript
-const BASE_SIZE := Vector2i(320, 180)
+Prefer project stretch settings over hand-rolled screen math:
 
-func _apply_integer_scale() -> void:
-  var screen := DisplayServer.screen_get_size()
-  var s := maxi(1, mini(screen.x / BASE_SIZE.x, screen.y / BASE_SIZE.y))
-  get_window().content_scale_factor = float(s)
+```gdscript
+# Project Settings → Display → Window:
+#   Stretch Mode = viewport
+#   Stretch Aspect = keep
+#   Stretch Scale Mode = integer
+
+# Runtime equivalent:
+get_window().content_scale_stretch = Window.CONTENT_SCALE_STRETCH_INTEGER
 ```
 
 ## DPI (non–pixel-art UI)
