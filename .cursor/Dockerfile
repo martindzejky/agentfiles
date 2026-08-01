@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     git \
     build-essential \
+    python3 \
     sudo \
     && rm -rf /var/lib/apt/lists/*
 
@@ -43,6 +44,9 @@ RUN mkdir -p /home/ubuntu/.cursor && \
     HOME=/home/ubuntu ./install
 
 RUN chown -R ubuntu:ubuntu /home/ubuntu
+
+# Workaround: expose ~/.cursor at the filesystem root so Cursor's upward walk finds it
+RUN ln -s /home/ubuntu/.cursor /.cursor
 
 ########################################################
 # SET USER
