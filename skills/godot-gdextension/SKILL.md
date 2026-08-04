@@ -13,7 +13,7 @@ Native shared library loaded by a **stock** engine — no custom engine build. I
 - Wrapping a C/C++ library you must call directly
 - Building a language binding
 
-C++ **modules** are the other native option, but they compile into the engine and force shipping a custom engine binary. GDExtension ships only the library.
+C++ **modules** are the other native option, but they compile into the engine and force shipping a custom engine binary. GDExtension ships only the library. A custom `TextServer` is the one thing that still needs a module.
 
 Three pieces make it work: `gdextension_interface.h` (C ABI), `extension_api.json` (exposed engine API), and the `*.gdextension` load config.
 
@@ -22,8 +22,8 @@ Three pieces make it work: `gdextension_interface.h` (C ABI), `extension_api.jso
 ```bash
 mkdir gdextension_example && cd gdextension_example
 git init
-# branch must match the target engine version, '4.x' in the docs is a placeholder
-git submodule add -b 4.3 https://github.com/godotengine/godot-cpp
+# use the godot-cpp branch matching the engine version you target
+git submodule add -b <engine-version> https://github.com/godotengine/godot-cpp
 cd godot-cpp && git submodule update --init && cd ..
 ```
 
@@ -41,7 +41,7 @@ gdextension_example/
 - Build with `scons platform=<platform>` (omit for the current one, `platform=list` to enumerate). Default target is **debug**; add `target=template_release` for optimized builds. Output lands in `project/bin/`.
 - Take the `SConstruct` from the C++ tutorial or [godot-cpp-template](https://github.com/godotengine/godot-cpp-template) instead of hand-rolling one — the template also ships a GitHub Actions matrix for cross-platform builds.
 - Develop and test against the **earliest** engine version you intend to support.
-- godot-cpp 10.x (`master`, still beta) is versioned independently of the engine: pick the target with `scons api_version=4.3` (or `custom_api_file=extension_api.json` from `godot --dump-extension-api`) instead of a version branch.
+- Newer godot-cpp is versioned independently of the engine: on those branches pick the target with `scons api_version=<engine-version>`, or with `custom_api_file=extension_api.json` dumped by your engine (`godot --dump-extension-api`), instead of relying on a matching branch.
 
 ## Bind a class
 
@@ -113,7 +113,7 @@ GDExtensionBool GDE_EXPORT example_library_init(
 ```ini
 [configuration]
 entry_symbol = "example_library_init"
-compatibility_minimum = "4.3"
+compatibility_minimum = "<engine-version>"
 reloadable = true
 
 [libraries]
@@ -131,10 +131,10 @@ linux.release.x86_64 = "./libgdexample.linux.template_release.x86_64.so"
 
 ## Compatibility
 
-- Forward, not backward: an extension built for 4.2 loads in 4.3, but a 4.3 one will not load in 4.2. Exception: 4.0 extensions do not work in 4.1+.
-- `compatibility_minimum` (4.1+) = lowest engine version you support; `compatibility_maximum` (4.3+) locks out newer ones.
-- `reloadable = true` reloads on recompile without restarting the editor — godot-cpp 4.2+, **debug builds only**, meant for development.
-- Rebuild against bindings matching the engine when upgrading. Notably 4.7 changed `Object.is_class()` to take a `StringName`, deprecated the `object_cast_to` / `classdb_get_class_tag` interface functions in favour of `is_class` casts, and dropped GDExtension support for custom text servers (a `TextServer` now needs an engine module).
+- Forward, not backward: an extension built against an older engine minor loads in newer ones, but one built against a newer minor will not load in an older engine.
+- `compatibility_minimum` = lowest engine version you support; `compatibility_maximum` locks out newer ones.
+- `reloadable = true` reloads on recompile without restarting the editor — **debug builds only**, meant for development.
+- After an engine upgrade, rebuild against matching bindings. Engine releases occasionally change interface signatures or deprecate interface functions, which only bites native code, so skim the GDExtension notes in the migration guide when upgrading.
 
 ## Use from GDScript
 

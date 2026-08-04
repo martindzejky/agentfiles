@@ -1,6 +1,6 @@
 # Rust — godot-rust / gdext
 
-Community binding (MPL-2.0), not official. Maintained releases need **Godot 4.2+**. godot-cpp is the official path — back to [SKILL.md](../SKILL.md).
+Community binding (MPL-2.0), not official — godot-cpp is the official path. Back to [SKILL.md](../SKILL.md).
 
 ## Crate
 
@@ -64,7 +64,7 @@ Same as C++ except the entry symbol, which gdext fixes:
 ```ini
 [configuration]
 entry_symbol = "gdext_rust_init"
-compatibility_minimum = "4.2"
+compatibility_minimum = "<engine-version>"
 ```
 
-Since 4.2, a gdext extension loads on any Godot whose runtime version is >= the API version it was built against.
+A gdext extension loads on any engine whose runtime version is at least the API version it was built against.
