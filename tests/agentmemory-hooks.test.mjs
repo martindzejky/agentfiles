@@ -253,7 +253,7 @@ test('afterAgentResponse records only the truncated final response', async () =>
       'tool_input',
       'tool_output',
     ]);
-    assert.equal(observe.body.data.tool_name, 'cursor_agent_response');
+    assert.equal(observe.body.data.tool_name, 'conversation');
     assert.equal(observe.body.data.tool_input, observe.body.timestamp);
     assert.equal(observe.body.data.tool_output.length, 10_000);
     assert.equal(result.stdout.includes('response-'), false);

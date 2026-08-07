@@ -33,7 +33,7 @@ AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
 the payloads:
 
 - The assistant response is sent as `post_tool_use` with
-  `tool_name: "cursor_agent_response"` and the text in `tool_output`. A custom
+  `tool_name: "conversation"` and the text in `tool_output`. A custom
   hook type is stored but never summarized, which produces empty memories.
 - Both capture hooks send the observation timestamp as `tool_input`. It is not
   tool data; without it the dedup hash is identical for every event in a

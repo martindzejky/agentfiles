@@ -37,7 +37,7 @@ async function main() {
         cwd,
         timestamp,
         data: {
-          tool_name: 'cursor_agent_response',
+          tool_name: 'conversation',
           tool_input: timestamp,
           tool_output: response,
         },
