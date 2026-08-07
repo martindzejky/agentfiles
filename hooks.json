@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "./hooks/agentmemory/session-start.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "./hooks/agentmemory/before-submit-prompt.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ],
+    "afterAgentResponse": [
+      {
+        "command": "./hooks/agentmemory/after-agent-response.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ],
+    "preCompact": [
+      {
+        "command": "./hooks/agentmemory/pre-compact.mjs",
+        "timeout": 4,
+        "failClosed": false
+      }
+    ],
+    "stop": [
+      {
+        "command": "./hooks/agentmemory/stop.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "./hooks/agentmemory/session-end.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ]
+  }
+}

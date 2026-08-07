@@ -10,19 +10,22 @@ This skill is Cursor-only. Prefer user-level hooks in `~/.cursor/hooks.json` for
 
 ## Quick start
 
-Target layout (not installed yet in this repo; add when you set hooks up):
+This repo installs the following local user hooks:
 
 ```json
 {
   "version": 1,
   "hooks": {
-    "sessionStart": [{ "command": "./hooks/agentmemory/session-start.sh" }],
-    "sessionEnd": [{ "command": "./hooks/agentmemory/session-end.sh" }],
-    "beforeSubmitPrompt": [{ "command": "./hooks/agentmemory/prompt.sh" }],
-    "postToolUse": [{ "command": "./hooks/agentmemory/tool.sh" }],
-    "afterFileEdit": [{ "command": "./hooks/agentmemory/edit.sh" }],
-    "preCompact": [{ "command": "./hooks/agentmemory/pre-compact.sh" }],
-    "stop": [{ "command": "./hooks/agentmemory/stop.sh" }]
+    "sessionStart": [{ "command": "./hooks/agentmemory/session-start.mjs" }],
+    "beforeSubmitPrompt": [
+      { "command": "./hooks/agentmemory/before-submit-prompt.mjs" }
+    ],
+    "afterAgentResponse": [
+      { "command": "./hooks/agentmemory/after-agent-response.mjs" }
+    ],
+    "preCompact": [{ "command": "./hooks/agentmemory/pre-compact.mjs" }],
+    "stop": [{ "command": "./hooks/agentmemory/stop.mjs" }],
+    "sessionEnd": [{ "command": "./hooks/agentmemory/session-end.mjs" }]
   }
 }
 ```
@@ -33,19 +36,23 @@ Watch captures at `http://localhost:3113` once the server is up.
 
 ## What the hooks should do
 
-- `sessionStart` / `sessionEnd`: frame each unit of work so `handoff` and `session-history` can resume it.
+- `sessionStart` / `sessionEnd`: frame each local conversation so `handoff` and `session-history` can resume it.
 - `beforeSubmitPrompt`: capture intent from the user prompt.
-- `postToolUse` / `afterFileEdit`: capture what changed and why. Raw material for `recall` and `recap`.
-- `preCompact`: preserve high-signal context before Cursor trims the window.
-- `stop`: close the turn, optionally flush a short summary.
+- `afterAgentResponse`: capture final outcomes without tool or thought content.
+- `preCompact`: record compaction metadata and checkpoint a summary.
+- `stop`: summarize without ending a conversation that may continue.
 
-Post observations to the agentmemory REST base (`AGENTMEMORY_URL`, default `http://localhost:3111`). Fail open: a down server must not block the agent.
+Hooks require `AGENTMEMORY_URL` and `AGENTMEMORY_SECRET` in the Cursor hook process environment. They fail open: missing configuration or a down server must not block the agent.
 
 ## Important
 
-- Capture scripts should spend no LLM tokens. `AGENTMEMORY_AUTO_COMPRESS` and `AGENTMEMORY_INJECT_CONTEXT` stay separate opt-ins.
+- Hook scripts never call an LLM provider directly. Summarization, reflection,
+  consolidation, and any resulting token usage happen on the configured
+  AgentMemory server. `AGENTMEMORY_INJECT_CONTEXT=true` must also be present in
+  the Cursor hook process to opt into returning server context.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
-- Until hooks are installed, use `remember` for explicit saves.
+- MCP server environment variables may not be inherited by hook processes.
+- If hooks are unavailable, use `remember` for explicit saves.
 
 ## See also
 

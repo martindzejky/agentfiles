@@ -2,19 +2,16 @@
 
 ## Event map
 
-| Cursor event                               | Capture job                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------ |
-| `sessionStart`                             | Open or resume a memory session for the workspace cwd              |
-| `sessionEnd`                               | Mark the session completed or abandoned                            |
-| `beforeSubmitPrompt`                       | Store user intent / prompt snapshot                                |
-| `postToolUse`                              | Store successful tool outcomes (files touched, decisions)          |
-| `postToolUseFailure`                       | Store failures worth recalling later                               |
-| `afterFileEdit`                            | Store edit summaries with paths                                    |
-| `beforeMCPExecution` / `afterMCPExecution` | Optional: audit MCP calls without double-logging agentmemory tools |
-| `preCompact`                               | Snapshot high-importance notes before context trim                 |
-| `stop`                                     | End-of-turn flush                                                  |
+| Cursor event          | Capture job                                             |
+| --------------------- | ------------------------------------------------------- |
+| `sessionStart`        | Open or resume a memory session; optionally add context |
+| `beforeSubmitPrompt`  | Initialize the session and store the user prompt        |
+| `afterAgentResponse`  | Store the final assistant response                      |
+| `preCompact`          | Record compaction metadata and checkpoint a summary     |
+| `stop`                | Summarize without ending the conversation               |
+| `sessionEnd`          | Mark the local session complete                         |
 
-Skip `beforeShellExecution` for capture. Gate shell there only if you want policy, not memory.
+No tool, thought, file, shell, MCP, or subagent hooks are installed.
 
 ## Install targets
 
@@ -23,17 +20,19 @@ Skip `beforeShellExecution` for capture. Gate shell there only if you want polic
 | User (global) | `~/.cursor/hooks.json`      | `~/.cursor/`     |
 | Project       | `<repo>/.cursor/hooks.json` | project root     |
 
-Cloud agents only see project hooks. User hooks stay local.
+Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
+currently supports `beforeSubmitPrompt`, `afterAgentResponse`, `preCompact`,
+and `stop`, but not `sessionStart` or `sessionEnd`.
 
 ## Transport
 
-Prefer REST from hook scripts:
+Use REST from hook scripts:
 
-- Base URL: `AGENTMEMORY_URL` or `http://localhost:3111`
-- Auth: send `Authorization: Bearer $AGENTMEMORY_SECRET` only when that secret is set
+- Base URL: required `AGENTMEMORY_URL`
+- Auth: required `Authorization: Bearer $AGENTMEMORY_SECRET`
 - Fail open on network errors so a down daemon does not stall Cursor
 
-Exact ingest paths depend on your agentmemory version. Confirm against agentmemory-rest-api before hard-coding.
+MCP-scoped environment variables may not be inherited by hook processes.
 
 ## Debug checklist
 
@@ -45,4 +44,7 @@ Exact ingest paths depend on your agentmemory version. Confirm against agentmemo
 
 ## Status in this repo
 
-Hooks are planned, not shipped yet. This skill documents the Cursor mapping so setup can follow the same shape as the other agentmemory skills.
+The six user-level hooks are installed from `hooks.json` and
+`hooks/agentmemory/`. Implementation details, Cloud limitations, smoke-test
+instructions, and the pinned upstream audit trail are in
+`hooks/agentmemory/README.md`.
