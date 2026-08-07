@@ -44,6 +44,11 @@ Watch captures at `http://localhost:3113` once the server is up.
 - `preCompact`: record compaction metadata and checkpoint a summary.
 - `stop`: summarize without ending a conversation that may continue.
 
+These Cursor lifecycle hooks do not link git commits. `commit-context` and
+`commit-history` need a separate git `post-commit` hook that POSTs to
+`/agentmemory/session/commit` (agentmemory ships one as
+`plugin/scripts/post-commit.mjs`). That hook is not installed here yet.
+
 Hooks load `hooks/agentmemory/.env` into their process environment and require
 `AGENTMEMORY_URL` and `AGENTMEMORY_SECRET`. Explicitly inherited environment
 variables take precedence. They fail open: missing configuration or a down

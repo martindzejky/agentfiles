@@ -28,7 +28,7 @@ Then restart Cursor or reload MCP so it picks up the server. Confirm the agent l
 ## See also
 
 - agentmemory-mcp-tools, agentmemory-rest-api, agentmemory-config.
-- agentmemory-hooks for automatic capture via Cursor hooks (planned).
+- agentmemory-hooks for automatic capture via Cursor hooks.
 
 ## Reference
 

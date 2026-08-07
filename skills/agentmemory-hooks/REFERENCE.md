@@ -13,6 +13,10 @@
 
 No tool, thought, file, shell, MCP, or subagent hooks are installed.
 
+Commit linking is outside this Cursor event map. A git `post-commit` hook that
+calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
+`commit-history`. This repo does not install that git hook yet.
+
 The capture hooks never call `/session/start`; it replaces the session record
 and resets `firstPrompt` and `observationCount`. `/observe` creates the session
 on its own when `project` and `cwd` are present. The assistant response rides on
