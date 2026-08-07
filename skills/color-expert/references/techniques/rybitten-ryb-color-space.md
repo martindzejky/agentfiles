@@ -46,8 +46,8 @@ Each includes metadata: title, author, year, reference image.
 ## API
 
 ```javascript
-import { ryb2rgb, rybHsl2rgb } from "rybitten";
-import { cubes } from "rybitten/cubes";
+import { ryb2rgb, rybHsl2rgb } from 'rybitten';
+import { cubes } from 'rybitten/cubes';
 
 // Basic RYB → RGB
 const rgb = ryb2rgb([1, 0, 0.5]); // full red, no yellow, half blue
@@ -56,7 +56,7 @@ const rgb = ryb2rgb([1, 0, 0.5]); // full red, no yellow, half blue
 const rgb = rybHsl2rgb([120, 1, 0.5]); // hue 120° in RYB = different from HSL 120°
 
 // Use Munsell's color system instead of Itten's
-const munsellCube = cubes.get("munsell").cube;
+const munsellCube = cubes.get('munsell').cube;
 const rgb = rybHsl2rgb([0, 1, 0.5], { cube: munsellCube });
 ```
 

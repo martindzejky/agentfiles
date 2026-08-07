@@ -157,15 +157,15 @@ Wire native nodes in scene files like any other node; `new()` only for dynamic s
 
 ## Pitfalls
 
-| Symptom | Cause |
-|---|---|
-| Extension never loads | `entry_symbol` differs from the exported `extern "C"` symbol |
+| Symptom                                    | Cause                                                                                |
+| ------------------------------------------ | ------------------------------------------------------------------------------------ |
+| Extension never loads                      | `entry_symbol` differs from the exported `extern "C"` symbol                         |
 | Works locally, missing on another platform | wrong path / arch key in `[libraries]`, or a broader tag listed above a specific one |
-| Class unknown in an exported game | `template_release` binaries not built or not shipped |
-| Load failure on the target engine | `compatibility_minimum` too low, or bindings built against a newer engine |
-| Class not registered | registration not gated on `MODULE_INITIALIZATION_LEVEL_SCENE` |
-| Method unknown from GDScript | not bound in `_bind_methods` |
-| Hot reload does nothing | release build, or `reloadable` not set |
+| Class unknown in an exported game          | `template_release` binaries not built or not shipped                                 |
+| Load failure on the target engine          | `compatibility_minimum` too low, or bindings built against a newer engine            |
+| Class not registered                       | registration not gated on `MODULE_INITIALIZATION_LEVEL_SCENE`                        |
+| Method unknown from GDScript               | not bound in `_bind_methods`                                                         |
+| Hot reload does nothing                    | release build, or `reloadable` not set                                               |
 
 ## Optional refs
 

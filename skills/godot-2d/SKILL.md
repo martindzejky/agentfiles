@@ -17,10 +17,10 @@ Legacy `TileMap` (multi-layer in one node) is **deprecated**. Use one `TileMapLa
 
 ## CanvasLayer vs z_index
 
-| Need | Use |
-|---|---|
-| Draw order in the same world / camera | Scene-tree order or `z_index` |
-| Independent of camera (HUD, pause, transitions) | `CanvasLayer.layer` |
+| Need                                            | Use                           |
+| ----------------------------------------------- | ----------------------------- |
+| Draw order in the same world / camera           | Scene-tree order or `z_index` |
+| Independent of camera (HUD, pause, transitions) | `CanvasLayer.layer`           |
 
 Do not invent CanvasLayers just to sort sprites — that fights the camera and y-sort.
 

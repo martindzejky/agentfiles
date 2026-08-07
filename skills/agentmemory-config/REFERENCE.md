@@ -41,4 +41,5 @@ Configuration is read from the environment and from `~/.agentmemory/.env` (no `e
 - `AGENTMEMORY_VERBOSE`
 - `AGENTMEMORY_VIEWER_HOST`
 - `AGENTMEMORY_VIEWER_URL`
+
 <!-- AUTOGEN:env END -->

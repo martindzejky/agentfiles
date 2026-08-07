@@ -5,7 +5,6 @@
 **Method:** Rust brute-force across all ~281 trillion hex color pairs for six algorithms. Reported runtime: 39 hours.
 **Author:** mrmrs / mrmrs.cc
 
-
 ## The Numbers
 
 Total possible hex code pairs: **~281 trillion** (16,777,216² / 2)

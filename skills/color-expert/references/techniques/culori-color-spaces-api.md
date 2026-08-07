@@ -57,8 +57,8 @@ The foundational color library used by many tools in this collection (PickyPalet
 ### Parse & Convert
 
 ```javascript
-parse("#ff6600"); // → { mode: 'rgb', r: 1, g: 0.4, b: 0 }
-converter("oklch")(color); // → convert any color to OKLCH
+parse('#ff6600'); // → { mode: 'rgb', r: 1, g: 0.4, b: 0 }
+converter('oklch')(color); // → convert any color to OKLCH
 formatHex(color); // → '#ff6600'
 formatCss(color); // → CSS Color Level 4 string
 ```
@@ -67,16 +67,16 @@ formatCss(color); // → CSS Color Level 4 string
 
 ```javascript
 displayable(color); // is it in sRGB?
-clampChroma(color, "oklch", "rgb"); // reduce chroma until displayable
-toGamut("rgb", "oklch"); // CSS Color L4 gamut mapping algorithm
-inGamut("p3")(color); // check any gamut
+clampChroma(color, 'oklch', 'rgb'); // reduce chroma until displayable
+toGamut('rgb', 'oklch'); // CSS Color L4 gamut mapping algorithm
+inGamut('p3')(color); // check any gamut
 ```
 
 ### Interpolation (gradients & palettes)
 
 ```javascript
-interpolate(["red", "blue"], "oklch"); // smooth gradient function
-interpolate([["red", 0], ["green", 0.3], "blue"], "oklch"); // positioned stops
+interpolate(['red', 'blue'], 'oklch'); // smooth gradient function
+interpolate([['red', 0], ['green', 0.3], 'blue'], 'oklch'); // positioned stops
 // Spline methods: linear, basis, natural, monotone (+ closed variants)
 // Hue fixup: shorter, longer, increasing, decreasing
 // Easing: smoothstep, gamma, midpoint, in-out-sine
@@ -86,7 +86,7 @@ samples(10); // [0, 0.11, 0.22, ..., 1]
 ### Color Difference (10 metrics)
 
 ```javascript
-differenceEuclidean("oklch"); // general purpose
+differenceEuclidean('oklch'); // general purpose
 differenceCiede2000(); // gold standard perceptual
 differenceCie76(); // = Euclidean in Lab65
 differenceCie94(); // improved CIE76
@@ -100,7 +100,7 @@ nearest(colors, metric, accessor); // find N nearest within threshold
 ### Blending (12 modes)
 
 ```javascript
-blend([bg, fg], "multiply", "rgb");
+blend([bg, fg], 'multiply', 'rgb');
 // Modes: normal, multiply, screen, overlay, darken, lighten,
 //        color-dodge, color-burn, hard-light, soft-light,
 //        difference, exclusion

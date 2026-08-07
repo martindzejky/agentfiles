@@ -13,11 +13,11 @@ func _on_viewport_size_changed() -> void:
 
 ## size_flags
 
-| Flag | Effect |
-|---|---|
-| `SIZE_FILL` | Occupy allocated space |
-| `SIZE_EXPAND` | Claim extra space |
-| `SIZE_EXPAND_FILL` | Both (common) |
-| `SIZE_SHRINK_CENTER` / `_END` | Shrink alignment |
+| Flag                          | Effect                 |
+| ----------------------------- | ---------------------- |
+| `SIZE_FILL`                   | Occupy allocated space |
+| `SIZE_EXPAND`                 | Claim extra space      |
+| `SIZE_EXPAND_FILL`            | Both (common)          |
+| `SIZE_SHRINK_CENTER` / `_END` | Shrink alignment       |
 
 Keep tap targets ≥ ~44×44 on touch. Docs: [Size flags](https://docs.godotengine.org/en/stable/tutorials/ui/size_and_anchors.html).

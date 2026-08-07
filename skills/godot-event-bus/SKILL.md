@@ -11,13 +11,13 @@ Related: `godot-scene-organization`, `godot-dependency-injection`.
 
 ## When to use
 
-| Situation | Use bus? |
-|-----------|----------|
-| Child → parent / parent → child | No — signal up / call down |
-| Siblings under same parent | No — parent mediates |
-| Unrelated scenes (HUD ↔ enemy, audio ↔ gameplay) | Yes |
-| Would need `get_node('../../..')` | Yes — redesign toward bus or inject |
-| Tight inner-loop call | No — direct method |
+| Situation                                        | Use bus?                            |
+| ------------------------------------------------ | ----------------------------------- |
+| Child → parent / parent → child                  | No — signal up / call down          |
+| Siblings under same parent                       | No — parent mediates                |
+| Unrelated scenes (HUD ↔ enemy, audio ↔ gameplay) | Yes                                 |
+| Would need `get_node('../../..')`                | Yes — redesign toward bus or inject |
+| Tight inner-loop call                            | No — direct method                  |
 
 Rule of thumb: if sender and receiver share an ancestor that can mediate, skip the bus.
 

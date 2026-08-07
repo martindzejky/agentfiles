@@ -21,7 +21,7 @@
 ## API
 
 ```javascript
-import { Poline, positionFunctions } from "poline";
+import { Poline, positionFunctions } from 'poline';
 
 // Basic — random anchors
 const poline = new Poline();

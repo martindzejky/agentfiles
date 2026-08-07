@@ -38,11 +38,11 @@ Rule of thumb: if the parent must wire three signals just to say "you were hit,"
 
 ## Communication
 
-| Direction | Mechanism |
-|-----------|-----------|
-| Up | Signals (prefer scene-wired, past tense) |
-| Down | Method calls on children |
-| Sideways | One event-bus autoload — distant / cross-scene only |
+| Direction | Mechanism                                           |
+| --------- | --------------------------------------------------- |
+| Up        | Signals (prefer scene-wired, past tense)            |
+| Down      | Method calls on children                            |
+| Sideways  | One event-bus autoload — distant / cross-scene only |
 
 Siblings do not hard-wire each other. Parent/root injects refs, connects signals, or calls methods.
 
@@ -58,9 +58,9 @@ No `get_parent().get_parent()` or `$../../foo` fishing. Expose `@export` and let
 
 ## Inheritance vs composition
 
-| Situation | Prefer |
-|-----------|--------|
-| Mix-and-match behaviours across entity types | Composition (component scenes) |
+| Situation                                             | Prefer                          |
+| ----------------------------------------------------- | ------------------------------- |
+| Mix-and-match behaviours across entity types          | Composition (component scenes)  |
 | Shared **structure** with small property/art variance | Inheritance (inherited `.tscn`) |
 
 Inheritance for shared bones (same collision + sprite + health slots, different stats/art). Do not inherit just to share a couple of functions — extract a component.

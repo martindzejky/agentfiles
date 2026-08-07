@@ -11,11 +11,11 @@ Related: `godot-components`, `godot-scene-organization`.
 
 ## Pick a shape
 
-| Approach | Use when |
-|----------|----------|
-| Enum + `match` | ≤ ~5 states, little enter/exit logic |
-| Node-based finite state machine | Characters / complex objects (default for this project) |
-| Resource-configured | Designers tune transitions/params in Inspector without new scripts |
+| Approach                        | Use when                                                           |
+| ------------------------------- | ------------------------------------------------------------------ |
+| Enum + `match`                  | ≤ ~5 states, little enter/exit logic                               |
+| Node-based finite state machine | Characters / complex objects (default for this project)            |
+| Resource-configured             | Designers tune transitions/params in Inspector without new scripts |
 
 Upgrade off enums when enter/exit duplicates, animation sync needs hooks, or the match block sprawls.
 

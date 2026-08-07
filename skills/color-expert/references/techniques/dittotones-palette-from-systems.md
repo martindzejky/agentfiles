@@ -35,11 +35,11 @@ Hybrid scaling: linear for lower saturation (preserves delicate tones), power cu
 ## API
 
 ```typescript
-import { DittoTones } from "dittotones";
-import { tailwindRamps } from "dittotones/ramps/tailwind";
+import { DittoTones } from 'dittotones';
+import { tailwindRamps } from 'dittotones/ramps/tailwind';
 
 const ditto = new DittoTones({ ramps: tailwindRamps });
-const result = ditto.generate("#F97316");
+const result = ditto.generate('#F97316');
 
 result.scale; // { '50': Oklch, '100': Oklch, ..., '950': Oklch }
 result.matchedShade; // '500'
@@ -52,11 +52,11 @@ result.sources; // [{ name: 'orange', diff: 0.02, weight: 1 }]
 ```typescript
 const customRamps = new Map([
   [
-    "brand",
+    'brand',
     {
-      "50": oklch(parse("oklch(98% 0.01 250)")),
-      "500": oklch(parse("#3B82F6")),
-      "950": oklch(parse("oklch(25% 0.05 250)")),
+      '50': oklch(parse('oklch(98% 0.01 250)')),
+      '500': oklch(parse('#3B82F6')),
+      '950': oklch(parse('oklch(25% 0.05 250)')),
     },
   ],
 ]);

@@ -222,8 +222,8 @@ _Last updated: [date]_
   **Words to avoid:**
   **Glossary:**
   | Term | Meaning |
-  |------|---------|
-  | | |
+  | ---- | ------- |
+  |      |         |
 
 ## Brand Voice
 
@@ -239,9 +239,10 @@ _Last updated: [date]_
 
 > "[quote]" — [who]
 > **Value themes:**
+>
 > | Theme | Proof |
-> |-------|-------|
-> | | |
+> | ----- | ----- |
+> |       |       |
 
 ## Goals
 

@@ -23,7 +23,7 @@ Instead of picking individual colors, RampenSau generates palettes by:
 ### `generateColorRamp(options)`
 
 ```javascript
-import { generateColorRamp } from "rampensau";
+import { generateColorRamp } from 'rampensau';
 
 const colors = generateColorRamp({
   total: 9, // number of colors
@@ -49,7 +49,7 @@ Convenience wrapper with preset curve methods:
 ### Hue Utilities
 
 ```javascript
-import { uniqueRandomHues, colorHarmonies } from "rampensau";
+import { uniqueRandomHues, colorHarmonies } from 'rampensau';
 
 // Random hues with minimum angular separation
 const hues = uniqueRandomHues({ total: 5, minHueDiffAngle: 60 });
@@ -63,12 +63,12 @@ const triadic = colorHarmonies.triadic(120); // base hue 120°
 ### Color Output
 
 ```javascript
-import { colorToCSS } from "rampensau";
+import { colorToCSS } from 'rampensau';
 
-colorToCSS([280, 0.6, 0.5], "oklch");
+colorToCSS([280, 0.6, 0.5], 'oklch');
 // → 'oklch(L% C H)'
 
-colorToCSS([280, 0.6, 0.5], "hsl");
+colorToCSS([280, 0.6, 0.5], 'hsl');
 // → 'hsl(280, 60%, 50%)'
 ```
 

@@ -23,7 +23,7 @@ entity
             └── fall
 ```
 
-Parent `enter`/`exit` enables/disables the sub-machine and enters/exits its current state. Parent checks transitions *out*; sub-machine handles transitions *within*.
+Parent `enter`/`exit` enables/disables the sub-machine and enters/exits its current state. Parent checks transitions _out_; sub-machine handles transitions _within_.
 
 ## Parallel
 

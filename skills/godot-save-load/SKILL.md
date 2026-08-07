@@ -16,10 +16,10 @@ description: Persist Godot data with ConfigFile and JSON on user://. Never load 
 
 ## Strategy
 
-| Format | Use | Avoid |
-|--------|-----|-------|
-| ConfigFile | settings, keybinds | deep nested game state |
-| JSON | save slots, world state | pretending Resources are safe user files |
+| Format           | Use                      | Avoid                                        |
+| ---------------- | ------------------------ | -------------------------------------------- |
+| ConfigFile       | settings, keybinds       | deep nested game state                       |
+| JSON             | save slots, world state  | pretending Resources are safe user files     |
 | `.tres` / `.res` | editor/project data only | anything from `user://` or untrusted sources |
 
 ## ConfigFile (settings)
@@ -139,10 +139,10 @@ func delete_save(slot: String) -> void:
 
 ## Pitfalls
 
-| Symptom | Fix |
-|---------|-----|
-| save works in editor, fails export | use `user://` |
-| Vector2 becomes string/null | store x/y dict |
-| old saves crash | version + `_migrate` with defaults for every loaded field |
-| list_slots fails on repeat | call `list_dir_end()` after `get_next()` loop |
-| “convenient” Resource save | do not — script exec risk |
+| Symptom                            | Fix                                                       |
+| ---------------------------------- | --------------------------------------------------------- |
+| save works in editor, fails export | use `user://`                                             |
+| Vector2 becomes string/null        | store x/y dict                                            |
+| old saves crash                    | version + `_migrate` with defaults for every loaded field |
+| list_slots fails on repeat         | call `list_dir_end()` after `get_next()` loop             |
+| “convenient” Resource save         | do not — script exec risk                                 |

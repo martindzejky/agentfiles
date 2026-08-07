@@ -18,12 +18,12 @@ print('took %d us' % (Time.get_ticks_usec() - start))
 
 ## Monitors
 
-| Monitor | Watch for |
-|---------|-----------|
-| FPS / Process / Physics Process | Frame budget overrun |
-| Object Count | Climbing = leak / missing `queue_free` |
-| Video RAM | Climbing textures |
-| 2D draw calls | Excessive unique materials/sprites |
+| Monitor                         | Watch for                              |
+| ------------------------------- | -------------------------------------- |
+| FPS / Process / Physics Process | Frame budget overrun                   |
+| Object Count                    | Climbing = leak / missing `queue_free` |
+| Video RAM                       | Climbing textures                      |
+| 2D draw calls                   | Excessive unique materials/sprites     |
 
 ## Usual culprits (2D)
 

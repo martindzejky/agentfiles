@@ -64,12 +64,12 @@ func move_to(target: Vector2) -> void:
 
 ## Tweener types
 
-| Call | Role |
-|------|------|
-| `tween_property` | animate a property |
-| `tween_method` | call a method with interpolated args |
-| `tween_callback` | fire a Callable |
-| `tween_interval` | delay |
+| Call             | Role                                 |
+| ---------------- | ------------------------------------ |
+| `tween_property` | animate a property                   |
+| `tween_method`   | call a method with interpolated args |
+| `tween_callback` | fire a Callable                      |
+| `tween_interval` | delay                                |
 
 ```gdscript
 tween.tween_property(self, 'modulate:a', 0.0, 0.3)
@@ -131,12 +131,12 @@ An empty running tween can error; kill if nothing was appended.
 
 ## Pitfalls
 
-| Symptom | Fix |
-|---------|-----|
-| jitter / fight | kill old tween first |
-| nothing happens | node freed; check `is_valid()` |
-| runs during pause | wrong pause mode |
-| relative loop drifts | use absolute values |
-| path not found | `'property:component'` spelling |
-| slow-mo UI | `set_ignore_time_scale()` |
+| Symptom                | Fix                                              |
+| ---------------------- | ------------------------------------------------ |
+| jitter / fight         | kill old tween first                             |
+| nothing happens        | node freed; check `is_valid()`                   |
+| runs during pause      | wrong pause mode                                 |
+| relative loop drifts   | use absolute values                              |
+| path not found         | `'property:component'` spelling                  |
+| slow-mo UI             | `set_ignore_time_scale()`                        |
 | container resets tween | use `offset_transform_*`, not `position`/`scale` |

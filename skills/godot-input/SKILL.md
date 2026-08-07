@@ -48,12 +48,12 @@ func _physics_process(_delta: float) -> void:
 
 ## Polling helpers
 
-| Call | Use |
-|------|-----|
-| `Input.is_action_pressed` | held |
-| `Input.get_action_strength` | analog 0–1 |
-| `Input.get_axis` / `get_vector` | axes / 2D direction |
-| `event.is_action_pressed` | inside input callbacks |
+| Call                            | Use                    |
+| ------------------------------- | ---------------------- |
+| `Input.is_action_pressed`       | held                   |
+| `Input.get_action_strength`     | analog 0–1             |
+| `Input.get_axis` / `get_vector` | axes / 2D direction    |
+| `event.is_action_pressed`       | inside input callbacks |
 
 ## Deadzone and gamepad
 
@@ -85,13 +85,13 @@ Keyboard/mouse events use `InputEvent.DEVICE_ID_KEYBOARD` (16) and `InputEvent.D
 
 ## Pitfalls
 
-| Symptom | Fix |
-|---------|-----|
-| one-shot missed | handle in `_unhandled_input`, not only physics poll |
-| action fires through UI | use `_unhandled_input`, not `_input` |
-| stick drift | raise Input Map deadzone |
-| double fire | one callback path per action |
-| rebind captures Shift alone | filter modifier-only keycodes |
+| Symptom                     | Fix                                                 |
+| --------------------------- | --------------------------------------------------- |
+| one-shot missed             | handle in `_unhandled_input`, not only physics poll |
+| action fires through UI     | use `_unhandled_input`, not `_input`                |
+| stick drift                 | raise Input Map deadzone                            |
+| double fire                 | one callback path per action                        |
+| rebind captures Shift alone | filter modifier-only keycodes                       |
 
 ## Optional refs
 

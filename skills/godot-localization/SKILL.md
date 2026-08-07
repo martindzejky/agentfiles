@@ -83,11 +83,11 @@ Prefer `Control.LAYOUT_DIRECTION_APPLICATION_LOCALE` on root UI when the whole t
 
 ## Pitfalls
 
-| Symptom | Fix |
-|---------|-----|
-| key shows as text | register translation in Project Settings |
-| UI not updating | use keys / `tr()`, not raw literals |
-| `%s` literal in UI | format after `tr()` |
-| plural wrong with CSV | use PO (or CSV `?plural` columns for simple cases) |
-| RTL still LTR | set `layout_direction` / fonts |
+| Symptom                              | Fix                                                                                                           |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| key shows as text                    | register translation in Project Settings                                                                      |
+| UI not updating                      | use keys / `tr()`, not raw literals                                                                           |
+| `%s` literal in UI                   | format after `tr()`                                                                                           |
+| plural wrong with CSV                | use PO (or CSV `?plural` columns for simple cases)                                                            |
+| RTL still LTR                        | set `layout_direction` / fonts                                                                                |
 | dynamic UI stale after locale switch | rebuild in `_notification(NOTIFICATION_TRANSLATION_CHANGED)`, or set Control text to keys with auto-translate |

@@ -22,20 +22,20 @@ Dependency-free TypeScript library generating **perceptually-tuned color palette
 ## API
 
 ```typescript
-import { ColorPaletteGenerator } from "pro-color-harmonies";
+import { ColorPaletteGenerator } from 'pro-color-harmonies';
 
 // Single harmony
 const palette = ColorPaletteGenerator.generate(
   { l: 0.7, c: 0.12, h: 200 }, // base color (OKLCH)
-  "triadic", // harmony type
-  { style: "triangle", modifiers: { sine: 0.3 } },
+  'triadic', // harmony type
+  { style: 'triangle', modifiers: { sine: 0.3 } },
 );
 // → 6 OKLCH colors
 
 // All harmonies at once
 const all = ColorPaletteGenerator.generateAll(
   { l: 0.7, c: 0.13, h: 260 },
-  { style: "triangle" },
+  { style: 'triangle' },
 );
 // → { analogous, complementary, triadic, tetradic, splitComplementary, tintsShades }
 ```
@@ -85,7 +85,7 @@ import {
   enhancePalette,
   polishPalette, // post-processing
   createPaletteGenerator, // factory
-} from "pro-color-harmonies";
+} from 'pro-color-harmonies';
 ```
 
 ## Key Concepts for the Skill

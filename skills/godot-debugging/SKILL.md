@@ -18,14 +18,14 @@ Isolated object scenes may error from missing world context — distinguish that
 
 ## Quick tools
 
-| Tool | Use |
-|------|-----|
-| `print` / `print_rich` | Values / colour-coded logs |
-| `print_debug` | Like `print()`, plus stack frame when debugger is attached (still prints in release) |
-| `push_warning` / `push_error` | Recoverable vs programmer errors (stack traces) |
-| `breakpoint` | Pause in debugger |
-| Remote scene tree | Live node Inspector while running |
-| Debugger → Profiler / Monitors | Self-time, FPS, object count, draw calls |
+| Tool                           | Use                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------ |
+| `print` / `print_rich`         | Values / colour-coded logs                                                           |
+| `print_debug`                  | Like `print()`, plus stack frame when debugger is attached (still prints in release) |
+| `push_warning` / `push_error`  | Recoverable vs programmer errors (stack traces)                                      |
+| `breakpoint`                   | Pause in debugger                                                                    |
+| Remote scene tree              | Live node Inspector while running                                                    |
+| Debugger → Profiler / Monitors | Self-time, FPS, object count, draw calls                                             |
 
 ```gdscript
 print_rich('[color=yellow]%s[/color] hp=%d' % [name, health])
@@ -34,14 +34,14 @@ push_error('required export missing: interaction_area')
 
 ## Common errors
 
-| Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| Node not found | Bad path / too early | After `_ready`; prefer `@export` |
-| Null instance | Freed node or unset export | `is_instance_valid`; assign exports in scene |
-| Flushing queries | Mutate collision in physics callback | `set_deferred(...)` |
-| Already connected | Double `connect` | `is_connected` or scene-wire once |
-| Await after free | Node freed during await | Guard with `is_instance_valid` |
-| Invalid call / wrong type | Bad cast or missing script | Typed refs / `as` + assert |
+| Symptom                   | Likely cause                         | Fix                                          |
+| ------------------------- | ------------------------------------ | -------------------------------------------- |
+| Node not found            | Bad path / too early                 | After `_ready`; prefer `@export`             |
+| Null instance             | Freed node or unset export           | `is_instance_valid`; assign exports in scene |
+| Flushing queries          | Mutate collision in physics callback | `set_deferred(...)`                          |
+| Already connected         | Double `connect`                     | `is_connected` or scene-wire once            |
+| Await after free          | Node freed during await              | Guard with `is_instance_valid`               |
+| Invalid call / wrong type | Bad cast or missing script           | Typed refs / `as` + assert                   |
 
 ## Footguns
 

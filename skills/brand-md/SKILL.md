@@ -51,35 +51,45 @@ Follow the spec's three-layer order: Strategy → Voice → Visual. A name/origi
 ## Strategy
 
 ### Overview
+
 <What it is. Origin if relevant. The deep description, not the surface feature. The problem it solves. Before → after. Long-term ambition.>
 
 ### Positioning
+
 <Category it occupies or creates. What it is not. Competitive landscape. Structural differentials. Territory it owns.>
 
 ### Personality
+
 <Dominant archetype. Attribute words. What it is. What it is not.>
 
 ### Promise
+
 <Core promise as a few declarative statements. Base message. One synthesizing phrase.>
 
 ### Guardrails
+
 <Tone summary. What the brand cannot be. A one-line litmus test.>
 
 ## Voice
 
 ### Identity
+
 <Who we are, written in first person. One-line essence.>
 
 ### Tagline & Slogans
+
 <Primary tagline with usage. 2–3 alternatives. Context-specific slogans.>
 
 ### Message Pillars
+
 <4–6 pillars, each with one or two statements.>
 
 ### Phrases
+
 <5–8 ownable one-liners. If any line still works after swapping in another brand name, it is not ownable.>
 
 ### Tonal Rules
+
 <Communication rules. Identity boundaries ("what we are not"). A say / never-say table.>
 
 ## Visual

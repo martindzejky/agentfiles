@@ -11,13 +11,13 @@ Related: `godot-components`, `godot-event-bus`, `godot-resources`.
 
 ## Decision table
 
-| Situation | Prefer |
-|-----------|--------|
-| Dep known at edit time, scene-authored | `@export` typed ref — wire in Inspector |
-| Parent owns consumer + dependency | Parent injects downward (assign exports / call setup) |
-| Truly global cross-cutting service | Autoload — **justify new ones with the user** |
-| Distant one-to-many game events | One event-bus autoload (not a pile of service autoloads) |
-| Optional collaborator | `@export` + `if` only because it is optional |
+| Situation                              | Prefer                                                   |
+| -------------------------------------- | -------------------------------------------------------- |
+| Dep known at edit time, scene-authored | `@export` typed ref — wire in Inspector                  |
+| Parent owns consumer + dependency      | Parent injects downward (assign exports / call setup)    |
+| Truly global cross-cutting service     | Autoload — **justify new ones with the user**            |
+| Distant one-to-many game events        | One event-bus autoload (not a pile of service autoloads) |
+| Optional collaborator                  | `@export` + `if` only because it is optional             |
 
 ```
 Every scene needs it forever?

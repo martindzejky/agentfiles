@@ -560,14 +560,14 @@ lightness constancy
 , and is one aspect of
 object-colour constancy
 . Without object-colour constancy we would perceive objects as having endlessly changing colour depending on the light they are under, but not any intrinsic lightness (or chroma).
-*A notable exception consists of areas of images of illuminated objects, where our attention can be so firmly held by the colours of the virtual objects depicted in the image that it can be very difficult to see colours associated with the image surface itself. This can cause us to experience the image as a
+_A notable exception consists of areas of images of illuminated objects, where our attention can be so firmly held by the colours of the virtual objects depicted in the image that it can be very difficult to see colours associated with the image surface itself. This can cause us to experience the image as a
 colour constancy illusion
 , for example the Adelson checker shadow illusion.
 Measures of Lightness
 Figure 1.3.5.
 A. Munsell value scale for my painting classes, designed to
 print
-accurate Munsell values on a specific printer (2012 version). B. Comparison of Munsell value with CIE lightness (L*) and percentage luminous reflectance. Munsell value 10 applies to a theoretical perfect diffuse reflector, while CIE lightness L* is based on luminance relative to an
+accurate Munsell values on a specific printer (2012 version). B. Comparison of Munsell value with CIE lightness (L_) and percentage luminous reflectance. Munsell value 10 applies to a theoretical perfect diffuse reflector, while CIE lightness L* is based on luminance relative to an
 actual
 similarly illuminated standard white reflector. This almost but not quite perfect reflector is assigned a CIE lightness of 100, and consequently Munsell value 10 has a CIE lightness greater than 100 and a nominal reflectance greater than 100%. C. Value scale of Denman Ross, as illustrated by Froelich and Snow (1905).
 The lightness scales most commonly used by painters and designers are the Munsell value scale (0-10) and CIE lightness (L*, 0-100) , the latter appearing as the "L" of Lab space used in Photoshop and other graphics programs. Lightness scales such as these are designed to make the

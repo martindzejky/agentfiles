@@ -16,13 +16,13 @@ description: Camera2D — limits, smoothing/follow, screen shake, room zones, ma
 
 ## Limits and basics
 
-| Property | Role |
-|----------|------|
-| `limit_left/right/top/bottom` | world-pixel clamps |
-| `position_smoothing_enabled` | built-in lerp follow |
-| `position_smoothing_speed` | catch-up rate |
-| `drag_horizontal/vertical_enabled` | dead zone before scroll |
-| `zoom` | `Vector2(2, 2)` zooms in |
+| Property                           | Role                     |
+| ---------------------------------- | ------------------------ |
+| `limit_left/right/top/bottom`      | world-pixel clamps       |
+| `position_smoothing_enabled`       | built-in lerp follow     |
+| `position_smoothing_speed`         | catch-up rate            |
+| `drag_horizontal/vertical_enabled` | dead zone before scroll  |
+| `zoom`                             | `Vector2(2, 2)` zooms in |
 
 Child the camera under the player for simplest follow, or keep it free and lerp toward a target.
 
@@ -140,9 +140,9 @@ func transition_to(next_cam: Camera2D, duration := 0.5) -> void:
 
 ## Pitfalls
 
-| Symptom | Fix |
-|---------|-----|
-| shows outside level | set all four limits |
-| shake leaves offset | clear when intensity == 0 |
-| cut mid-blend | `make_current` only after tween |
-| zone triggers wrong bodies | collision masks / player group |
+| Symptom                    | Fix                             |
+| -------------------------- | ------------------------------- |
+| shows outside level        | set all four limits             |
+| shake leaves offset        | clear when intensity == 0       |
+| cut mid-blend              | `make_current` only after tween |
+| zone triggers wrong bodies | collision masks / player group  |

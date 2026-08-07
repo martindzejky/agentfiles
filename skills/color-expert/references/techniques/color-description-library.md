@@ -9,13 +9,13 @@
 Converts technical color values (hex, RGB, HSL) into **human-readable descriptive adjectives** capturing the psychological and aesthetic qualities of colors.
 
 ```javascript
-import ColorDescription from "color-description/dist/index.esm";
+import ColorDescription from 'color-description/dist/index.esm';
 
-const cd = new ColorDescription("#ffffff");
+const cd = new ColorDescription('#ffffff');
 cd.getDescriptiveList();
 // → ["pale", "light", "faded", "delicate", "glistening", "bleached"]
 
-cd.color = "red";
+cd.color = 'red';
 cd.getDescriptiveList();
 // → ["saturated", "strong", "lush", "ablaze", "beaming", "bold", "brilliant", "vibrant", "vivid"]
 

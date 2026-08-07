@@ -30,7 +30,7 @@ Quick visual assessment of palette quality:
 ## API
 
 ```javascript
-import { PaletteViz } from "palette-shader";
+import { PaletteViz } from 'palette-shader';
 
 const viz = new PaletteViz({
   palette: [
@@ -38,11 +38,11 @@ const viz = new PaletteViz({
     [0, 1, 0],
     [0, 0, 1],
   ], // linear sRGB [0-1]
-  container: document.querySelector("#app"),
-  colorModel: "okhsvPolar", // visualization space
-  distanceMetric: "oklab", // similarity measurement
+  container: document.querySelector('#app'),
+  colorModel: 'okhsvPolar', // visualization space
+  distanceMetric: 'oklab', // similarity measurement
   position: 0.5, // axis slice position
-  axis: "y", // which axis to slice
+  axis: 'y', // which axis to slice
   gamutClip: false, // show out-of-gamut?
   outlineWidth: 1, // region boundary lines
 });
@@ -52,7 +52,7 @@ viz.palette = [
   [1, 0, 0],
   [0, 0.5, 1],
 ];
-viz.colorModel = "oklchPolar";
+viz.colorModel = 'oklchPolar';
 
 // Sampling
 const [r, g, b] = viz.getColorAtUV(0.5, 0.5);

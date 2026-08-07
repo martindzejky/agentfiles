@@ -18,13 +18,13 @@ func _dump_all_connected(node: Object) -> void:
 
 ## Common issues
 
-| Issue | Check |
-|-------|--------|
-| Never fires | Signal name typo; connected to wrong node; emit before connect; scene connection missing |
-| Fires twice | Connected in scene **and** in code, or `connect` in `_ready` without guard |
-| Arg mismatch | Handler signature must match signal params |
-| Emitter outlives receiver | Disconnect in `_exit_tree` (autoload / event bus) or `CONNECT_ONE_SHOT` |
-| Emit before listeners ready | `call_deferred` emit from early autoload `_ready` |
+| Issue                       | Check                                                                                    |
+| --------------------------- | ---------------------------------------------------------------------------------------- |
+| Never fires                 | Signal name typo; connected to wrong node; emit before connect; scene connection missing |
+| Fires twice                 | Connected in scene **and** in code, or `connect` in `_ready` without guard               |
+| Arg mismatch                | Handler signature must match signal params                                               |
+| Emitter outlives receiver   | Disconnect in `_exit_tree` (autoload / event bus) or `CONNECT_ONE_SHOT`                  |
+| Emit before listeners ready | `call_deferred` emit from early autoload `_ready`                                        |
 
 ```gdscript
 # typed connect preferred over string names

@@ -90,10 +90,11 @@ When building a color gradient:
 ### Sprite Examples (Wood, Plant)
 
 **Wood ramp:**
-| Brightest | Bright | Middle | Dark | Darkest | Outlines |
-|-----------|--------|--------|------|---------|----------|
-| Hue: +15 | +15 | 30 (start) | +15 | +15 | — |
-| Brightness: +14 | +11 | 62 (start) | +15 | +15 | — |
+
+| Brightest       | Bright | Middle     | Dark | Darkest | Outlines |
+| --------------- | ------ | ---------- | ---- | ------- | -------- |
+| Hue: +15        | +15    | 30 (start) | +15  | +15     | —        |
+| Brightness: +14 | +11    | 62 (start) | +15  | +15     | —        |
 
 Outline color is always consistent across all sprites. Choose dark blue or dark purple. Can have strong saturation.
 

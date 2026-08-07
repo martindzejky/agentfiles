@@ -12,7 +12,7 @@ JavaScript package aggregating **18 distinct color naming systems** from histori
 ## API
 
 ```javascript
-import { colorNameLists } from "color-name-lists";
+import { colorNameLists } from 'color-name-lists';
 
 colorNameLists.lists; // object of all lists
 colorNameLists.meta; // description of each list

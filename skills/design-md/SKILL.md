@@ -66,9 +66,9 @@ Follow the spec's section order:
 
 <One-line palette philosophy.>
 
-| Role          | Token        | Use                                |
-| ------------- | ------------ | ---------------------------------- |
-| <role>        | `<token>`    | <where it appears>                 |
+| Role   | Token     | Use                |
+| ------ | --------- | ------------------ |
+| <role> | `<token>` | <where it appears> |
 
 <Any constraints or no-go's, e.g. "no new color families", "this accent only when X is active".>
 
@@ -123,6 +123,7 @@ Default: omit. Include the spec's YAML token frontmatter (`colors`, `typography`
    - Whether the brand voice / personality is settled in `BRAND.md`. If not, suggest doing that first.
 
    Default to no frontmatter; ask only if the project looks like it might consume token YAML.
+
 3. **Interview the user — one question at a time.** Walk through the canonical sections in order. Cover at minimum:
    - Overall direction: light refresh, palette tweak, type tweak, full rethink.
    - Palette: primary / accent / neutral roles, tonal layers, restriction rules.

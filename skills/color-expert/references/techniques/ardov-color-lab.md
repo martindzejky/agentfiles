@@ -118,12 +118,12 @@ A concrete implementation of the "encode color decisions" principle — theme co
 
 The 3D viewer supports:
 
-| Family | Spaces |
-| --- | --- |
-| **RGB** | sRGB, HSL, HSV, Display P3 |
+| Family    | Spaces                              |
+| --------- | ----------------------------------- |
+| **RGB**   | sRGB, HSL, HSV, Display P3          |
 | **OKLAB** | OKLAB, OKLrAB, OKLrCH, OKHSL, OKHSV |
-| **CIE** | CIELAB, CIELCH, CIELuv, CIE xyY |
-| **Other** | DIN99 Lab, Jab (Jzazbz), YIQ |
+| **CIE**   | CIELAB, CIELCH, CIELuv, CIE xyY     |
+| **Other** | DIN99 Lab, Jab (Jzazbz), YIQ        |
 
 ---
 

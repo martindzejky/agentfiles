@@ -37,21 +37,21 @@ var health: int:
 
 ## Other red flags
 
-| Flag | Why | Severity guide |
-|------|-----|----------------|
-| `$` / `get_node` / `load` inside hot loops or process | Tree walks / disk every frame | Critical / Important |
-| Deep NodePaths (`$A/B/C/D`) | Fragile; prefer `@export` wiring | Important |
-| Mutating physics-related state inside physics callbacks without `set_deferred` | "Can't change this state while flushing queries" | Critical |
-| `await` then use self/node without `is_instance_valid` | Use-after-free | Critical |
-| `CharacterBody*` locomotion via raw `position` instead of `velocity` + `move_and_slide` | Skips collision / tunnelling | Critical |
-| Mutating a shared Resource without `duplicate()` / deep duplicate | One instance corrupts all | Critical |
-| Signals connected in code when they could be scene-wired | Prefer editor connections | Important |
-| Defensive `if` on required `@export` / deps | Required means assume present; optional gets `if` | Important |
-| Missing static types on vars / params / returns | Silent runtime failures | Important |
-| Hard-coded `res://` paths or `$` / `get_node` for scene deps | Fragile wiring — use `@export` refs assigned in the scene | Important |
-| New Autoload without justification | Scope creep — scripts rule | Important |
-| `distance_to` in tight comparisons | Prefer `distance_squared_to` | Suggestions / Important if hot |
-| Sibling fishing / `get_parent()` chains | Breaks composition | Important |
+| Flag                                                                                    | Why                                                       | Severity guide                 |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------ |
+| `$` / `get_node` / `load` inside hot loops or process                                   | Tree walks / disk every frame                             | Critical / Important           |
+| Deep NodePaths (`$A/B/C/D`)                                                             | Fragile; prefer `@export` wiring                          | Important                      |
+| Mutating physics-related state inside physics callbacks without `set_deferred`          | "Can't change this state while flushing queries"          | Critical                       |
+| `await` then use self/node without `is_instance_valid`                                  | Use-after-free                                            | Critical                       |
+| `CharacterBody*` locomotion via raw `position` instead of `velocity` + `move_and_slide` | Skips collision / tunnelling                              | Critical                       |
+| Mutating a shared Resource without `duplicate()` / deep duplicate                       | One instance corrupts all                                 | Critical                       |
+| Signals connected in code when they could be scene-wired                                | Prefer editor connections                                 | Important                      |
+| Defensive `if` on required `@export` / deps                                             | Required means assume present; optional gets `if`         | Important                      |
+| Missing static types on vars / params / returns                                         | Silent runtime failures                                   | Important                      |
+| Hard-coded `res://` paths or `$` / `get_node` for scene deps                            | Fragile wiring — use `@export` refs assigned in the scene | Important                      |
+| New Autoload without justification                                                      | Scope creep — scripts rule                                | Important                      |
+| `distance_to` in tight comparisons                                                      | Prefer `distance_squared_to`                              | Suggestions / Important if hot |
+| Sibling fishing / `get_parent()` chains                                                 | Breaks composition                                        | Important                      |
 
 ## Prefer (brief)
 

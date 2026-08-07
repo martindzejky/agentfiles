@@ -2,14 +2,14 @@
 
 ## Event map
 
-| Cursor event          | Capture job                                             |
-| --------------------- | ------------------------------------------------------- |
-| `sessionStart`        | Open or resume a memory session; optionally add context |
-| `beforeSubmitPrompt`  | Initialize the session and store the user prompt        |
-| `afterAgentResponse`  | Store the final assistant response                      |
-| `preCompact`          | Record compaction metadata and checkpoint a summary     |
-| `stop`                | Summarize without ending the conversation               |
-| `sessionEnd`          | Mark the local session complete                         |
+| Cursor event         | Capture job                                             |
+| -------------------- | ------------------------------------------------------- |
+| `sessionStart`       | Open or resume a memory session; optionally add context |
+| `beforeSubmitPrompt` | Initialize the session and store the user prompt        |
+| `afterAgentResponse` | Store the final assistant response                      |
+| `preCompact`         | Record compaction metadata and checkpoint a summary     |
+| `stop`               | Summarize without ending the conversation               |
+| `sessionEnd`         | Mark the local session complete                         |
 
 No tool, thought, file, shell, MCP, or subagent hooks are installed.
 

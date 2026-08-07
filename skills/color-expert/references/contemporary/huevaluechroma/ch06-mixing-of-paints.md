@@ -132,7 +132,7 @@ Artists who use physical paint media mix their colours in three basic ways:
    be the optimal
    primaries for paint mixing, if such pigments existed. However, even today our best magenta
    and cyan pigments are well towards  
-    red and blue respectively, compared to the ideal magenta and cyan subtractive primaries. No high-chroma pigments are very close to an ideal magenta hue; the closest
+   red and blue respectively, compared to the ideal magenta and cyan subtractive primaries. No high-chroma pigments are very close to an ideal magenta hue; the closest
    high-chroma oil painting pigment is
    quinacridone magenta (PV 19)
    , which is distinctly redder than ideal magenta. The closest popular
@@ -666,7 +666,7 @@ Titanium White
   ).
   Transparent paints allow light to pass through without scattering; they always darken mixtures, because they work by simply removing light.
   Opaque paints scatter light; they can lighten a darker paint when added to it, but their effect  
-   is conditional, depending as it does on the balance of their effect of
+  is conditional, depending as it does on the balance of their effect of
   absorbing some wavelengths with their effect as adding reflectors of the remaining
   wavelengths (Fig. 6.3.8).
   Painting in transparent layers takes different ways of thinking about colour manipulation to those that work for opaque paint. A paint used transparently does not have a single Munsell notation, and glazed over white can have any value from its body colour (very dark for most of them) up to near white (Principle 8, above). Transparent layers are inclined to show colour variations that follow short segments of this path, though these variations can be eliminated if necessary by building up to the required colour in a few light layers. The basic technique needed is to mentally analyze each colour into a set of subtractive "components", i.e. to assess how much of each transparent paint is needed to arrive, whether by mixing or glazing, at the required hue, value and chroma.

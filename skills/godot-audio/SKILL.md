@@ -53,12 +53,12 @@ Prefer `@export` streams assigned in the scene over hard-coded paths.
 
 Positional SFX relative to the current `Camera2D` (or an `AudioListener2D` if you need a custom ear).
 
-| Property | Notes |
-|----------|-------|
-| `max_distance` | silent beyond |
-| `attenuation` | falloff curve |
+| Property        | Notes                         |
+| --------------- | ----------------------------- |
+| `max_distance`  | silent beyond                 |
+| `attenuation`   | falloff curve                 |
 | `max_polyphony` | overlapping plays on one node |
-| `bus` | usually `'SFX'` |
+| `bus`           | usually `'SFX'`               |
 
 Default `area_mask` is `0` (Area2D bus override off). Set mask to the Area2D layer bit if you use bus-override zones.
 
@@ -118,11 +118,11 @@ After registering a new autoload, refresh editor state with the `godot-cli` skil
 
 ## Pitfalls
 
-| Symptom | Fix |
-|---------|-----|
-| no sound | player in tree? bus name? muted? |
-| music restarts on change_scene | move player to justified autoload |
-| 2D pan missing | need current Camera2D / listener |
-| slider feels wrong | use `linear_to_db` |
-| click/pop | tiny fade on WAV edges |
-| crossfade glitches | swap `_active` only after fade callback |
+| Symptom                        | Fix                                     |
+| ------------------------------ | --------------------------------------- |
+| no sound                       | player in tree? bus name? muted?        |
+| music restarts on change_scene | move player to justified autoload       |
+| 2D pan missing                 | need current Camera2D / listener        |
+| slider feels wrong             | use `linear_to_db`                      |
+| click/pop                      | tiny fade on WAV edges                  |
+| crossfade glitches             | swap `_active` only after fade callback |

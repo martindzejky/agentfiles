@@ -13,15 +13,15 @@ Control layout and scaling. 2-space indent; single quotes; lowercase node names.
 
 ## Containers
 
-| Node | Use |
-|---|---|
-| `VBoxContainer` / `HBoxContainer` | Lists, toolbars |
-| `GridContainer` | Inventory grids |
-| `MarginContainer` | Padding around one child |
-| `PanelContainer` | Background + children |
-| `ScrollContainer` | Overflow lists |
-| `TabContainer` | Settings sections |
-| `FoldableContainer` | Accordion sections |
+| Node                              | Use                      |
+| --------------------------------- | ------------------------ |
+| `VBoxContainer` / `HBoxContainer` | Lists, toolbars          |
+| `GridContainer`                   | Inventory grids          |
+| `MarginContainer`                 | Padding around one child |
+| `PanelContainer`                  | Background + children    |
+| `ScrollContainer`                 | Overflow lists           |
+| `TabContainer`                    | Settings sections        |
+| `FoldableContainer`               | Accordion sections       |
 
 - Expand fillers: `size_flags_horizontal = SIZE_EXPAND_FILL`
 - Prevent collapse: `custom_minimum_size`
@@ -82,10 +82,10 @@ Pause UI must be `PROCESS_MODE_ALWAYS` or it freezes with the tree.
 
 `Project Settings → Display → Window`:
 
-| Setting | Typical |
-|---|---|
-| `stretch/mode` | `canvas_items` (most UI/2D) · `viewport` (pixel art) · `disabled` (manual) |
-| `stretch/aspect` | `expand` (fill) · `keep` (letterbox) · `keep_width` / `keep_height` |
+| Setting          | Typical                                                                    |
+| ---------------- | -------------------------------------------------------------------------- |
+| `stretch/mode`   | `canvas_items` (most UI/2D) · `viewport` (pixel art) · `disabled` (manual) |
+| `stretch/aspect` | `expand` (fill) · `keep` (letterbox) · `keep_width` / `keep_height`        |
 
 ```gdscript
 var size := get_viewport().get_visible_rect().size

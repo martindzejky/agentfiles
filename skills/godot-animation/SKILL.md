@@ -14,10 +14,10 @@ description: 2D animation with AnimationPlayer, AnimationTree, AnimatedSprite2D,
 
 ## AnimationPlayer vs Tree
 
-| Node | Use |
-|------|-----|
-| `AnimationPlayer` | play/stop/queue one clip; one-shots; simple idle/walk |
-| `AnimationTree` | travel between states, BlendSpace1D/2D, layered blends |
+| Node              | Use                                                    |
+| ----------------- | ------------------------------------------------------ |
+| `AnimationPlayer` | play/stop/queue one clip; one-shots; simple idle/walk  |
+| `AnimationTree`   | travel between states, BlendSpace1D/2D, layered blends |
 
 Start with Player. Add Tree when `play()` snaps or you need continuous blend params.
 
@@ -58,10 +58,10 @@ func spawn_projectile() -> void:
 
 ## AnimatedSprite2D vs Sprite2D + Player
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| `AnimatedSprite2D` | fast SpriteFrames setup | frames only |
-| `Sprite2D` + `AnimationPlayer` | property tracks, methods, audio | more setup |
+| Approach                       | Pros                            | Cons        |
+| ------------------------------ | ------------------------------- | ----------- |
+| `AnimatedSprite2D`             | fast SpriteFrames setup         | frames only |
+| `Sprite2D` + `AnimationPlayer` | property tracks, methods, audio | more setup  |
 
 Prefer Player when hitboxes/sounds must sync to the same clip.
 
@@ -99,13 +99,13 @@ anim_tree['parameters/BlendSpace2D/blend_position'] = input_dir
 
 ## Pitfalls
 
-| Symptom | Fix |
-|---------|-----|
-| snaps between clips | use AnimationTree + transitions |
-| Tree does nothing | set `active = true` |
-| `travel` no-op | add transition arrows between states |
-| method track silent | exact method name + target path |
-| blend dead | correct `parameters/.../blend_position` path |
+| Symptom             | Fix                                          |
+| ------------------- | -------------------------------------------- |
+| snaps between clips | use AnimationTree + transitions              |
+| Tree does nothing   | set `active = true`                          |
+| `travel` no-op      | add transition arrows between states         |
+| method track silent | exact method name + target path              |
+| blend dead          | correct `parameters/.../blend_position` path |
 
 ## Optional refs
 

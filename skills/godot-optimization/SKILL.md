@@ -55,9 +55,9 @@ See [references/pools.md](references/pools.md).
 
 ## Anti-patterns
 
-| Bad | Better |
-|---|---|
-| Alloc in `_process` | Cache / mutate in place |
-| Unique material per instance | Shared material + uniforms |
-| `load()` / `instantiate()` in hot path | `@export` scene + pool |
-| Legacy `TileMap` | `TileMapLayer` + single atlas |
+| Bad                                    | Better                        |
+| -------------------------------------- | ----------------------------- |
+| Alloc in `_process`                    | Cache / mutate in place       |
+| Unique material per instance           | Shared material + uniforms    |
+| `load()` / `instantiate()` in hot path | `@export` scene + pool        |
+| Legacy `TileMap`                       | `TileMapLayer` + single atlas |

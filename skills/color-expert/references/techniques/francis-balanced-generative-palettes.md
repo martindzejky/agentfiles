@@ -45,9 +45,9 @@ Takes `[{ value, weight }]` objects. Returns a closure that produces a random `v
 
 ```javascript
 const pickColor = createWeightedSelector([
-  { weight: 60, value: 'black' },    // neutral    — 60%
-  { weight: 30, value: 'orange' },   // primary    — 30%
-  { weight: 10, value: 'tomato' },   // accent     — 10%
+  { weight: 60, value: 'black' }, // neutral    — 60%
+  { weight: 30, value: 'orange' }, // primary    — 30%
+  { weight: 10, value: 'tomato' }, // accent     — 10%
 ]);
 
 // In the render loop:
@@ -102,9 +102,9 @@ The article's headline recommendation is the combination:
 
 ```javascript
 const pickBase = createWeightedSelector([
-  { weight: 60, value: { h: 0,   s: 0,  l: 10 } },  // near-black
-  { weight: 30, value: { h: 30,  s: 90, l: 55 } },  // orange
-  { weight: 10, value: { h: 10,  s: 80, l: 60 } },  // tomato
+  { weight: 60, value: { h: 0, s: 0, l: 10 } }, // near-black
+  { weight: 30, value: { h: 30, s: 90, l: 55 } }, // orange
+  { weight: 10, value: { h: 10, s: 80, l: 60 } }, // tomato
 ]);
 
 function drawShape() {

@@ -35,11 +35,11 @@ Root type is the scene's contract with the world (`CharacterBody2D` for movers, 
 
 ## Communication
 
-| Direction | Mechanism | Scope |
-|-----------|-----------|--------|
-| Up | Signals (past tense) | Child → parent / ancestors |
-| Down | Method calls | Parent → children |
-| Sideways | One event-bus autoload | Distant / cross-scene only |
+| Direction | Mechanism              | Scope                      |
+| --------- | ---------------------- | -------------------------- |
+| Up        | Signals (past tense)   | Child → parent / ancestors |
+| Down      | Method calls           | Parent → children          |
+| Sideways  | One event-bus autoload | Distant / cross-scene only |
 
 Prefer scene-wired signals. Do not invent a second global bus. Inside one scene, prefer parent mediation over the bus.
 
@@ -51,15 +51,15 @@ Ask explicitly: what data exists, who owns each field, what happens if a signal 
 
 ## Architecture pickers (one-liners)
 
-| Need | Prefer |
-|------|--------|
-| Truly global cross-cutting service | Autoload — justify a new one with the user |
-| Shared defs / tunables / tables | `Resource` (`.tres`) |
-| Reusable behaviour across entity types | Component `.tscn` + `@export` surface |
-| Complex object with many behaviours | Node finite state machine — root = public API, states drive behaviour |
-| Distant game events | Single event-bus autoload |
-| Spawned content | `@export var scene: PackedScene` |
-| Encapsulated cooldowns / state timers | Timer created in code (see scripts Timers rule) |
+| Need                                   | Prefer                                                                |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| Truly global cross-cutting service     | Autoload — justify a new one with the user                            |
+| Shared defs / tunables / tables        | `Resource` (`.tres`)                                                  |
+| Reusable behaviour across entity types | Component `.tscn` + `@export` surface                                 |
+| Complex object with many behaviours    | Node finite state machine — root = public API, states drive behaviour |
+| Distant game events                    | Single event-bus autoload                                             |
+| Spawned content                        | `@export var scene: PackedScene`                                      |
+| Encapsulated cooldowns / state timers  | Timer created in code (see scripts Timers rule)                       |
 
 ## Reuse candidates
 

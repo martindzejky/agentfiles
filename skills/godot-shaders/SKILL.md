@@ -26,13 +26,13 @@ void fragment() {
 
 ## Builtins
 
-| Name | Notes |
-|---|---|
-| `UV` / `TEXTURE` / `COLOR` | Sample and write |
-| `TEXTURE_PIXEL_SIZE` | Outline / pixel offsets |
-| `TIME` | Animation |
-| `SCREEN_UV` | Screen-space |
-| `VERTEX` | In `vertex()` |
+| Name                       | Notes                   |
+| -------------------------- | ----------------------- |
+| `UV` / `TEXTURE` / `COLOR` | Sample and write        |
+| `TEXTURE_PIXEL_SIZE`       | Outline / pixel offsets |
+| `TIME`                     | Animation               |
+| `SCREEN_UV`                | Screen-space            |
+| `VERTEX`                   | In `vertex()`           |
 
 Screen read (`SCREEN_TEXTURE` removed; use a uniform):
 
@@ -80,12 +80,12 @@ See [references/2d-shader-recipes.md](references/2d-shader-recipes.md) — disso
 
 ## Pitfalls
 
-| Symptom | Fix |
-|---|---|
-| No effect | Material/shader not assigned or not saved |
-| Black transparency | Preserve `COLOR.a = tex.a` |
-| Uniform missing | Typo / shader compile error |
-| Screen sample empty | Need `hint_screen_texture` uniform |
-| Batch breaks | Too many unique ShaderMaterials |
+| Symptom             | Fix                                       |
+| ------------------- | ----------------------------------------- |
+| No effect           | Material/shader not assigned or not saved |
+| Black transparency  | Preserve `COLOR.a = tex.a`                |
+| Uniform missing     | Typo / shader compile error               |
+| Screen sample empty | Need `hint_screen_texture` uniform        |
+| Batch breaks        | Too many unique ShaderMaterials           |
 
 Drive animated params with Tween/`AnimationPlayer`, not `_process` when possible.

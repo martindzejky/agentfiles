@@ -13,12 +13,12 @@ Related: `godot-components`, `godot-dependency-injection`. After new `class_name
 
 Defs, stats, loot tables, tunables, catalogs — anything Inspector-editable and shareable without living in the scene tree.
 
-| Prefer Resource | Prefer Node / other |
-|-----------------|---------------------|
-| Item / enemy defs | Per-frame behaviour |
-| Balance tables | Scene structure |
-| Shared tunables | Global mutable session state (careful Autoload) |
-| Event payloads | Player save files from disk (see security) |
+| Prefer Resource   | Prefer Node / other                             |
+| ----------------- | ----------------------------------------------- |
+| Item / enemy defs | Per-frame behaviour                             |
+| Balance tables    | Scene structure                                 |
+| Shared tunables   | Global mutable session state (careful Autoload) |
+| Event payloads    | Player save files from disk (see security)      |
 
 Prefer Resources over Dictionaries/JSON for typed project data.
 
@@ -38,11 +38,11 @@ Wire with `@export var item: ItemData` for scene-assigned data.
 
 Exported/loaded Resources are **shared by path**. Mutating one instance mutates everyone holding that path.
 
-| Data | Action |
-|------|--------|
-| Read-only defs (item blueprint, balance sheet) | Share |
-| Per-instance mutable runtime state | `duplicate()` or `duplicate(true)` before mutating |
-| One scene needs different nested sub-resource values | Editor **Make Unique** on the sub-resource slot |
+| Data                                                 | Action                                             |
+| ---------------------------------------------------- | -------------------------------------------------- |
+| Read-only defs (item blueprint, balance sheet)       | Share                                              |
+| Per-instance mutable runtime state                   | `duplicate()` or `duplicate(true)` before mutating |
+| One scene needs different nested sub-resource values | Editor **Make Unique** on the sub-resource slot    |
 
 ```gdscript
 @export var stats: EnemyStats
@@ -63,11 +63,11 @@ Do **not** load untrusted `.tres` / `.res` for user save data — they can embed
 
 ## Resource vs Node
 
-| Aspect | Resource | Node |
-|--------|----------|------|
-| Role | Data | Behaviour / tree |
-| Sharing | Shared by path | Per instance |
-| Lifecycle | `_init` only | `_ready`, process, etc. |
+| Aspect    | Resource       | Node                    |
+| --------- | -------------- | ----------------------- |
+| Role      | Data           | Behaviour / tree        |
+| Sharing   | Shared by path | Per instance            |
+| Lifecycle | `_init` only   | `_ready`, process, etc. |
 
 If it needs the scene tree, signals from gameplay, or per-frame work → Node. If it is Inspector data → Resource.
 

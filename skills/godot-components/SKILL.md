@@ -53,10 +53,10 @@ func take_damage(amount: int) -> void:
 
 ## Wiring preference
 
-| Pattern | When |
-|---------|------|
+| Pattern                      | When                                                     |
+| ---------------------------- | -------------------------------------------------------- |
 | `@export var health: Health` | Cross-child, component, or configurable deps (preferred) |
-| Root assigns in `_ready` | Dynamic spawn / programmatic scenes only |
+| Root assigns in `_ready`     | Dynamic spawn / programmatic scenes only                 |
 
 Root and child scripts both use `@export` for component refs — not `$sprite`, `$health`, etc.
 
