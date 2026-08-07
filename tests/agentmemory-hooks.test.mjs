@@ -1,13 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { constants } from 'node:fs';
-import {
-  access,
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
+import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -42,11 +36,15 @@ function hookEnvironment(url, extra = {}) {
 
 function runHook(event, payload, options = {}) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [join(HOOK_DIRECTORY, HOOKS[event])], {
-      cwd: ROOT,
-      env: hookEnvironment(options.url, options.env),
-      stdio: ['pipe', 'pipe', 'pipe'],
-    });
+    const child = spawn(
+      process.execPath,
+      [join(HOOK_DIRECTORY, HOOKS[event])],
+      {
+        cwd: ROOT,
+        env: hookEnvironment(options.url, options.env),
+        stdio: ['pipe', 'pipe', 'pipe'],
+      },
+    );
     let stdout = '';
     let stderr = '';
 
@@ -126,9 +124,7 @@ function assertSuccessfulNoOp(result) {
 }
 
 test('manifest contains exactly the six selected executable hooks', async () => {
-  const manifest = JSON.parse(
-    await readFile(join(ROOT, 'hooks.json'), 'utf8'),
-  );
+  const manifest = JSON.parse(await readFile(join(ROOT, 'hooks.json'), 'utf8'));
 
   assert.equal(manifest.version, 1);
   assert.deepEqual(
@@ -505,9 +501,7 @@ test('hooks reject redirects without forwarding captured content', async () => {
 test('configuration requires a secret and restricts plain HTTP', async () => {
   const original = { ...process.env };
   process.env.AGENTMEMORY_DISABLE_ENV_FILE = '1';
-  const { readConfig } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
-  );
+  const { readConfig } = await import(join(HOOK_DIRECTORY, 'shared.mjs'));
 
   try {
     process.env.AGENTMEMORY_URL = 'http://127.0.0.1:3111';
@@ -527,8 +521,7 @@ test('configuration requires a secret and restricts plain HTTP', async () => {
     process.env.AGENTMEMORY_URL = 'https://memory.example.test';
     assert.equal(readConfig().baseUrl, 'https://memory.example.test');
 
-    process.env.AGENTMEMORY_URL =
-      'https://user:password@memory.example.test';
+    process.env.AGENTMEMORY_URL = 'https://user:password@memory.example.test';
     assert.equal(readConfig(), null);
   } finally {
     for (const key of Object.keys(process.env)) {

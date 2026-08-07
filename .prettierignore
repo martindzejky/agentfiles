@@ -1,0 +1,11 @@
+# vendored code
+dotbot
+
+# legacy content
+skills
+
+# generated files
+pnpm-lock.yaml
+
+# local secrets
+.env

@@ -57,11 +57,7 @@ async function main() {
     { config },
   );
 
-  await postJson(
-    '/agentmemory/summarize',
-    { sessionId },
-    { config },
-  );
+  await postJson('/agentmemory/summarize', { sessionId }, { config });
 
   writeCursorOutput();
 }

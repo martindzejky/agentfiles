@@ -13,6 +13,18 @@ cd ~/.agentfiles
 ./install
 ```
 
+## Development
+
+Use Node.js 24 and pnpm:
+
+```sh
+pnpm install
+pnpm format
+pnpm test
+```
+
+Run `pnpm format:fix` to apply Prettier formatting. Linting is not configured.
+
 ## Philosophy
 
 I try to keep my setup lean. I'm a professional engineer and I want to be behind the steering wheel when working, not just along for the ride. I view the setup in a few categories: reusable pieces, orchestration, and domain knowledge.

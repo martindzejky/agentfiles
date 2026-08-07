@@ -1,0 +1,17 @@
+{
+  "name": "agentfiles",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format": "prettier --check .",
+    "format:fix": "prettier --write .",
+    "test": "node --test tests/agentmemory-hooks.test.mjs"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.6"
+  },
+  "packageManager": "pnpm@10.34.5",
+  "engines": {
+    "node": ">=24"
+  }
+}
