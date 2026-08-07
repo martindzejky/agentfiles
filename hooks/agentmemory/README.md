@@ -9,8 +9,11 @@ The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
 - `sessionStart` opens or resumes the AgentMemory session and, when
   `AGENTMEMORY_INJECT_CONTEXT=true`, returns server context through Cursor's
   documented `additional_context` field.
-- `beforeSubmitPrompt` repeats session initialization as a safe lifecycle
-  fallback, then records only the truncated user prompt.
+- `beforeSubmitPrompt` records only the truncated user prompt. It never calls
+  `/session/start`, because that endpoint replaces the whole session record and
+  would clear `firstPrompt` and `observationCount` on every prompt. AgentMemory
+  creates the session from the observation itself when the record is missing,
+  which also covers Cloud Agents.
 - `afterAgentResponse` records only the truncated final assistant response.
   It does not record reasoning or tool activity.
 - `preCompact` records documented compaction metadata, then asks AgentMemory to
@@ -23,6 +26,18 @@ The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
 Every hook fails open and returns Cursor JSON. Requests have short timeouts.
 Prompt, response, authorization, and full Cursor payloads are never logged.
 Prompt and response captures are capped at 10,000 characters.
+
+AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
+`userPrompt` fields of an observation, and it deduplicates on
+`sessionId + tool_name + tool_input` for five minutes. Two consequences shape
+the payloads:
+
+- The assistant response is sent as `post_tool_use` with
+  `tool_name: "cursor_agent_response"` and the text in `tool_output`. A custom
+  hook type is stored but never summarized, which produces empty memories.
+- Both capture hooks send the observation timestamp as `tool_input`. It is not
+  tool data; without it the dedup hash is identical for every event in a
+  session and each one sent inside the five minute window is dropped.
 
 ## Runtime configuration
 
@@ -90,9 +105,9 @@ Cursor currently supports these four hooks in Cloud Agents:
 - `stop`
 
 Cursor currently does not provide `sessionStart` or `sessionEnd` in Cloud
-Agents. `beforeSubmitPrompt` therefore performs the sole repeated
-session-initialization fallback. Cloud sessions may remain active; observations
-and stop summaries are still retained.
+Agents. No fallback is needed: AgentMemory creates the session from the first
+observation that carries `project` and `cwd`. Cloud sessions may remain active;
+observations and stop summaries are still retained.
 
 Cloud Agents load project-level `.cursor/hooks.json`, not this user-level
 `~/.cursor/hooks.json`. A project that opts into Cloud capture must add its own
@@ -119,7 +134,9 @@ Intentional differences:
 - Scripts use Cursor's `workspace_roots` and emit protocol-safe JSON.
 - `preCompact` checkpoints instead of printing context.
 - `stop` never calls `/session/end`.
-- `afterAgentResponse` is Cursor-specific; upstream has no direct equivalent.
+- `beforeSubmitPrompt` never calls `/session/start`; upstream does.
+- `afterAgentResponse` is Cursor-specific; upstream has no direct equivalent, so
+  it borrows the `post_tool_use` shape.
 - Claude memory bridge, Notification, TaskCompleted, tool, thought, file, shell,
   MCP, and subagent hooks are omitted.
 

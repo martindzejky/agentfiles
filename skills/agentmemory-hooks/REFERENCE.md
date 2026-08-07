@@ -5,13 +5,19 @@
 | Cursor event         | Capture job                                             |
 | -------------------- | ------------------------------------------------------- |
 | `sessionStart`       | Open or resume a memory session; optionally add context |
-| `beforeSubmitPrompt` | Initialize the session and store the user prompt        |
+| `beforeSubmitPrompt` | Store the user prompt                                   |
 | `afterAgentResponse` | Store the final assistant response                      |
 | `preCompact`         | Record compaction metadata and checkpoint a summary     |
 | `stop`               | Summarize without ending the conversation               |
 | `sessionEnd`         | Mark the local session complete                         |
 
 No tool, thought, file, shell, MCP, or subagent hooks are installed.
+
+The capture hooks never call `/session/start`; it replaces the session record
+and resets `firstPrompt` and `observationCount`. `/observe` creates the session
+on its own when `project` and `cwd` are present. The assistant response rides on
+the `post_tool_use` shape because AgentMemory summarizes only `toolName`,
+`toolInput`, `toolOutput`, and `userPrompt`.
 
 ## Install targets
 

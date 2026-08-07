@@ -4,11 +4,14 @@ import { constants } from 'node:fs';
 import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+// Hooks resolve the project from the checkout directory, so the expectation
+// has to follow the clone name rather than assume this repository's own.
+const PROJECT = basename(ROOT);
 const HOOK_DIRECTORY = join(ROOT, 'hooks', 'agentmemory');
 const HOOKS = {
   sessionStart: 'session-start.mjs',
@@ -172,7 +175,7 @@ test('sessionStart registers and emits only Cursor additional_context JSON', asy
         authorization: 'Bearer test-secret',
         body: {
           sessionId: 'session-id',
-          project: '.agentfiles',
+          project: PROJECT,
           cwd: ROOT,
         },
       },
@@ -182,7 +185,7 @@ test('sessionStart registers and emits only Cursor additional_context JSON', asy
   }
 });
 
-test('beforeSubmitPrompt initializes the session and records only the prompt', async () => {
+test('beforeSubmitPrompt records only the prompt and never resets the session', async () => {
   const server = await startMockServer();
   const prompt = `prompt-${'p'.repeat(10_050)}`;
   try {
@@ -200,23 +203,22 @@ test('beforeSubmitPrompt initializes the session and records only the prompt', a
     );
 
     assertSuccessfulNoOp(result);
+    // /session/start overwrites the whole session record upstream, so the
+    // prompt hook must never call it. observe creates the session instead.
     assert.deepEqual(
       server.requests.map((request) => request.path),
-      ['/agentmemory/session/start', '/agentmemory/observe'],
+      ['/agentmemory/observe'],
     );
-    const [start, observe] = server.requests;
-    assert.deepEqual(start.body, {
-      sessionId: 'conversation-id',
-      project: '.agentfiles',
-      cwd: ROOT,
-    });
-    assert.deepEqual(Object.keys(observe.body.data), ['prompt']);
+    const [observe] = server.requests;
+    assert.deepEqual(Object.keys(observe.body.data), ['prompt', 'tool_input']);
     assert.equal(observe.body.data.prompt.length, 10_000);
     assert.equal(observe.body.hookType, 'prompt_submit');
     assert.equal(observe.body.sessionId, 'conversation-id');
-    assert.equal(observe.body.project, '.agentfiles');
+    assert.equal(observe.body.project, PROJECT);
     assert.equal(observe.body.cwd, ROOT);
     assert.match(observe.body.timestamp, /^\d{4}-\d{2}-\d{2}T/);
+    // Carries the timestamp purely so upstream dedup sees a distinct hash.
+    assert.equal(observe.body.data.tool_input, observe.body.timestamp);
     assert.equal(result.stdout.includes('prompt-'), false);
   } finally {
     await server.close();
@@ -241,11 +243,50 @@ test('afterAgentResponse records only the truncated final response', async () =>
 
     assertSuccessfulNoOp(result);
     assert.equal(server.requests.length, 1);
-    assert.equal(server.requests[0].path, '/agentmemory/observe');
-    assert.equal(server.requests[0].body.hookType, 'agent_response');
-    assert.deepEqual(Object.keys(server.requests[0].body.data), ['response']);
-    assert.equal(server.requests[0].body.data.response.length, 10_000);
+    const [observe] = server.requests;
+    assert.equal(observe.path, '/agentmemory/observe');
+    // AgentMemory only summarizes known fields, so the response has to travel
+    // as tool_output on a supported hookType rather than a custom one.
+    assert.equal(observe.body.hookType, 'post_tool_use');
+    assert.deepEqual(Object.keys(observe.body.data), [
+      'tool_name',
+      'tool_input',
+      'tool_output',
+    ]);
+    assert.equal(observe.body.data.tool_name, 'cursor_agent_response');
+    assert.equal(observe.body.data.tool_input, observe.body.timestamp);
+    assert.equal(observe.body.data.tool_output.length, 10_000);
     assert.equal(result.stdout.includes('response-'), false);
+  } finally {
+    await server.close();
+  }
+});
+
+test('repeated prompts stay distinct and never reset the session', async () => {
+  const server = await startMockServer();
+  try {
+    for (const prompt of ['continue', 'continue']) {
+      const result = await runHook(
+        'beforeSubmitPrompt',
+        {
+          conversation_id: 'conversation-id',
+          workspace_roots: [ROOT],
+          prompt,
+        },
+        { url: server.url },
+      );
+      assertSuccessfulNoOp(result);
+    }
+
+    assert.deepEqual(
+      server.requests.map((request) => request.path),
+      ['/agentmemory/observe', '/agentmemory/observe'],
+    );
+    const [first, second] = server.requests;
+    // Identical prompt text must still produce a distinct dedup hash, or
+    // upstream drops the second one for the next five minutes.
+    assert.equal(first.body.data.prompt, second.body.data.prompt);
+    assert.notEqual(first.body.data.tool_input, second.body.data.tool_input);
   } finally {
     await server.close();
   }
@@ -397,7 +438,7 @@ test('hooks load local env files without overriding inherited values', async () 
     );
     assertSuccessfulNoOp(inherited);
     const inheritedRequests = server.requests.slice(1);
-    assert.equal(inheritedRequests.length, 2);
+    assert.equal(inheritedRequests.length, 1);
     for (const request of inheritedRequests) {
       assert.equal(request.authorization, 'Bearer test-secret');
       assert.equal(request.body.project, 'inherited-project');

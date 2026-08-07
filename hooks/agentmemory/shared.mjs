@@ -11,7 +11,6 @@ import { parseEnv } from 'node:util';
 export const CAPTURE_LIMIT = 10_000;
 export const REQUEST_TIMEOUT_MS = 1_000;
 export const CONTEXT_TIMEOUT_MS = 1_500;
-export const SESSION_INIT_TIMEOUT_MS = 500;
 
 const LOCAL_ENV_KEYS = [
   'AGENTMEMORY_URL',

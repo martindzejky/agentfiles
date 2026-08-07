@@ -37,8 +37,10 @@ Watch captures at `http://localhost:3113` once the server is up.
 ## What the hooks should do
 
 - `sessionStart` / `sessionEnd`: frame each local conversation so `handoff` and `session-history` can resume it.
-- `beforeSubmitPrompt`: capture intent from the user prompt.
-- `afterAgentResponse`: capture final outcomes without tool or thought content.
+- `beforeSubmitPrompt`: capture intent from the user prompt, without calling
+  `/session/start`, which would reset the session record.
+- `afterAgentResponse`: capture final outcomes without tool or thought content,
+  sent as `post_tool_use` so AgentMemory actually summarizes the text.
 - `preCompact`: record compaction metadata and checkpoint a summary.
 - `stop`: summarize without ending a conversation that may continue.
 
@@ -56,6 +58,9 @@ server must not block the agent.
 - Copy `.env.example` to `.env`, fill in the secret, and set its permissions to
   `600`. The real file is gitignored.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
+- AgentMemory drops observations whose `sessionId + tool_name + tool_input` hash
+  repeats within five minutes, so capture payloads carry the timestamp as
+  `tool_input` to stay distinct.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
 

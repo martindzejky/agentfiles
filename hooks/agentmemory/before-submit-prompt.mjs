@@ -4,7 +4,6 @@
 // d60652a7058773fa9428fa720eda38942f12f014.
 
 import {
-  SESSION_INIT_TIMEOUT_MS,
   postJson,
   readConfig,
   readPayload,
@@ -25,15 +24,12 @@ async function main() {
   const project = resolveProject(cwd);
   const prompt = truncateText(payload.prompt ?? payload.userPrompt);
 
-  // Cursor Cloud does not run sessionStart. Keep this fallback short, but
-  // finish it before observing so session metadata cannot race prompt capture.
-  await postJson(
-    '/agentmemory/session/start',
-    { sessionId, project, cwd },
-    { config, timeoutMs: SESSION_INIT_TIMEOUT_MS },
-  );
-
+  // No /session/start here. That endpoint overwrites the whole session record,
+  // clearing firstPrompt and observationCount on every prompt. Sending project
+  // and cwd is enough: observe creates the session when the record is missing,
+  // which also covers Cursor Cloud, where sessionStart never runs.
   if (prompt) {
+    const timestamp = new Date().toISOString();
     await postJson(
       '/agentmemory/observe',
       {
@@ -41,8 +37,13 @@ async function main() {
         sessionId,
         project,
         cwd,
-        timestamp: new Date().toISOString(),
-        data: { prompt },
+        timestamp,
+        // tool_input is not tool data. AgentMemory deduplicates on
+        // sessionId + tool_name + tool_input, so leaving it unset makes the
+        // hash identical for every prompt in a session and silently drops
+        // each one sent inside the five minute window. The timestamp keeps
+        // each real prompt distinct.
+        data: { prompt, tool_input: timestamp },
       },
       { config },
     );
