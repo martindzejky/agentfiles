@@ -37,12 +37,17 @@ WRONG: invent commits from local `git log` when the tool returns an empty list.
 
 RIGHT: "No agent-linked commits on that branch. Drop the branch filter, or try another branch."
 
+WRONG (REST fallback): concatenate `?branch=` + raw branch name, so a name with `?`, `&`, or `#` corrupts the query string.
+
+RIGHT: URL-encode every value with `URLSearchParams`/`encodeURIComponent` before appending to `GET /agentmemory/commits`.
+
 ## Checklist
 
 - Filters parsed; bare number treated as limit; limit capped at 500.
 - Output is reverse-chronological.
 - Session ids and observation counts come straight from the response.
 - Empty results stay empty. No filler from git alone.
+- REST fallback URL-encodes branch, repo, and limit.
 
 ## See also
 

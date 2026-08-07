@@ -71,3 +71,11 @@ Response:
 Present:
 
 > No agent-linked commits on `release-2.0`. Drop the branch filter to see all linked commits, or try a different branch.
+
+REST fallback for this same call, with encoding:
+
+```http
+GET /agentmemory/commits?branch=release-2.0&limit=100
+```
+
+Build it with `URLSearchParams` so a branch like `feat/a&b` becomes `feat%2Fa%26b` rather than breaking the query.

@@ -29,6 +29,6 @@ A real-time web viewer at `http://localhost:3113` shows memory building as sessi
 ## See also
 
 - agentmemory-mcp-tools and agentmemory-rest-api for the APIs.
-- agentmemory-hooks for Cursor automatic capture (planned).
+- agentmemory-hooks for Cursor automatic capture.
 - agentmemory-config for ports and feature flags.
 - remember / recall for explicit capture and retrieval in Cursor.
