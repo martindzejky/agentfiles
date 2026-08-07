@@ -38,3 +38,4 @@ There are a couple of "domain knowledge" style skills like marketing, color theo
 - https://github.com/coreyhaines31/marketingskills
 - https://github.com/ibelick/ui-skills
 - https://github.com/jame581/GodotPrompter
+- https://github.com/rohitg00/agentmemory
