@@ -1,6 +1,9 @@
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseEnv } from 'node:util';
 
 // Project discovery is adapted from AgentMemory's src/hooks/_project.ts at
 // d60652a7058773fa9428fa720eda38942f12f014.
@@ -10,9 +13,38 @@ export const REQUEST_TIMEOUT_MS = 1_000;
 export const CONTEXT_TIMEOUT_MS = 1_500;
 export const SESSION_INIT_TIMEOUT_MS = 500;
 
+const LOCAL_ENV_KEYS = [
+  'AGENTMEMORY_URL',
+  'AGENTMEMORY_SECRET',
+  'AGENTMEMORY_REQUIRE_HTTPS',
+  'AGENTMEMORY_INJECT_CONTEXT',
+  'AGENTMEMORY_PROJECT_NAME',
+];
+
 function nonEmptyString(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
+
+export function loadLocalEnv() {
+  if (process.env.AGENTMEMORY_DISABLE_ENV_FILE === '1') return;
+
+  const envFile =
+    nonEmptyString(process.env.AGENTMEMORY_ENV_FILE) ??
+    fileURLToPath(new URL('.env', import.meta.url));
+
+  try {
+    const values = parseEnv(readFileSync(envFile, 'utf8'));
+    for (const key of LOCAL_ENV_KEYS) {
+      if (process.env[key] === undefined && typeof values[key] === 'string') {
+        process.env[key] = values[key];
+      }
+    }
+  } catch {
+    // Missing or invalid local configuration must not break Cursor.
+  }
+}
+
+loadLocalEnv();
 
 export async function readPayload() {
   let input = '';

@@ -2,6 +2,7 @@
 
 This is a local-first, dependency-free Cursor adaptation of AgentMemory's hook
 scripts. Dotbot links `hooks.json` and this directory into `~/.cursor`.
+The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
 
 ## Installed hooks
 
@@ -25,10 +26,27 @@ Prompt and response captures are capped at 10,000 characters.
 
 ## Runtime configuration
 
-The Cursor hook process must inherit:
+Create the ignored local configuration from the committed example:
+
+```sh
+cp hooks/agentmemory/.env.example hooks/agentmemory/.env
+chmod 600 hooks/agentmemory/.env
+```
+
+Then fill in `AGENTMEMORY_SECRET`. Because Dotbot symlinks the whole `hooks`
+directory, the file is also available to the installed scripts at
+`~/.cursor/hooks/agentmemory/.env`; no additional symlink or Cursor setting is
+needed.
+
+Each hook loads this file before reading its configuration. Existing process
+environment variables take precedence over file values. Only these keys are
+loaded:
 
 - `AGENTMEMORY_URL`
 - `AGENTMEMORY_SECRET`
+- `AGENTMEMORY_REQUIRE_HTTPS`
+- `AGENTMEMORY_INJECT_CONTEXT`
+- `AGENTMEMORY_PROJECT_NAME`
 
 Optional settings:
 
@@ -38,11 +56,10 @@ Optional settings:
   context injection.
 - `AGENTMEMORY_PROJECT_NAME` overrides Git-based project discovery.
 
-No secure environment-injection mechanism exists in this repository, so these
-values must be supplied to the Cursor application process through the user's
-secure local setup. Environment variables inside an MCP server block are scoped
-to that MCP subprocess and may not be inherited by Cursor hook processes. Do
-not add secrets to this repository or to `hooks.json`.
+The real `.env` is gitignored and must never be committed. It is still a
+plaintext local secret, so keep its permissions at `600`. Environment variables
+inside an MCP server block remain scoped to that MCP subprocess and may not be
+inherited by Cursor hook processes; the local file avoids relying on that.
 
 Do not enable AgentMemory's plugin-scoped Cursor hooks at the same time as
 these user-level hooks. Cursor can run both scopes and record every event
@@ -54,7 +71,6 @@ After running `./install`, a local smoke test can be sent without printing the
 secret:
 
 ```sh
-test -n "$AGENTMEMORY_URL" && test -n "$AGENTMEMORY_SECRET"
 printf '%s\n' \
   '{"conversation_id":"cursor-hook-smoke","workspace_roots":["'"$PWD"'"],"prompt":"AgentMemory hook smoke test"}' |
   "$HOME/.cursor/hooks/agentmemory/before-submit-prompt.mjs"
@@ -80,8 +96,9 @@ and stop summaries are still retained.
 
 Cloud Agents load project-level `.cursor/hooks.json`, not this user-level
 `~/.cursor/hooks.json`. A project that opts into Cloud capture must add its own
-manifest and make these scripts available there. This repository does not
-install hooks into unrelated projects.
+manifest and make these scripts available there. Globally configured Cloud
+process environment variables take precedence; a local `.env` file is not
+required there. This repository does not install hooks into unrelated projects.
 
 ## Upstream audit trail
 

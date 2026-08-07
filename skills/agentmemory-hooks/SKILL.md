@@ -42,14 +42,19 @@ Watch captures at `http://localhost:3113` once the server is up.
 - `preCompact`: record compaction metadata and checkpoint a summary.
 - `stop`: summarize without ending a conversation that may continue.
 
-Hooks require `AGENTMEMORY_URL` and `AGENTMEMORY_SECRET` in the Cursor hook process environment. They fail open: missing configuration or a down server must not block the agent.
+Hooks load `hooks/agentmemory/.env` into their process environment and require
+`AGENTMEMORY_URL` and `AGENTMEMORY_SECRET`. Explicitly inherited environment
+variables take precedence. They fail open: missing configuration or a down
+server must not block the agent.
 
 ## Important
 
 - Hook scripts never call an LLM provider directly. Summarization, reflection,
   consolidation, and any resulting token usage happen on the configured
   AgentMemory server. `AGENTMEMORY_INJECT_CONTEXT=true` must also be present in
-  the Cursor hook process to opt into returning server context.
+  the local hook environment to opt into returning server context.
+- Copy `.env.example` to `.env`, fill in the secret, and set its permissions to
+  `600`. The real file is gitignored.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.

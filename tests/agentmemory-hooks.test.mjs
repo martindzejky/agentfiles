@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { constants } from 'node:fs';
-import { access, readFile } from 'node:fs/promises';
+import {
+  access,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import http from 'node:http';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
@@ -23,6 +30,7 @@ function hookEnvironment(url, extra = {}) {
   for (const key of Object.keys(environment)) {
     if (key.startsWith('AGENTMEMORY_')) delete environment[key];
   }
+  environment.AGENTMEMORY_DISABLE_ENV_FILE = '1';
 
   if (url) {
     environment.AGENTMEMORY_URL = url;
@@ -343,6 +351,67 @@ test('sessionEnd ends the stable session', async () => {
   }
 });
 
+test('hooks load local env files without overriding inherited values', async () => {
+  const server = await startMockServer();
+  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-hooks-'));
+  const envFile = join(directory, '.env');
+
+  try {
+    await writeFile(
+      envFile,
+      [
+        `AGENTMEMORY_URL=${server.url}`,
+        'AGENTMEMORY_SECRET=env-file-secret',
+        'AGENTMEMORY_PROJECT_NAME=env-file-project',
+      ].join('\n'),
+      { mode: 0o600 },
+    );
+
+    const fromFile = await runHook(
+      'sessionEnd',
+      {
+        conversation_id: 'env-file-session',
+        workspace_roots: [ROOT],
+      },
+      {
+        env: {
+          AGENTMEMORY_DISABLE_ENV_FILE: '0',
+          AGENTMEMORY_ENV_FILE: envFile,
+        },
+      },
+    );
+    assertSuccessfulNoOp(fromFile);
+    assert.equal(server.requests[0].authorization, 'Bearer env-file-secret');
+
+    const inherited = await runHook(
+      'beforeSubmitPrompt',
+      {
+        conversation_id: 'inherited-env-session',
+        workspace_roots: [ROOT],
+        prompt: 'inherited values win',
+      },
+      {
+        url: server.url,
+        env: {
+          AGENTMEMORY_DISABLE_ENV_FILE: '0',
+          AGENTMEMORY_ENV_FILE: envFile,
+          AGENTMEMORY_PROJECT_NAME: 'inherited-project',
+        },
+      },
+    );
+    assertSuccessfulNoOp(inherited);
+    const inheritedRequests = server.requests.slice(1);
+    assert.equal(inheritedRequests.length, 2);
+    for (const request of inheritedRequests) {
+      assert.equal(request.authorization, 'Bearer test-secret');
+      assert.equal(request.body.project, 'inherited-project');
+    }
+  } finally {
+    await server.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test('all hooks fail open for missing configuration and invalid JSON', async () => {
   for (const event of Object.keys(HOOKS)) {
     assertSuccessfulNoOp(
@@ -434,10 +503,11 @@ test('hooks reject redirects without forwarding captured content', async () => {
 });
 
 test('configuration requires a secret and restricts plain HTTP', async () => {
+  const original = { ...process.env };
+  process.env.AGENTMEMORY_DISABLE_ENV_FILE = '1';
   const { readConfig } = await import(
     join(HOOK_DIRECTORY, 'shared.mjs')
   );
-  const original = { ...process.env };
 
   try {
     process.env.AGENTMEMORY_URL = 'http://127.0.0.1:3111';

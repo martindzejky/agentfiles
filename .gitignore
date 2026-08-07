@@ -4,3 +4,7 @@
 # IDEs and editors
 .idea
 .vscode
+
+# Env variables
+.env
+!.env.example

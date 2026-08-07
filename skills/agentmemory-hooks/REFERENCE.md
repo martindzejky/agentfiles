@@ -28,11 +28,14 @@ and `stop`, but not `sessionStart` or `sessionEnd`.
 
 Use REST from hook scripts:
 
+- Local config: gitignored `hooks/agentmemory/.env`, copied from `.env.example`
 - Base URL: required `AGENTMEMORY_URL`
 - Auth: required `Authorization: Bearer $AGENTMEMORY_SECRET`
 - Fail open on network errors so a down daemon does not stall Cursor
 
-MCP-scoped environment variables may not be inherited by hook processes.
+The hooks load only recognized AgentMemory keys from the local file. Existing
+process variables take precedence. MCP-scoped environment variables may not be
+inherited by hook processes.
 
 ## Debug checklist
 
