@@ -177,6 +177,7 @@ test('sessionStart registers and emits only Cursor additional_context JSON', asy
           sessionId: 'session-id',
           project: PROJECT,
           cwd: ROOT,
+          agentId: 'cursor',
         },
       },
     ]);
@@ -216,6 +217,7 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
     assert.equal(observe.body.sessionId, 'conversation-id');
     assert.equal(observe.body.project, PROJECT);
     assert.equal(observe.body.cwd, ROOT);
+    assert.equal(observe.body.agentId, 'cursor');
     assert.match(observe.body.timestamp, /^\d{4}-\d{2}-\d{2}T/);
     // Carries the timestamp purely so upstream dedup sees a distinct hash.
     assert.equal(observe.body.data.tool_input, observe.body.timestamp);
@@ -256,6 +258,7 @@ test('afterAgentResponse records only the truncated final response', async () =>
     assert.equal(observe.body.data.tool_name, 'conversation');
     assert.equal(observe.body.data.tool_input, observe.body.timestamp);
     assert.equal(observe.body.data.tool_output.length, 10_000);
+    assert.equal(observe.body.agentId, 'cursor');
     assert.equal(result.stdout.includes('response-'), false);
   } finally {
     await server.close();
@@ -327,8 +330,10 @@ test('preCompact records metadata, summarizes, and never ends the session', asyn
       messages_to_compact: 20,
       is_first_compaction: true,
     });
+    assert.equal(server.requests[0].body.agentId, 'cursor');
     assert.deepEqual(server.requests[1].body, {
       sessionId: 'conversation-id',
+      agentId: 'cursor',
     });
     assert.equal(
       server.requests.some(
@@ -355,7 +360,7 @@ test('stop summarizes without ending the session', async () => {
       {
         path: '/agentmemory/summarize',
         authorization: 'Bearer test-secret',
-        body: { sessionId: 'conversation-id' },
+        body: { sessionId: 'conversation-id', agentId: 'cursor' },
       },
     ]);
   } finally {
@@ -380,9 +385,49 @@ test('sessionEnd ends the stable session', async () => {
       {
         path: '/agentmemory/session/end',
         authorization: 'Bearer test-secret',
-        body: { sessionId: 'session-id' },
+        body: { sessionId: 'session-id', agentId: 'cursor' },
       },
     ]);
+  } finally {
+    await server.close();
+  }
+});
+
+test('every hook REST body hardcodes agentId cursor', async () => {
+  const server = await startMockServer();
+  try {
+    const payloads = {
+      sessionStart: {
+        session_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+      },
+      beforeSubmitPrompt: {
+        conversation_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+        prompt: 'tag me',
+      },
+      afterAgentResponse: {
+        conversation_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+        text: 'tagged response',
+      },
+      preCompact: {
+        conversation_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+        trigger: 'manual',
+      },
+      stop: { conversation_id: 'agent-id-session' },
+      sessionEnd: { session_id: 'agent-id-session' },
+    };
+
+    for (const [event, payload] of Object.entries(payloads)) {
+      assertSuccessfulNoOp(await runHook(event, payload, { url: server.url }));
+    }
+
+    assert.ok(server.requests.length >= Object.keys(payloads).length);
+    for (const request of server.requests) {
+      assert.equal(request.body.agentId, 'cursor');
+    }
   } finally {
     await server.close();
   }

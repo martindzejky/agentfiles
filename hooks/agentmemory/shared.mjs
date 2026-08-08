@@ -12,6 +12,14 @@ export const CAPTURE_LIMIT = 10_000;
 export const REQUEST_TIMEOUT_MS = 1_000;
 export const CONTEXT_TIMEOUT_MS = 1_500;
 
+// Hardcoded for this Cursor-only integration. Multi-agent setups that share
+// one AgentMemory server use agentId to tag which client wrote the memory.
+export const AGENT_ID = 'cursor';
+
+export function withAgentId(body) {
+  return { ...body, agentId: AGENT_ID };
+}
+
 const LOCAL_ENV_KEYS = [
   'AGENTMEMORY_URL',
   'AGENTMEMORY_SECRET',
@@ -145,7 +153,10 @@ export async function postJson(path, body, options = {}) {
         Authorization: `Bearer ${config.secret}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      // Always tag writes as Cursor. /session/start stamps the session;
+      // other endpoints may ignore unknown fields today but stay tagged
+      // for forward compatibility.
+      body: JSON.stringify(withAgentId(body)),
       redirect: 'error',
       signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS),
     });

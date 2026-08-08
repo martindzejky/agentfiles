@@ -27,6 +27,12 @@ Every hook fails open and returns Cursor JSON. Requests have short timeouts.
 Prompt, response, authorization, and full Cursor payloads are never logged.
 Prompt and response captures are capped at 10,000 characters.
 
+Every REST body includes a hardcoded `agentId: "cursor"` so a shared
+AgentMemory server can tell Cursor writes apart from other agents later.
+`/session/start` is what stamps the session today; `/observe`, `/summarize`,
+and `/session/end` still receive the field for forward compatibility even if
+the current server ignores unknown keys on those routes.
+
 AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
 `userPrompt` fields of an observation, and it deduplicates on
 `sessionId + tool_name + tool_input` for five minutes. Two consequences shape
