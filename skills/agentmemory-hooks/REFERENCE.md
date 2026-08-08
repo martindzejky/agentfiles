@@ -31,8 +31,11 @@ the `post_tool_use` shape because AgentMemory summarizes only `toolName`,
 | Project       | `<repo>/.cursor/hooks.json` | project root     |
 
 Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
-currently supports `beforeSubmitPrompt`, `afterAgentResponse`, `preCompact`,
-and `stop`, but not `sessionStart` or `sessionEnd`.
+supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
+`afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
+`subagentStart`, `subagentStop`, `preCompact`, `stop`, and others) but not
+`sessionStart` or `sessionEnd`. This repo still wires only the six events in
+the table above; tool, thought, and subagent hooks are not installed yet.
 
 ## Transport
 
