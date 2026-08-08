@@ -66,6 +66,8 @@ server must not block the agent.
 - AgentMemory drops observations whose `sessionId + tool_name + tool_input` hash
   repeats within five minutes, so capture payloads carry the timestamp as
   `tool_input` to stay distinct.
+- REST bodies hardcode `agentId: "cursor"` for multi-agent tagging on a shared
+  server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
 

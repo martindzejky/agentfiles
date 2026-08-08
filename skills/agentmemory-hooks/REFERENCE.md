@@ -44,11 +44,13 @@ Use REST from hook scripts:
 - Local config: gitignored `hooks/agentmemory/.env`, copied from `.env.example`
 - Base URL: required `AGENTMEMORY_URL`
 - Auth: required `Authorization: Bearer $AGENTMEMORY_SECRET`
+- Agent tag: hardcoded `agentId: "cursor"` on every POST body
 - Fail open on network errors so a down daemon does not stall Cursor
 
 The hooks load only recognized AgentMemory keys from the local file. Existing
 process variables take precedence. MCP-scoped environment variables may not be
-inherited by hook processes.
+inherited by hook processes. `/session/start` stamps `agentId` on the session;
+other endpoints still send it even when the server ignores unknown fields.
 
 ## Debug checklist
 
