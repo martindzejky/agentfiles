@@ -42,10 +42,10 @@ payloads:
   `tool_name: "conversation"`, matching Hermes / OpenClaw / Pi. `tool_output`
   is the assistant text. `tool_input` is the user prompt from a local cache
   written by `beforeSubmitPrompt` (Cursor's response hook only documents
-  `text`). Identical prompts within five minutes may be deduplicated; that
-  rare drop is accepted.
-- `prompt_submit` still puts the observation timestamp in `tool_input` so
-  repeated prompts in one session stay distinct.
+  `text`).
+- `prompt_submit` also sets `tool_input` to the prompt text. Identical prompts
+  within five minutes may be deduplicated; that rare drop is accepted. Leaving
+  `tool_input` unset would make every `prompt_submit` in a session collide.
 - The prompt cache is gitignored (`.prompt-cache.json`). Growth is bounded by
   per-session overwrite, a 7-day TTL prune on write, a 200-entry cap, and
   deletion on `sessionEnd`.

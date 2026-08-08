@@ -36,7 +36,6 @@ async function main() {
   // and cwd is enough: observe creates the session when the record is missing,
   // which also covers Cursor Cloud, where sessionStart never runs.
   if (prompt) {
-    const timestamp = new Date().toISOString();
     await postJson(
       '/agentmemory/observe',
       {
@@ -44,13 +43,12 @@ async function main() {
         sessionId,
         project,
         cwd,
-        timestamp,
-        // tool_input is not tool data. AgentMemory deduplicates on
-        // sessionId + tool_name + tool_input, so leaving it unset makes the
-        // hash identical for every prompt in a session and silently drops
-        // each one sent inside the five minute window. The timestamp keeps
-        // each real prompt_submit distinct.
-        data: { prompt, tool_input: timestamp },
+        timestamp: new Date().toISOString(),
+        // tool_input mirrors the prompt so different prompts stay distinct in
+        // the five-minute dedup window. Identical prompts may dedupe; that is
+        // accepted (same stance as conversation pairing / Pi-style turns).
+        // Leaving tool_input unset would make every prompt_submit collide.
+        data: { prompt, tool_input: prompt },
       },
       { config },
     );

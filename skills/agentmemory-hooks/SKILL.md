@@ -65,9 +65,8 @@ server must not block the agent.
   `600`. The real file is gitignored.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
 - AgentMemory drops observations whose `sessionId + tool_name + tool_input` hash
-  repeats within five minutes. `prompt_submit` uses a timestamp `tool_input` to
-  stay distinct; conversation pairing uses the cached prompt and accepts rare
-  identical-prompt drops.
+  repeats within five minutes. Both `prompt_submit` and conversation pairing use
+  the user prompt as `tool_input` and accept rare identical-prompt drops.
 - REST bodies hardcode `agentId: "cursor"` for multi-agent tagging on a shared
   server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.

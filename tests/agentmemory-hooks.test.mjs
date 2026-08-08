@@ -219,8 +219,9 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
     assert.equal(observe.body.cwd, ROOT);
     assert.equal(observe.body.agentId, 'cursor');
     assert.match(observe.body.timestamp, /^\d{4}-\d{2}-\d{2}T/);
-    // Carries the timestamp purely so upstream dedup sees a distinct hash.
-    assert.equal(observe.body.data.tool_input, observe.body.timestamp);
+    // Prompt text doubles as tool_input so different prompts stay distinct;
+    // identical prompts may dedupe within five minutes.
+    assert.equal(observe.body.data.tool_input, observe.body.data.prompt);
     assert.equal(result.stdout.includes('prompt-'), false);
   } finally {
     await server.close();
@@ -385,7 +386,7 @@ test('prompt cache prune drops stale entries and enforces the cap', async () => 
   assert.equal(pruned.newer.prompt, 'keep for cap');
 });
 
-test('repeated prompts stay distinct and never reset the session', async () => {
+test('repeated prompts share tool_input and never reset the session', async () => {
   const server = await startMockServer();
   try {
     for (const prompt of ['continue', 'continue']) {
@@ -406,10 +407,12 @@ test('repeated prompts stay distinct and never reset the session', async () => {
       ['/agentmemory/observe', '/agentmemory/observe'],
     );
     const [first, second] = server.requests;
-    // Identical prompt text must still produce a distinct dedup hash, or
-    // upstream drops the second one for the next five minutes.
+    // Same prompt => same tool_input. Upstream may dedupe within five minutes;
+    // that is accepted. Different prompts still get different hashes.
     assert.equal(first.body.data.prompt, second.body.data.prompt);
-    assert.notEqual(first.body.data.tool_input, second.body.data.tool_input);
+    assert.equal(first.body.data.tool_input, second.body.data.tool_input);
+    assert.equal(first.body.data.tool_input, 'continue');
+    assert.notEqual(first.body.timestamp, second.body.timestamp);
   } finally {
     await server.close();
   }
