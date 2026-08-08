@@ -11,18 +11,25 @@ import {
   resolveSessionId,
   resolveWorkingDirectory,
   truncateText,
+  writeCachedPrompt,
   writeCursorOutput,
 } from './shared.mjs';
 
 async function main() {
   const payload = await readPayload();
-  const config = readConfig();
-  if (!payload || !config) return writeCursorOutput();
+  if (!payload) return writeCursorOutput();
 
   const sessionId = resolveSessionId(payload);
   const cwd = resolveWorkingDirectory(payload);
   const project = resolveProject(cwd);
   const prompt = truncateText(payload.prompt ?? payload.userPrompt);
+
+  // Cache even when the server is unreachable so a later response hook can
+  // still pair conversation tool_input once config/network recover.
+  if (prompt) writeCachedPrompt(sessionId, prompt);
+
+  const config = readConfig();
+  if (!config) return writeCursorOutput();
 
   // No /session/start here. That endpoint overwrites the whole session record,
   // clearing firstPrompt and observationCount on every prompt. Sending project
@@ -42,7 +49,7 @@ async function main() {
         // sessionId + tool_name + tool_input, so leaving it unset makes the
         // hash identical for every prompt in a session and silently drops
         // each one sent inside the five minute window. The timestamp keeps
-        // each real prompt distinct.
+        // each real prompt_submit distinct.
         data: { prompt, tool_input: timestamp },
       },
       { config },

@@ -35,15 +35,20 @@ the current server ignores unknown keys on those routes.
 
 AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
 `userPrompt` fields of an observation, and it deduplicates on
-`sessionId + tool_name + tool_input` for five minutes. Two consequences shape
-the payloads:
+`sessionId + tool_name + tool_input` for five minutes. Consequences for the
+payloads:
 
 - The assistant response is sent as `post_tool_use` with
-  `tool_name: "conversation"` and the text in `tool_output`. A custom
-  hook type is stored but never summarized, which produces empty memories.
-- Both capture hooks send the observation timestamp as `tool_input`. It is not
-  tool data; without it the dedup hash is identical for every event in a
-  session and each one sent inside the five minute window is dropped.
+  `tool_name: "conversation"`, matching Hermes / OpenClaw / Pi. `tool_output`
+  is the assistant text. `tool_input` is the user prompt from a local cache
+  written by `beforeSubmitPrompt` (Cursor's response hook only documents
+  `text`). Identical prompts within five minutes may be deduplicated; that
+  rare drop is accepted.
+- `prompt_submit` still puts the observation timestamp in `tool_input` so
+  repeated prompts in one session stay distinct.
+- The prompt cache is gitignored (`.prompt-cache.json`). Growth is bounded by
+  per-session overwrite, a 7-day TTL prune on write, a 200-entry cap, and
+  deletion on `sessionEnd`.
 
 ## Runtime configuration
 

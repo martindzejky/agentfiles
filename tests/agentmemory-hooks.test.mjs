@@ -227,10 +227,28 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
   }
 });
 
-test('afterAgentResponse records only the truncated final response', async () => {
+test('afterAgentResponse pairs the cached prompt as conversation tool_input', async () => {
   const server = await startMockServer();
+  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-cache-'));
+  const cacheFile = join(directory, 'prompt-cache.json');
+  const prompt = 'cached user prompt for pairing';
   const response = `response-${'r'.repeat(10_050)}`;
   try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'beforeSubmitPrompt',
+        {
+          conversation_id: 'conversation-id',
+          workspace_roots: [ROOT],
+          prompt,
+        },
+        {
+          url: server.url,
+          env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+        },
+      ),
+    );
+
     const result = await runHook(
       'afterAgentResponse',
       {
@@ -238,14 +256,17 @@ test('afterAgentResponse records only the truncated final response', async () =>
         workspace_roots: [ROOT],
         text: response,
         thought: 'private reasoning',
-        prompt: 'previous prompt',
+        prompt: 'do not read this undeclared field',
       },
-      { url: server.url },
+      {
+        url: server.url,
+        env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+      },
     );
 
     assertSuccessfulNoOp(result);
-    assert.equal(server.requests.length, 1);
-    const [observe] = server.requests;
+    assert.equal(server.requests.length, 2);
+    const observe = server.requests[1];
     assert.equal(observe.path, '/agentmemory/observe');
     // AgentMemory only summarizes known fields, so the response has to travel
     // as tool_output on a supported hookType rather than a custom one.
@@ -256,13 +277,112 @@ test('afterAgentResponse records only the truncated final response', async () =>
       'tool_output',
     ]);
     assert.equal(observe.body.data.tool_name, 'conversation');
-    assert.equal(observe.body.data.tool_input, observe.body.timestamp);
+    assert.equal(observe.body.data.tool_input, prompt);
     assert.equal(observe.body.data.tool_output.length, 10_000);
     assert.equal(observe.body.agentId, 'cursor');
     assert.equal(result.stdout.includes('response-'), false);
   } finally {
     await server.close();
+    await rm(directory, { recursive: true, force: true });
   }
+});
+
+test('afterAgentResponse uses empty tool_input on prompt cache miss', async () => {
+  const server = await startMockServer();
+  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-miss-'));
+  const cacheFile = join(directory, 'missing-cache.json');
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'afterAgentResponse',
+        {
+          conversation_id: 'missing-cache-session',
+          workspace_roots: [ROOT],
+          text: 'response without a cached prompt',
+        },
+        {
+          url: server.url,
+          env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+        },
+      ),
+    );
+    assert.equal(server.requests[0].body.data.tool_input, '');
+  } finally {
+    await server.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('sessionEnd clears the prompt cache entry', async () => {
+  const server = await startMockServer();
+  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-end-'));
+  const cacheFile = join(directory, 'prompt-cache.json');
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'beforeSubmitPrompt',
+        {
+          conversation_id: 'ending-session',
+          workspace_roots: [ROOT],
+          prompt: 'please forget this cache entry',
+        },
+        {
+          url: server.url,
+          env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+        },
+      ),
+    );
+    assert.equal(
+      JSON.parse(await readFile(cacheFile, 'utf8'))['ending-session'].prompt,
+      'please forget this cache entry',
+    );
+
+    assertSuccessfulNoOp(
+      await runHook(
+        'sessionEnd',
+        { conversation_id: 'ending-session' },
+        {
+          url: server.url,
+          env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+        },
+      ),
+    );
+
+    await assert.rejects(() => access(cacheFile), { code: 'ENOENT' });
+  } finally {
+    await server.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('prompt cache prune drops stale entries and enforces the cap', async () => {
+  const { prunePromptCache } = await import(join(HOOK_DIRECTORY, 'shared.mjs'));
+  const now = Date.parse('2026-08-08T12:00:00.000Z');
+  const pruned = prunePromptCache(
+    {
+      fresh: {
+        prompt: 'keep me',
+        updatedAt: '2026-08-08T11:00:00.000Z',
+      },
+      stale: {
+        prompt: 'drop me',
+        updatedAt: '2026-07-01T00:00:00.000Z',
+      },
+      old: {
+        prompt: 'also drop for cap',
+        updatedAt: '2026-08-07T00:00:00.000Z',
+      },
+      newer: {
+        prompt: 'keep for cap',
+        updatedAt: '2026-08-08T10:00:00.000Z',
+      },
+    },
+    { now, ttlMs: 2 * 24 * 60 * 60 * 1000, maxEntries: 2 },
+  );
+
+  assert.deepEqual(Object.keys(pruned).sort(), ['fresh', 'newer']);
+  assert.equal(pruned.fresh.prompt, 'keep me');
+  assert.equal(pruned.newer.prompt, 'keep for cap');
 });
 
 test('repeated prompts stay distinct and never reset the session', async () => {

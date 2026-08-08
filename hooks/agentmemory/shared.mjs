@@ -1,7 +1,14 @@
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import {
+  chmodSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseEnv } from 'node:util';
 
@@ -19,6 +26,13 @@ export const AGENT_ID = 'cursor';
 export function withAgentId(body) {
   return { ...body, agentId: AGENT_ID };
 }
+
+// Pi-style bridge: beforeSubmitPrompt stores the user prompt so
+// afterAgentResponse can send it as conversation tool_input. Growth is
+// bounded by per-session overwrite, TTL prune, a hard cap, and sessionEnd
+// deletion.
+export const PROMPT_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export const PROMPT_CACHE_MAX_ENTRIES = 200;
 
 const LOCAL_ENV_KEYS = [
   'AGENTMEMORY_URL',
@@ -175,4 +189,116 @@ export function truncateText(value) {
 
 export function writeCursorOutput(output = {}) {
   process.stdout.write(`${JSON.stringify(output)}\n`);
+}
+
+function promptCachePath() {
+  return (
+    nonEmptyString(process.env.AGENTMEMORY_PROMPT_CACHE_FILE) ??
+    fileURLToPath(new URL('.prompt-cache.json', import.meta.url))
+  );
+}
+
+function readPromptCacheFile(path) {
+  try {
+    const parsed = JSON.parse(readFileSync(path, 'utf8'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? parsed
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePromptCacheFile(path, cache) {
+  mkdirSync(dirname(path), { recursive: true });
+  const tempPath = `${path}.${process.pid}.${Date.now()}.tmp`;
+  writeFileSync(tempPath, `${JSON.stringify(cache)}\n`, { mode: 0o600 });
+  try {
+    chmodSync(tempPath, 0o600);
+  } catch {
+    // Best effort on platforms that ignore mode in writeFileSync.
+  }
+  renameSync(tempPath, path);
+}
+
+export function prunePromptCache(
+  cache,
+  {
+    now = Date.now(),
+    ttlMs = PROMPT_CACHE_TTL_MS,
+    maxEntries = PROMPT_CACHE_MAX_ENTRIES,
+  } = {},
+) {
+  const cutoff = now - ttlMs;
+  const kept = {};
+
+  for (const [sessionId, entry] of Object.entries(cache)) {
+    if (!entry || typeof entry !== 'object') continue;
+    const prompt = nonEmptyString(entry.prompt);
+    const updatedAt = Date.parse(entry.updatedAt);
+    if (!prompt || !Number.isFinite(updatedAt) || updatedAt < cutoff) continue;
+    kept[sessionId] = { prompt, updatedAt: new Date(updatedAt).toISOString() };
+  }
+
+  const sessions = Object.keys(kept);
+  if (sessions.length <= maxEntries) return kept;
+
+  sessions.sort(
+    (left, right) =>
+      Date.parse(kept[left].updatedAt) - Date.parse(kept[right].updatedAt),
+  );
+  for (const sessionId of sessions.slice(0, sessions.length - maxEntries)) {
+    delete kept[sessionId];
+  }
+  return kept;
+}
+
+export function writeCachedPrompt(sessionId, prompt) {
+  const id = nonEmptyString(sessionId);
+  const text = truncateText(prompt);
+  if (!id || !text) return;
+
+  try {
+    const path = promptCachePath();
+    const cache = prunePromptCache(readPromptCacheFile(path));
+    cache[id] = { prompt: text, updatedAt: new Date().toISOString() };
+    writePromptCacheFile(path, prunePromptCache(cache));
+  } catch {
+    // Cache failures must never block Cursor.
+  }
+}
+
+export function readCachedPrompt(sessionId) {
+  const id = nonEmptyString(sessionId);
+  if (!id) return '';
+
+  try {
+    const entry = readPromptCacheFile(promptCachePath())[id];
+    return truncateText(entry?.prompt);
+  } catch {
+    return '';
+  }
+}
+
+export function clearCachedPrompt(sessionId) {
+  const id = nonEmptyString(sessionId);
+  if (!id) return;
+
+  try {
+    const path = promptCachePath();
+    const cache = prunePromptCache(readPromptCacheFile(path));
+    if (!(id in cache)) return;
+    delete cache[id];
+    if (Object.keys(cache).length === 0) {
+      try {
+        unlinkSync(path);
+      } catch {
+        writePromptCacheFile(path, {});
+      }
+      return;
+    }
+    writePromptCacheFile(path, cache);
+  } catch {
+    // Cache failures must never block Cursor.
+  }
 }

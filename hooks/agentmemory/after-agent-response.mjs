@@ -6,10 +6,15 @@
 // Cursor has no upstream equivalent for this event. AgentMemory only reads
 // toolName, toolInput, toolOutput and userPrompt off an observation, so a
 // custom hookType carrying data.response is stored but never summarised. The
-// response is therefore mapped onto the supported post_tool_use shape.
+// response is therefore mapped onto the supported post_tool_use shape, matching
+// Hermes / OpenClaw / Pi: tool_input is the user prompt, tool_output is the
+// assistant reply. The prompt comes from a local cache written by
+// beforeSubmitPrompt because Cursor's afterAgentResponse payload only
+// documents `text`.
 
 import {
   postJson,
+  readCachedPrompt,
   readConfig,
   readPayload,
   resolveProject,
@@ -26,19 +31,21 @@ async function main() {
 
   const response = truncateText(payload.text);
   if (response) {
+    const sessionId = resolveSessionId(payload);
     const cwd = resolveWorkingDirectory(payload);
-    const timestamp = new Date().toISOString();
     await postJson(
       '/agentmemory/observe',
       {
         hookType: 'post_tool_use',
-        sessionId: resolveSessionId(payload),
+        sessionId,
         project: resolveProject(cwd),
         cwd,
-        timestamp,
+        timestamp: new Date().toISOString(),
         data: {
           tool_name: 'conversation',
-          tool_input: timestamp,
+          // Empty on cache miss. Identical prompts within five minutes may be
+          // deduplicated upstream; that rare drop is accepted.
+          tool_input: readCachedPrompt(sessionId),
           tool_output: response,
         },
       },
