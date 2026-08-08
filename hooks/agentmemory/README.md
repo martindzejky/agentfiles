@@ -97,17 +97,25 @@ prompt observation in the configured AgentMemory viewer (the local default is
 
 ## Cursor Cloud Agents
 
-Cursor currently supports these four hooks in Cloud Agents:
+Cursor Cloud Agents run many of the same agent hooks as the local editor,
+including:
 
 - `beforeSubmitPrompt`
 - `afterAgentResponse`
+- `afterAgentThought`
+- `preToolUse` / `postToolUse` / `postToolUseFailure`
+- `subagentStart` / `subagentStop`
 - `preCompact`
 - `stop`
 
-Cursor currently does not provide `sessionStart` or `sessionEnd` in Cloud
-Agents. No fallback is needed: AgentMemory creates the session from the first
+Cursor Cloud does not provide `sessionStart` or `sessionEnd`. No fallback is
+needed for session creation: AgentMemory creates the session from the first
 observation that carries `project` and `cwd`. Cloud sessions may remain active;
 observations and stop summaries are still retained.
+
+This repo currently installs only the six lifecycle hooks in
+[Installed hooks](#installed-hooks). Tool, thought, and subagent Cloud events
+are supported by Cursor but not wired here yet.
 
 Cloud Agents load project-level `.cursor/hooks.json`, not this user-level
 `~/.cursor/hooks.json`. A project that opts into Cloud capture must add its own
@@ -134,7 +142,9 @@ Intentional differences:
 - Scripts use Cursor's `workspace_roots` and emit protocol-safe JSON.
 - `preCompact` checkpoints instead of printing context.
 - `stop` never calls `/session/end`.
-- `beforeSubmitPrompt` never calls `/session/start`; upstream does.
+- `beforeSubmitPrompt` never calls `/session/start`. Upstream Claude
+  `prompt-submit` also only posts `/observe`; an earlier local draft called
+  `/session/start` on every prompt and that overwrote the session record.
 - `afterAgentResponse` is Cursor-specific; upstream has no direct equivalent, so
   it borrows the `post_tool_use` shape.
 - Claude memory bridge, Notification, TaskCompleted, tool, thought, file, shell,
