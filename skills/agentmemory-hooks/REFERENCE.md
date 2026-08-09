@@ -7,8 +7,8 @@
 | `sessionStart`       | Open or resume a memory session; optionally add context |
 | `beforeSubmitPrompt` | Store the user prompt                                   |
 | `afterAgentResponse` | Store the final assistant response                      |
-| `postToolUse`        | Store successful tool calls                             |
-| `postToolUseFailure` | Store failed tool calls (skips interrupts)              |
+| `postToolUse`        | Store successful tool calls; optional file-tool enrich  |
+| `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)   |
 | `preCompact`         | Record compaction metadata and checkpoint a summary     |
 | `stop`               | Summarize without ending the conversation               |
 | `sessionEnd`         | Mark the local session complete                         |

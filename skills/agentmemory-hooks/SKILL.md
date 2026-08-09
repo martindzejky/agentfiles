@@ -47,7 +47,10 @@ Watch captures at `http://localhost:3113` once the server is up.
   `tool_name: "conversation"`, `tool_input` from the cached user prompt, and
   `tool_output` as the assistant text.
 - `postToolUse` / `postToolUseFailure`: capture real tool calls and failures
-  (all tools; interrupts skipped on failure).
+  (all tools; interrupts skipped on failure). With
+  `AGENTMEMORY_INJECT_CONTEXT=true`, successful file-touching tools also
+  enrich via `/agentmemory/enrich` → `additional_context` (Shell/MCP skipped;
+  failure hooks cannot inject on Cursor).
 - `preCompact`: record compaction metadata and checkpoint a summary.
 - `stop`: summarize without ending a conversation that may continue.
 

@@ -262,6 +262,86 @@ export function resolveToolOutput(payload) {
   return result;
 }
 
+// File-touching tools only, matching AgentMemory pre-tool-use.ts. Shell and
+// MCP tools are skipped (no reliable path list; MCP names look like MCP:…).
+const ENRICH_FILE_TOOLS = new Set([
+  'edit',
+  'write',
+  'create',
+  'read',
+  'view',
+  'glob',
+  'grep',
+]);
+
+export function isContextInjectionEnabled() {
+  return process.env.AGENTMEMORY_INJECT_CONTEXT === 'true';
+}
+
+// Adapted from AgentMemory src/hooks/pre-tool-use.ts file/term extraction.
+export function extractEnrichQuery(toolName, toolInput) {
+  const name = nonEmptyString(toolName);
+  if (!name) return null;
+  if (name.startsWith('MCP:') || name.toLowerCase().startsWith('mcp:')) {
+    return null;
+  }
+
+  const normalized = name.toLowerCase();
+  if (!ENRICH_FILE_TOOLS.has(normalized)) return null;
+
+  const input =
+    toolInput && typeof toolInput === 'object' && !Array.isArray(toolInput)
+      ? toolInput
+      : {};
+  const files = [];
+  const fileKeys =
+    normalized === 'grep'
+      ? ['path', 'file']
+      : ['file_path', 'path', 'file', 'pattern'];
+  for (const key of fileKeys) {
+    const value = input[key];
+    if (typeof value === 'string' && value.length > 0) files.push(value);
+  }
+  if (files.length === 0) return null;
+
+  const terms = [];
+  if (normalized === 'grep' || normalized === 'glob') {
+    const pattern = input.pattern;
+    if (typeof pattern === 'string' && pattern.length > 0) terms.push(pattern);
+  }
+
+  return { files, terms };
+}
+
+// Cursor-native port of upstream PreToolUse enrich: POST /agentmemory/enrich
+// and return text for postToolUse additional_context. Opt-in only (#143).
+export async function fetchEnrichContext({
+  config,
+  sessionId,
+  project,
+  toolName,
+  toolInput,
+}) {
+  if (!isContextInjectionEnabled() || !config) return '';
+
+  const query = extractEnrichQuery(toolName, toolInput);
+  if (!query) return '';
+
+  const result = await postJson(
+    '/agentmemory/enrich',
+    {
+      sessionId,
+      files: query.files,
+      ...(query.terms.length > 0 ? { terms: query.terms } : {}),
+      toolName,
+      project,
+    },
+    { config, timeoutMs: CONTEXT_TIMEOUT_MS },
+  );
+
+  return truncateText(result?.context);
+}
+
 export function writeCursorOutput(output = {}) {
   process.stdout.write(`${JSON.stringify(output)}\n`);
 }
