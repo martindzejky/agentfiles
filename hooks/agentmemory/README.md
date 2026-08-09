@@ -46,9 +46,10 @@ payloads:
 - `prompt_submit` also sets `tool_input` to the prompt text. Identical prompts
   within five minutes may be deduplicated; that rare drop is accepted. Leaving
   `tool_input` unset would make every `prompt_submit` in a session collide.
-- The prompt cache is gitignored (`.prompt-cache.json`). Growth is bounded by
-  per-session overwrite, a 7-day TTL prune on write, a 200-entry cap, and
-  deletion on `sessionEnd`.
+- The prompt cache is gitignored (`.prompt-cache/`, one JSON file per session)
+  so parallel local agents do not share a single read-modify-write map. Growth
+  is bounded by per-session overwrite, a 7-day TTL prune on write, a 200-entry
+  cap, and deletion on `sessionEnd`.
 
 ## Runtime configuration
 

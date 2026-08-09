@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { constants } from 'node:fs';
-import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
@@ -230,8 +237,7 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
 
 test('afterAgentResponse pairs the cached prompt as conversation tool_input', async () => {
   const server = await startMockServer();
-  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-cache-'));
-  const cacheFile = join(directory, 'prompt-cache.json');
+  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-cache-'));
   const prompt = 'cached user prompt for pairing';
   const response = `response-${'r'.repeat(10_050)}`;
   try {
@@ -245,7 +251,7 @@ test('afterAgentResponse pairs the cached prompt as conversation tool_input', as
         },
         {
           url: server.url,
-          env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+          env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
         },
       ),
     );
@@ -261,7 +267,7 @@ test('afterAgentResponse pairs the cached prompt as conversation tool_input', as
       },
       {
         url: server.url,
-        env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+        env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
       },
     );
 
@@ -284,14 +290,13 @@ test('afterAgentResponse pairs the cached prompt as conversation tool_input', as
     assert.equal(result.stdout.includes('response-'), false);
   } finally {
     await server.close();
-    await rm(directory, { recursive: true, force: true });
+    await rm(cacheDir, { recursive: true, force: true });
   }
 });
 
 test('afterAgentResponse uses empty tool_input on prompt cache miss', async () => {
   const server = await startMockServer();
-  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-miss-'));
-  const cacheFile = join(directory, 'missing-cache.json');
+  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-miss-'));
   try {
     assertSuccessfulNoOp(
       await runHook(
@@ -303,21 +308,24 @@ test('afterAgentResponse uses empty tool_input on prompt cache miss', async () =
         },
         {
           url: server.url,
-          env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+          env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
         },
       ),
     );
     assert.equal(server.requests[0].body.data.tool_input, '');
   } finally {
     await server.close();
-    await rm(directory, { recursive: true, force: true });
+    await rm(cacheDir, { recursive: true, force: true });
   }
 });
 
 test('sessionEnd clears the prompt cache entry', async () => {
   const server = await startMockServer();
-  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-end-'));
-  const cacheFile = join(directory, 'prompt-cache.json');
+  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-end-'));
+  const { promptCacheEntryPath } = await import(
+    join(HOOK_DIRECTORY, 'shared.mjs')
+  );
+  const entryPath = promptCacheEntryPath(cacheDir, 'ending-session');
   try {
     assertSuccessfulNoOp(
       await runHook(
@@ -329,12 +337,12 @@ test('sessionEnd clears the prompt cache entry', async () => {
         },
         {
           url: server.url,
-          env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+          env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
         },
       ),
     );
     assert.equal(
-      JSON.parse(await readFile(cacheFile, 'utf8'))['ending-session'].prompt,
+      JSON.parse(await readFile(entryPath, 'utf8')).prompt,
       'please forget this cache entry',
     );
 
@@ -344,46 +352,149 @@ test('sessionEnd clears the prompt cache entry', async () => {
         { conversation_id: 'ending-session' },
         {
           url: server.url,
-          env: { AGENTMEMORY_PROMPT_CACHE_FILE: cacheFile },
+          env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
         },
       ),
     );
 
-    await assert.rejects(() => access(cacheFile), { code: 'ENOENT' });
+    await assert.rejects(() => access(entryPath), { code: 'ENOENT' });
   } finally {
     await server.close();
-    await rm(directory, { recursive: true, force: true });
+    await rm(cacheDir, { recursive: true, force: true });
   }
 });
 
 test('prompt cache prune drops stale entries and enforces the cap', async () => {
-  const { prunePromptCache } = await import(join(HOOK_DIRECTORY, 'shared.mjs'));
-  const now = Date.parse('2026-08-08T12:00:00.000Z');
-  const pruned = prunePromptCache(
-    {
-      fresh: {
-        prompt: 'keep me',
-        updatedAt: '2026-08-08T11:00:00.000Z',
-      },
-      stale: {
-        prompt: 'drop me',
-        updatedAt: '2026-07-01T00:00:00.000Z',
-      },
-      old: {
-        prompt: 'also drop for cap',
-        updatedAt: '2026-08-07T00:00:00.000Z',
-      },
-      newer: {
-        prompt: 'keep for cap',
-        updatedAt: '2026-08-08T10:00:00.000Z',
-      },
-    },
-    { now, ttlMs: 2 * 24 * 60 * 60 * 1000, maxEntries: 2 },
+  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-prune-'));
+  const { promptCacheEntryPath, prunePromptCacheDir } = await import(
+    join(HOOK_DIRECTORY, 'shared.mjs')
   );
+  await mkdir(cacheDir, { recursive: true });
 
-  assert.deepEqual(Object.keys(pruned).sort(), ['fresh', 'newer']);
-  assert.equal(pruned.fresh.prompt, 'keep me');
-  assert.equal(pruned.newer.prompt, 'keep for cap');
+  const entries = {
+    fresh: {
+      prompt: 'keep me',
+      updatedAt: '2026-08-08T11:00:00.000Z',
+    },
+    stale: {
+      prompt: 'drop me',
+      updatedAt: '2026-07-01T00:00:00.000Z',
+    },
+    old: {
+      prompt: 'also drop for cap',
+      updatedAt: '2026-08-07T00:00:00.000Z',
+    },
+    newer: {
+      prompt: 'keep for cap',
+      updatedAt: '2026-08-08T10:00:00.000Z',
+    },
+  };
+
+  try {
+    for (const [sessionId, entry] of Object.entries(entries)) {
+      await writeFile(
+        promptCacheEntryPath(cacheDir, sessionId),
+        `${JSON.stringify(entry)}\n`,
+      );
+    }
+
+    const remaining = prunePromptCacheDir(cacheDir, {
+      now: Date.parse('2026-08-08T12:00:00.000Z'),
+      ttlMs: 2 * 24 * 60 * 60 * 1000,
+      maxEntries: 2,
+    });
+
+    assert.equal(remaining, 2);
+    assert.equal(
+      JSON.parse(
+        await readFile(promptCacheEntryPath(cacheDir, 'fresh'), 'utf8'),
+      ).prompt,
+      'keep me',
+    );
+    assert.equal(
+      JSON.parse(
+        await readFile(promptCacheEntryPath(cacheDir, 'newer'), 'utf8'),
+      ).prompt,
+      'keep for cap',
+    );
+    await assert.rejects(
+      () => access(promptCacheEntryPath(cacheDir, 'stale')),
+      { code: 'ENOENT' },
+    );
+    await assert.rejects(() => access(promptCacheEntryPath(cacheDir, 'old')), {
+      code: 'ENOENT',
+    });
+  } finally {
+    await rm(cacheDir, { recursive: true, force: true });
+  }
+});
+
+test('parallel session cache writes keep both prompts', async () => {
+  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-race-'));
+  const { promptCacheEntryPath } = await import(
+    join(HOOK_DIRECTORY, 'shared.mjs')
+  );
+  const sharedModule = join(HOOK_DIRECTORY, 'shared.mjs');
+
+  function writeInChild(sessionId, prompt) {
+    return new Promise((resolve, reject) => {
+      const child = spawn(
+        process.execPath,
+        [
+          '--input-type=module',
+          '-e',
+          `
+            import { writeCachedPrompt } from ${JSON.stringify(sharedModule)};
+            const start = Date.now();
+            while (Date.now() - start < 30) {}
+            writeCachedPrompt(process.argv[1], process.argv[2]);
+          `,
+          sessionId,
+          prompt,
+        ],
+        {
+          env: {
+            ...process.env,
+            AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir,
+            AGENTMEMORY_DISABLE_ENV_FILE: '1',
+          },
+          stdio: ['ignore', 'pipe', 'pipe'],
+        },
+      );
+      let stderr = '';
+      child.stderr.setEncoding('utf8');
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk;
+      });
+      child.once('error', reject);
+      child.once('close', (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`cache writer exited ${code}: ${stderr}`));
+      });
+    });
+  }
+
+  try {
+    await Promise.all([
+      writeInChild('session-a', 'prompt-a'),
+      writeInChild('session-b', 'prompt-b'),
+    ]);
+
+    assert.equal(
+      JSON.parse(
+        await readFile(promptCacheEntryPath(cacheDir, 'session-a'), 'utf8'),
+      ).prompt,
+      'prompt-a',
+    );
+    assert.equal(
+      JSON.parse(
+        await readFile(promptCacheEntryPath(cacheDir, 'session-b'), 'utf8'),
+      ).prompt,
+      'prompt-b',
+    );
+  } finally {
+    await rm(cacheDir, { recursive: true, force: true });
+  }
 });
 
 test('repeated prompts share tool_input and never reset the session', async () => {
