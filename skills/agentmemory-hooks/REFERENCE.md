@@ -9,11 +9,13 @@
 | `afterAgentResponse` | Store the final assistant response                      |
 | `postToolUse`        | Store successful tool calls; optional file-tool enrich  |
 | `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)   |
+| `subagentStart`      | Store Task-tool subagent start                          |
+| `subagentStop`       | Store Task-tool subagent completion                     |
 | `preCompact`         | Record compaction metadata and checkpoint a summary     |
 | `stop`               | Summarize without ending the conversation               |
 | `sessionEnd`         | Mark the local session complete                         |
 
-No thought or subagent hooks are installed.
+No thought hooks are installed.
 
 Commit linking is outside this Cursor event map. A git `post-commit` hook that
 calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
@@ -38,7 +40,7 @@ supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
 `afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
 `subagentStart`, `subagentStop`, `preCompact`, `stop`, and others) but not
 `sessionStart` or `sessionEnd`. This repo wires the events in the table above;
-thought and subagent hooks are not installed yet.
+thought hooks are not installed yet.
 
 ## Transport
 

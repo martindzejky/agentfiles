@@ -25,6 +25,8 @@ The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
   upstream PreToolUse enrich.
 - `postToolUseFailure` records failed tool calls (skips user interrupts). It
   does not enrich: Cursor documents no output fields for this event.
+- `subagentStart` / `subagentStop` record Task-tool subagent lifecycle
+  (`agent_id`, `agent_type`, task/summary) on the parent session.
 - `preCompact` records documented compaction metadata, then asks AgentMemory to
   summarize the session. It cannot alter Cursor's compaction.
 - `stop` asks AgentMemory to summarize, but deliberately does not end the
@@ -134,9 +136,9 @@ needed for session creation: AgentMemory creates the session from the first
 observation that carries `project` and `cwd`. Cloud sessions may remain active;
 observations and stop summaries are still retained.
 
-This repo currently installs the lifecycle and tool hooks in
-[Installed hooks](#installed-hooks). Thought and subagent Cloud events are
-supported by Cursor but not wired here yet.
+This repo currently installs the lifecycle, tool, and subagent hooks in
+[Installed hooks](#installed-hooks). Thought hooks are supported by Cursor but
+not wired here yet.
 
 Cloud Agents load project-level `.cursor/hooks.json`, not this user-level
 `~/.cursor/hooks.json`. A project that opts into Cloud capture must add its own
@@ -155,6 +157,8 @@ Adapted from AgentMemory commit
 - [`plugin/scripts/post-tool-failure.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/post-tool-failure.mjs)
 - [`plugin/scripts/pre-tool-use.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/pre-tool-use.mjs)
   (enrich logic only; wired on Cursor `postToolUse`)
+- [`plugin/scripts/subagent-start.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-start.mjs)
+- [`plugin/scripts/subagent-stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-stop.mjs)
 - [`plugin/scripts/pre-compact.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/pre-compact.mjs)
 - [`plugin/scripts/stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/stop.mjs)
 - [`plugin/scripts/session-end.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/session-end.mjs)
@@ -177,8 +181,11 @@ Intentional differences:
   file-touching tools.
 - `preToolUse` is omitted: Cursor cannot inject context there. Upstream enrich
   is adapted onto `postToolUse` `additional_context` instead.
-- Claude memory bridge, Notification, TaskCompleted, thought, and subagent
-  hooks are omitted.
+- Subagent hooks map Cursor `subagent_id` / `subagent_type` / `summary` onto
+  upstream `agent_id` / `agent_type` / `last_message`, and set `tool_input` so
+  concurrent subagents do not share one dedup hash.
+- Claude memory bridge, Notification, TaskCompleted, and thought hooks are
+  omitted.
 
 Open upstream
 [PR #1112](https://github.com/rohitg00/agentmemory/pull/1112) was reviewed for
