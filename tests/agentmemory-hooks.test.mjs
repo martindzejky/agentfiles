@@ -237,7 +237,10 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
 
 test('afterAgentResponse pairs the cached prompt as conversation tool_input', async () => {
   const server = await startMockServer();
-  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-cache-'));
+  const { clearCachedPrompt } = await import(
+    join(HOOK_DIRECTORY, 'shared.mjs')
+  );
+  const sessionId = 'pairing-cache-session';
   const prompt = 'cached user prompt for pairing';
   const response = `response-${'r'.repeat(10_050)}`;
   try {
@@ -245,30 +248,24 @@ test('afterAgentResponse pairs the cached prompt as conversation tool_input', as
       await runHook(
         'beforeSubmitPrompt',
         {
-          conversation_id: 'conversation-id',
+          conversation_id: sessionId,
           workspace_roots: [ROOT],
           prompt,
         },
-        {
-          url: server.url,
-          env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
-        },
+        { url: server.url },
       ),
     );
 
     const result = await runHook(
       'afterAgentResponse',
       {
-        conversation_id: 'conversation-id',
+        conversation_id: sessionId,
         workspace_roots: [ROOT],
         text: response,
         thought: 'private reasoning',
         prompt: 'do not read this undeclared field',
       },
-      {
-        url: server.url,
-        env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
-      },
+      { url: server.url },
     );
 
     assertSuccessfulNoOp(result);
@@ -289,56 +286,52 @@ test('afterAgentResponse pairs the cached prompt as conversation tool_input', as
     assert.equal(observe.body.agentId, 'cursor');
     assert.equal(result.stdout.includes('response-'), false);
   } finally {
+    clearCachedPrompt(sessionId);
     await server.close();
-    await rm(cacheDir, { recursive: true, force: true });
   }
 });
 
 test('afterAgentResponse uses empty tool_input on prompt cache miss', async () => {
   const server = await startMockServer();
-  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-miss-'));
+  const { clearCachedPrompt } = await import(
+    join(HOOK_DIRECTORY, 'shared.mjs')
+  );
+  const sessionId = 'missing-cache-session';
+  clearCachedPrompt(sessionId);
   try {
     assertSuccessfulNoOp(
       await runHook(
         'afterAgentResponse',
         {
-          conversation_id: 'missing-cache-session',
+          conversation_id: sessionId,
           workspace_roots: [ROOT],
           text: 'response without a cached prompt',
         },
-        {
-          url: server.url,
-          env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
-        },
+        { url: server.url },
       ),
     );
     assert.equal(server.requests[0].body.data.tool_input, '');
   } finally {
     await server.close();
-    await rm(cacheDir, { recursive: true, force: true });
   }
 });
 
 test('sessionEnd clears the prompt cache entry', async () => {
   const server = await startMockServer();
-  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-end-'));
-  const { promptCacheEntryPath } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
-  );
-  const entryPath = promptCacheEntryPath(cacheDir, 'ending-session');
+  const { promptCacheDir, promptCacheEntryPath, clearCachedPrompt } =
+    await import(join(HOOK_DIRECTORY, 'shared.mjs'));
+  const sessionId = 'ending-session';
+  const entryPath = promptCacheEntryPath(promptCacheDir(), sessionId);
   try {
     assertSuccessfulNoOp(
       await runHook(
         'beforeSubmitPrompt',
         {
-          conversation_id: 'ending-session',
+          conversation_id: sessionId,
           workspace_roots: [ROOT],
           prompt: 'please forget this cache entry',
         },
-        {
-          url: server.url,
-          env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
-        },
+        { url: server.url },
       ),
     );
     assert.equal(
@@ -349,18 +342,15 @@ test('sessionEnd clears the prompt cache entry', async () => {
     assertSuccessfulNoOp(
       await runHook(
         'sessionEnd',
-        { conversation_id: 'ending-session' },
-        {
-          url: server.url,
-          env: { AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir },
-        },
+        { conversation_id: sessionId },
+        { url: server.url },
       ),
     );
 
     await assert.rejects(() => access(entryPath), { code: 'ENOENT' });
   } finally {
+    clearCachedPrompt(sessionId);
     await server.close();
-    await rm(cacheDir, { recursive: true, force: true });
   }
 });
 
@@ -447,15 +437,15 @@ test('parallel session cache writes keep both prompts', async () => {
             import { writeCachedPrompt } from ${JSON.stringify(sharedModule)};
             const start = Date.now();
             while (Date.now() - start < 30) {}
-            writeCachedPrompt(process.argv[1], process.argv[2]);
+            writeCachedPrompt(process.argv[1], process.argv[2], process.argv[3]);
           `,
           sessionId,
           prompt,
+          cacheDir,
         ],
         {
           env: {
             ...process.env,
-            AGENTMEMORY_PROMPT_CACHE_DIR: cacheDir,
             AGENTMEMORY_DISABLE_ENV_FILE: '1',
           },
           stdio: ['ignore', 'pipe', 'pipe'],

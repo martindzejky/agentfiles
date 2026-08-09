@@ -194,10 +194,7 @@ export function writeCursorOutput(output = {}) {
 }
 
 export function promptCacheDir() {
-  return (
-    nonEmptyString(process.env.AGENTMEMORY_PROMPT_CACHE_DIR) ??
-    fileURLToPath(new URL('.prompt-cache', import.meta.url))
-  );
+  return fileURLToPath(new URL('.prompt-cache', import.meta.url));
 }
 
 // Encode so odd session ids cannot escape the cache directory via `/` or `..`.
@@ -284,13 +281,12 @@ export function prunePromptCacheDir(
   return Math.min(kept.length, maxEntries);
 }
 
-export function writeCachedPrompt(sessionId, prompt) {
+export function writeCachedPrompt(sessionId, prompt, dir = promptCacheDir()) {
   const id = nonEmptyString(sessionId);
   const text = truncateText(prompt);
   if (!id || !text) return;
 
   try {
-    const dir = promptCacheDir();
     writeAtomicJson(promptCacheEntryPath(dir, id), {
       prompt: text,
       updatedAt: new Date().toISOString(),
@@ -301,26 +297,24 @@ export function writeCachedPrompt(sessionId, prompt) {
   }
 }
 
-export function readCachedPrompt(sessionId) {
+export function readCachedPrompt(sessionId, dir = promptCacheDir()) {
   const id = nonEmptyString(sessionId);
   if (!id) return '';
 
   try {
-    const entry = readPromptCacheEntry(
-      promptCacheEntryPath(promptCacheDir(), id),
-    );
+    const entry = readPromptCacheEntry(promptCacheEntryPath(dir, id));
     return truncateText(entry?.prompt);
   } catch {
     return '';
   }
 }
 
-export function clearCachedPrompt(sessionId) {
+export function clearCachedPrompt(sessionId, dir = promptCacheDir()) {
   const id = nonEmptyString(sessionId);
   if (!id) return;
 
   try {
-    unlinkSync(promptCacheEntryPath(promptCacheDir(), id));
+    unlinkSync(promptCacheEntryPath(dir, id));
   } catch {
     // Cache failures must never block Cursor.
   }
