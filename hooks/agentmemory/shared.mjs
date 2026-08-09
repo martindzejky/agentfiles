@@ -17,8 +17,11 @@ import { parseEnv } from 'node:util';
 // d60652a7058773fa9428fa720eda38942f12f014.
 
 export const CAPTURE_LIMIT = 10_000;
-export const REQUEST_TIMEOUT_MS = 1_000;
-export const CONTEXT_TIMEOUT_MS = 1_500;
+// Sized for remote HTTPS (e.g. Railway) while staying under Cursor's usual
+// 3s hook budget. preCompact runs two sequential POSTs, so its Cursor
+// timeout in hooks.json is raised to match.
+export const REQUEST_TIMEOUT_MS = 2_500;
+export const CONTEXT_TIMEOUT_MS = 2_500;
 
 // Hardcoded for this Cursor-only integration. Multi-agent setups that share
 // one AgentMemory server use agentId to tag which client wrote the memory.

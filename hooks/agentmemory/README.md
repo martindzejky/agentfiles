@@ -34,9 +34,12 @@ The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
   turn.
 - `sessionEnd` marks the AgentMemory session complete.
 
-Every hook fails open and returns Cursor JSON. Requests have short timeouts.
-Prompt, response, authorization, and full Cursor payloads are never logged.
-Prompt and response captures are capped at 10,000 characters.
+Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
+so remote HTTPS (for example Railway) has room for TLS without exceeding
+Cursor's usual 3s hook budget. `preCompact` posts observe then summarize, so
+its Cursor timeout is 6s. Prompt, response, authorization, and full Cursor
+payloads are never logged. Prompt and response captures are capped at 10,000
+characters.
 
 Every REST body includes a hardcoded `agentId: "cursor"` so a shared
 AgentMemory server can tell Cursor writes apart from other agents later.
