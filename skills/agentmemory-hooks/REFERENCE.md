@@ -2,18 +2,18 @@
 
 ## Event map
 
-| Cursor event         | Capture job                                             |
-| -------------------- | ------------------------------------------------------- |
-| `sessionStart`       | Open or resume a memory session; optionally add context |
-| `beforeSubmitPrompt` | Store the user prompt                                   |
-| `afterAgentResponse` | Store the final assistant response                      |
-| `postToolUse`        | Store successful tool calls; optional file-tool enrich  |
-| `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)   |
-| `subagentStart`      | Store Task-tool subagent start                          |
-| `subagentStop`       | Store Task-tool subagent completion                     |
-| `preCompact`         | Record compaction metadata and checkpoint a summary     |
-| `stop`               | Summarize without ending the conversation               |
-| `sessionEnd`         | Mark the local session complete                         |
+| Cursor event         | Capture job                                                 |
+| -------------------- | ----------------------------------------------------------- |
+| `sessionStart`       | Open or resume a memory session; optionally add context     |
+| `beforeSubmitPrompt` | Store the user prompt                                       |
+| `afterAgentResponse` | Store the final assistant response                          |
+| `postToolUse`        | Store successful tool calls; optional file-tool enrich      |
+| `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)       |
+| `subagentStart`      | Store Task-tool subagent start as `tool_name: "subagent"`   |
+| `subagentStop`       | Store Task-tool subagent summary as `tool_name: "subagent"` |
+| `preCompact`         | Checkpoint a summary (no Cursor context reinject)           |
+| `stop`               | Summarize without ending the conversation                   |
+| `sessionEnd`         | Mark the local session complete                             |
 
 No thought hooks are installed.
 
@@ -50,8 +50,7 @@ Use REST from hook scripts:
 - Base URL: required `AGENTMEMORY_URL`
 - Auth: required `Authorization: Bearer $AGENTMEMORY_SECRET`
 - Agent tag: hardcoded `agentId: "cursor"` on every POST body
-- HTTP timeout: 2.5s per REST call (under Cursor's usual 3s hook budget;
-  `preCompact` Cursor timeout is 6s for observe + summarize)
+- HTTP timeout: 2.5s per REST call (under Cursor's usual 3s hook budget)
 - Fail open on network errors so a down daemon does not stall Cursor
 
 The hooks load only recognized AgentMemory keys from the local file. Existing
@@ -71,5 +70,5 @@ other endpoints still send it even when the server ignores unknown fields.
 
 The user-level hooks are installed from `hooks.json` and
 `hooks/agentmemory/`. Implementation details, Cloud limitations, smoke-test
-instructions, and the pinned upstream audit trail are in
-`hooks/agentmemory/README.md`.
+instructions, the pinned upstream audit trail, and when to consider forking
+AgentMemory are in `hooks/agentmemory/README.md`.

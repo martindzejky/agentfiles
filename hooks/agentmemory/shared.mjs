@@ -18,8 +18,7 @@ import { parseEnv } from 'node:util';
 
 export const CAPTURE_LIMIT = 10_000;
 // Sized for remote HTTPS (e.g. Railway) while staying under Cursor's usual
-// 3s hook budget. preCompact runs two sequential POSTs, so its Cursor
-// timeout in hooks.json is raised to match.
+// 3s hook budget.
 export const REQUEST_TIMEOUT_MS = 2_500;
 export const CONTEXT_TIMEOUT_MS = 2_500;
 
@@ -242,27 +241,21 @@ function isBase64Image(value) {
   );
 }
 
-// Adapted from AgentMemory plugin/scripts/post-tool-use.mjs image handling.
-export function extractImageData(output) {
-  if (isBase64Image(output)) {
-    return { imageData: output, cleanOutput: '[image data extracted]' };
-  }
+// Strip base64 image blobs from tool output. Upstream Claude post-tool-use
+// extracts them into image_data for vision features; Cursor hooks only need
+// text that AgentMemory can summarize, so replace blobs with a placeholder.
+export function stripImageData(output) {
+  if (isBase64Image(output)) return '[image data omitted]';
 
   if (output && typeof output === 'object' && !Array.isArray(output)) {
-    let imageData;
     const clean = {};
     for (const [key, value] of Object.entries(output)) {
-      if (!imageData && isBase64Image(value)) {
-        imageData = value;
-        clean[key] = '[image data extracted]';
-      } else {
-        clean[key] = value;
-      }
+      clean[key] = isBase64Image(value) ? '[image data omitted]' : value;
     }
-    return { imageData, cleanOutput: clean };
+    return clean;
   }
 
-  return { imageData: undefined, cleanOutput: output };
+  return output;
 }
 
 export function resolveToolName(payload) {

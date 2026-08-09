@@ -3,6 +3,10 @@
 // Adapted from AgentMemory plugin/scripts/subagent-start.mjs at
 // d60652a7058773fa9428fa720eda38942f12f014. Field names follow Cursor's
 // subagentStart payload (subagent_id / subagent_type / task).
+//
+// Mapped onto post_tool_use with tool_name "subagent" so AgentMemory's
+// summarizer lifts tool_input / tool_output (custom subagent_* hookTypes are
+// stored but never summarised).
 
 import {
   postJson,
@@ -26,24 +30,27 @@ async function main() {
   const agentId = resolveSubagentId(payload);
   const agentType = resolveSubagentType(payload);
   const task = truncateText(payload.task);
-  // Dedup is sessionId + tool_name + tool_input. Without tool_input, every
-  // subagent_start in a session collapses for five minutes. Prefer || over ??
-  // so an empty truncated task does not block agent_type.
-  const toolInput = agentId || task || agentType || '';
+  // Dedup is sessionId + tool_name + tool_input. Prefix start: so this does
+  // not collide with subagentStop for the same id; include type/task too so
+  // concurrent same-type Task tools without an id do not share one hash.
+  const toolInput =
+    ['start', agentId, agentType, task].filter(Boolean).join(':') || 'start';
+  const toolOutput = truncateText(
+    ['started', agentType, task].filter(Boolean).join(': '),
+  );
 
   await postJson(
     '/agentmemory/observe',
     {
-      hookType: 'subagent_start',
+      hookType: 'post_tool_use',
       sessionId: resolveSessionId(payload),
       project: resolveProject(cwd),
       cwd,
       timestamp: new Date().toISOString(),
       data: {
-        agent_id: agentId,
-        agent_type: agentType,
-        ...(task ? { task } : {}),
+        tool_name: 'subagent',
         tool_input: toolInput,
+        tool_output: toolOutput,
       },
     },
     { config },

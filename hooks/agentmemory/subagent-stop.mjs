@@ -3,6 +3,10 @@
 // Adapted from AgentMemory plugin/scripts/subagent-stop.mjs at
 // d60652a7058773fa9428fa720eda38942f12f014. Cursor's subagentStop exposes
 // summary/status/task rather than last_assistant_message.
+//
+// Mapped onto post_tool_use with tool_name "subagent" so the summary lands in
+// tool_output and AgentMemory can compress it (custom subagent_* hookTypes are
+// stored but never summarised).
 
 import {
   postJson,
@@ -28,27 +32,32 @@ async function main() {
   const task = truncateText(payload.task);
   const status =
     typeof payload.status === 'string' ? payload.status : undefined;
-  const lastMessage = truncateText(
+  const summary = truncateText(
     payload.summary ?? payload.last_assistant_message ?? '',
   );
+  // Prefix stop: so start/stop do not share one five-minute dedup hash for the
+  // same subagent_id; include type/status/task for concurrency without an id.
   const toolInput =
-    agentId || [agentType, status, task].filter(Boolean).join(':') || '';
+    ['stop', agentId, agentType, status, task].filter(Boolean).join(':') ||
+    'stop';
+  const toolOutput =
+    summary ||
+    truncateText(
+      ['finished', agentType, status, task].filter(Boolean).join(': '),
+    );
 
   await postJson(
     '/agentmemory/observe',
     {
-      hookType: 'subagent_stop',
+      hookType: 'post_tool_use',
       sessionId: resolveSessionId(payload),
       project: resolveProject(cwd),
       cwd,
       timestamp: new Date().toISOString(),
       data: {
-        agent_id: agentId,
-        agent_type: agentType,
-        ...(status ? { status } : {}),
-        ...(task ? { task } : {}),
-        last_message: lastMessage,
+        tool_name: 'subagent',
         tool_input: toolInput,
+        tool_output: toolOutput,
       },
     },
     { config },

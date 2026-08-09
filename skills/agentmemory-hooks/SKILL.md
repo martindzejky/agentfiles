@@ -54,8 +54,8 @@ Watch captures at `http://localhost:3113` once the server is up.
   enrich via `/agentmemory/enrich` → `additional_context` (Shell/MCP skipped;
   failure hooks cannot inject on Cursor).
 - `subagentStart` / `subagentStop`: capture Task-tool subagent lifecycle on the
-  parent session.
-- `preCompact`: record compaction metadata and checkpoint a summary.
+  parent session as `post_tool_use` with `tool_name: "subagent"`.
+- `preCompact`: checkpoint a summary (no context reinject on Cursor).
 - `stop`: summarize without ending a conversation that may continue.
 
 These Cursor lifecycle hooks do not link git commits. `commit-context` and
@@ -84,6 +84,10 @@ server must not block the agent.
   server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
+- This Cursor adapter remaps several events around AgentMemory summarizer and
+  dedup footguns. If that keeps growing, forking AgentMemory (or switching
+  hosts) may be cleaner than more client patches; see
+  `hooks/agentmemory/README.md` ("Forking AgentMemory").
 
 ## See also
 

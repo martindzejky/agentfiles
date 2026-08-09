@@ -6,7 +6,6 @@
 // preToolUse additional_context, so enrichment returns here after the tool.
 
 import {
-  extractImageData,
   fetchEnrichContext,
   postJson,
   readConfig,
@@ -17,6 +16,7 @@ import {
   resolveToolName,
   resolveToolOutput,
   resolveWorkingDirectory,
+  stripImageData,
   truncateValue,
   writeCursorOutput,
 } from './shared.mjs';
@@ -33,9 +33,8 @@ async function main() {
   const sessionId = resolveSessionId(payload);
   const project = resolveProject(cwd);
   const toolInput = resolveToolInput(payload);
-  const { imageData, cleanOutput } = extractImageData(
-    resolveToolOutput(payload),
-  );
+  // Drop base64 image blobs: they bloat storage and add no useful recall text.
+  const cleanOutput = stripImageData(resolveToolOutput(payload));
 
   const [, context] = await Promise.all([
     postJson(
@@ -50,7 +49,6 @@ async function main() {
           tool_name: toolName,
           tool_input: truncateValue(toolInput),
           tool_output: truncateValue(cleanOutput),
-          ...(imageData ? { image_data: imageData } : {}),
         },
       },
       { config },

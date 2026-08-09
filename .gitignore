@@ -19,6 +19,7 @@ coverage
 
 # Local AgentMemory hook prompt bridge (Pi-style conversation pairing)
 hooks/agentmemory/.prompt-cache/
+hooks/agentmemory/.prompt-cache.json
 
 # debug
 npm-debug.log*
