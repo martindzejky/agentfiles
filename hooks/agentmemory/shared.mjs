@@ -189,6 +189,79 @@ export function truncateText(value) {
   return typeof value === 'string' ? value.slice(0, CAPTURE_LIMIT) : '';
 }
 
+// Truncate tool payloads for observe. Strings are sliced; objects are
+// JSON-stringified when they exceed the capture limit.
+export function truncateValue(value, max = CAPTURE_LIMIT) {
+  if (typeof value === 'string') {
+    return value.length > max
+      ? `${value.slice(0, max)}\n[...truncated]`
+      : value;
+  }
+  if (value && typeof value === 'object') {
+    try {
+      const serialized = JSON.stringify(value);
+      if (serialized.length > max)
+        return `${serialized.slice(0, max)}...[truncated]`;
+      return value;
+    } catch {
+      return String(value).slice(0, max);
+    }
+  }
+  return value;
+}
+
+function isBase64Image(value) {
+  return (
+    typeof value === 'string' &&
+    (value.startsWith('data:image/') ||
+      value.startsWith('iVBORw0KGgo') ||
+      value.startsWith('/9j/'))
+  );
+}
+
+// Adapted from AgentMemory plugin/scripts/post-tool-use.mjs image handling.
+export function extractImageData(output) {
+  if (isBase64Image(output)) {
+    return { imageData: output, cleanOutput: '[image data extracted]' };
+  }
+
+  if (output && typeof output === 'object' && !Array.isArray(output)) {
+    let imageData;
+    const clean = {};
+    for (const [key, value] of Object.entries(output)) {
+      if (!imageData && isBase64Image(value)) {
+        imageData = value;
+        clean[key] = '[image data extracted]';
+      } else {
+        clean[key] = value;
+      }
+    }
+    return { imageData, cleanOutput: clean };
+  }
+
+  return { imageData: undefined, cleanOutput: output };
+}
+
+export function resolveToolName(payload) {
+  return (
+    nonEmptyString(payload?.tool_name) ?? nonEmptyString(payload?.toolName)
+  );
+}
+
+export function resolveToolInput(payload) {
+  return payload?.tool_input ?? payload?.toolArgs;
+}
+
+export function resolveToolOutput(payload) {
+  if (payload?.tool_response !== undefined) return payload.tool_response;
+  if (payload?.tool_output !== undefined) return payload.tool_output;
+  const result = payload?.tool_result ?? payload?.toolResult;
+  if (result && typeof result === 'object' && !Array.isArray(result)) {
+    return result.text_result_for_llm ?? result.textResultForLlm ?? result;
+  }
+  return result;
+}
+
 export function writeCursorOutput(output = {}) {
   process.stdout.write(`${JSON.stringify(output)}\n`);
 }

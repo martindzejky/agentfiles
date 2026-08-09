@@ -7,11 +7,13 @@
 | `sessionStart`       | Open or resume a memory session; optionally add context |
 | `beforeSubmitPrompt` | Store the user prompt                                   |
 | `afterAgentResponse` | Store the final assistant response                      |
+| `postToolUse`        | Store successful tool calls                             |
+| `postToolUseFailure` | Store failed tool calls (skips interrupts)              |
 | `preCompact`         | Record compaction metadata and checkpoint a summary     |
 | `stop`               | Summarize without ending the conversation               |
 | `sessionEnd`         | Mark the local session complete                         |
 
-No tool, thought, file, shell, MCP, or subagent hooks are installed.
+No thought or subagent hooks are installed.
 
 Commit linking is outside this Cursor event map. A git `post-commit` hook that
 calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
@@ -35,8 +37,8 @@ Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
 supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
 `afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
 `subagentStart`, `subagentStop`, `preCompact`, `stop`, and others) but not
-`sessionStart` or `sessionEnd`. This repo still wires only the six events in
-the table above; tool, thought, and subagent hooks are not installed yet.
+`sessionStart` or `sessionEnd`. This repo wires the events in the table above;
+thought and subagent hooks are not installed yet.
 
 ## Transport
 
@@ -63,7 +65,7 @@ other endpoints still send it even when the server ignores unknown fields.
 
 ## Status in this repo
 
-The six user-level hooks are installed from `hooks.json` and
+The user-level hooks are installed from `hooks.json` and
 `hooks/agentmemory/`. Implementation details, Cloud limitations, smoke-test
 instructions, and the pinned upstream audit trail are in
 `hooks/agentmemory/README.md`.

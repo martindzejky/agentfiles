@@ -23,6 +23,10 @@ This repo installs the following local user hooks:
     "afterAgentResponse": [
       { "command": "./hooks/agentmemory/after-agent-response.mjs" }
     ],
+    "postToolUse": [{ "command": "./hooks/agentmemory/post-tool-use.mjs" }],
+    "postToolUseFailure": [
+      { "command": "./hooks/agentmemory/post-tool-failure.mjs" }
+    ],
     "preCompact": [{ "command": "./hooks/agentmemory/pre-compact.mjs" }],
     "stop": [{ "command": "./hooks/agentmemory/stop.mjs" }],
     "sessionEnd": [{ "command": "./hooks/agentmemory/session-end.mjs" }]
@@ -42,6 +46,8 @@ Watch captures at `http://localhost:3113` once the server is up.
 - `afterAgentResponse`: capture the final reply as `post_tool_use` with
   `tool_name: "conversation"`, `tool_input` from the cached user prompt, and
   `tool_output` as the assistant text.
+- `postToolUse` / `postToolUseFailure`: capture real tool calls and failures
+  (all tools; interrupts skipped on failure).
 - `preCompact`: record compaction metadata and checkpoint a summary.
 - `stop`: summarize without ending a conversation that may continue.
 

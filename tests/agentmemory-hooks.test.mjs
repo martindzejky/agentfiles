@@ -24,6 +24,8 @@ const HOOKS = {
   sessionStart: 'session-start.mjs',
   beforeSubmitPrompt: 'before-submit-prompt.mjs',
   afterAgentResponse: 'after-agent-response.mjs',
+  postToolUse: 'post-tool-use.mjs',
+  postToolUseFailure: 'post-tool-failure.mjs',
   preCompact: 'pre-compact.mjs',
   stop: 'stop.mjs',
   sessionEnd: 'session-end.mjs',
@@ -133,7 +135,7 @@ function assertSuccessfulNoOp(result) {
   assert.equal(result.stderr, '');
 }
 
-test('manifest contains exactly the six selected executable hooks', async () => {
+test('manifest contains exactly the selected executable hooks', async () => {
   const manifest = JSON.parse(await readFile(join(ROOT, 'hooks.json'), 'utf8'));
 
   assert.equal(manifest.version, 1);
@@ -617,6 +619,96 @@ test('sessionEnd ends the stable session', async () => {
   }
 });
 
+test('postToolUse records truncated tool observations', async () => {
+  const server = await startMockServer();
+  const huge = 'x'.repeat(10_050);
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUse',
+        {
+          conversation_id: 'tool-session',
+          workspace_roots: [ROOT],
+          tool_name: 'Shell',
+          tool_input: { command: 'npm test', working_directory: ROOT },
+          tool_output: huge,
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.equal(server.requests.length, 1);
+    const [observe] = server.requests;
+    assert.equal(observe.path, '/agentmemory/observe');
+    assert.equal(observe.body.hookType, 'post_tool_use');
+    assert.equal(observe.body.agentId, 'cursor');
+    assert.equal(observe.body.sessionId, 'tool-session');
+    assert.equal(observe.body.project, PROJECT);
+    assert.equal(observe.body.cwd, ROOT);
+    assert.equal(observe.body.data.tool_name, 'Shell');
+    assert.deepEqual(observe.body.data.tool_input, {
+      command: 'npm test',
+      working_directory: ROOT,
+    });
+    assert.equal(typeof observe.body.data.tool_output, 'string');
+    assert.ok(observe.body.data.tool_output.endsWith('[...truncated]'));
+    assert.equal(
+      observe.body.data.tool_output.length,
+      10_000 + '\n[...truncated]'.length,
+    );
+  } finally {
+    await server.close();
+  }
+});
+
+test('postToolUseFailure records errors and skips interrupts', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUseFailure',
+        {
+          conversation_id: 'tool-fail-session',
+          workspace_roots: [ROOT],
+          tool_name: 'Shell',
+          tool_input: { command: 'npm test' },
+          error_message: 'Command timed out after 30s',
+          failure_type: 'timeout',
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.equal(server.requests.length, 1);
+    assert.equal(server.requests[0].body.hookType, 'post_tool_failure');
+    assert.equal(server.requests[0].body.data.tool_name, 'Shell');
+    assert.equal(
+      server.requests[0].body.data.error,
+      'Command timed out after 30s',
+    );
+    assert.equal(server.requests[0].body.data.failure_type, 'timeout');
+    assert.equal(server.requests[0].body.agentId, 'cursor');
+
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUseFailure',
+        {
+          conversation_id: 'tool-fail-session',
+          workspace_roots: [ROOT],
+          tool_name: 'Shell',
+          tool_input: { command: 'npm test' },
+          error_message: 'interrupted',
+          is_interrupt: true,
+        },
+        { url: server.url },
+      ),
+    );
+    assert.equal(server.requests.length, 1);
+  } finally {
+    await server.close();
+  }
+});
+
 test('every hook REST body hardcodes agentId cursor', async () => {
   const server = await startMockServer();
   try {
@@ -634,6 +726,21 @@ test('every hook REST body hardcodes agentId cursor', async () => {
         conversation_id: 'agent-id-session',
         workspace_roots: [ROOT],
         text: 'tagged response',
+      },
+      postToolUse: {
+        conversation_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+        tool_name: 'Read',
+        tool_input: { path: 'README.md' },
+        tool_output: 'ok',
+      },
+      postToolUseFailure: {
+        conversation_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+        tool_name: 'Shell',
+        tool_input: { command: 'false' },
+        error_message: 'exit 1',
+        failure_type: 'error',
       },
       preCompact: {
         conversation_id: 'agent-id-session',
