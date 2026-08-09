@@ -19,9 +19,10 @@ The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
 - `postToolUse` records successful tool calls (`tool_name`, `tool_input`,
   `tool_output`) for every tool, matching Claude Code's PostToolUse capture.
   When `AGENTMEMORY_INJECT_CONTEXT=true`, file-touching tools also call
-  `/agentmemory/enrich` and return Cursor `additional_context` (Shell and MCP
-  skipped). Cursor's `preToolUse` has no injection field, so this is the
-  Cursor-native home for upstream PreToolUse enrich.
+  `/agentmemory/enrich` and return Cursor `additional_context` (includes
+  Cursor `StrReplace` / `Delete`; Shell and MCP skipped). Cursor's
+  `preToolUse` has no injection field, so this is the Cursor-native home for
+  upstream PreToolUse enrich.
 - `postToolUseFailure` records failed tool calls (skips user interrupts). It
   does not enrich: Cursor documents no output fields for this event.
 - `preCompact` records documented compaction metadata, then asks AgentMemory to

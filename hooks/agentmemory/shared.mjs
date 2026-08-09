@@ -262,8 +262,8 @@ export function resolveToolOutput(payload) {
   return result;
 }
 
-// File-touching tools only, matching AgentMemory pre-tool-use.ts. Shell and
-// MCP tools are skipped (no reliable path list; MCP names look like MCP:…).
+// File-touching tools: upstream Claude names plus Cursor edit/delete tools.
+// Shell and MCP are skipped (no reliable path list; MCP names look like MCP:…).
 const ENRICH_FILE_TOOLS = new Set([
   'edit',
   'write',
@@ -272,13 +272,17 @@ const ENRICH_FILE_TOOLS = new Set([
   'view',
   'glob',
   'grep',
+  'strreplace',
+  'search_replace',
+  'delete',
 ]);
 
 export function isContextInjectionEnabled() {
   return process.env.AGENTMEMORY_INJECT_CONTEXT === 'true';
 }
 
-// Adapted from AgentMemory src/hooks/pre-tool-use.ts file/term extraction.
+// Adapted from AgentMemory src/hooks/pre-tool-use.ts file/term extraction,
+// with Cursor path key aliases (filePath, target_file).
 export function extractEnrichQuery(toolName, toolInput) {
   const name = nonEmptyString(toolName);
   if (!name) return null;
@@ -296,8 +300,16 @@ export function extractEnrichQuery(toolName, toolInput) {
   const files = [];
   const fileKeys =
     normalized === 'grep'
-      ? ['path', 'file']
-      : ['file_path', 'path', 'file', 'pattern'];
+      ? ['path', 'file', 'file_path', 'filePath']
+      : [
+          'file_path',
+          'filePath',
+          'path',
+          'file',
+          'target_file',
+          'targetFile',
+          'pattern',
+        ];
   for (const key of fileKeys) {
     const value = input[key];
     if (typeof value === 'string' && value.length > 0) files.push(value);

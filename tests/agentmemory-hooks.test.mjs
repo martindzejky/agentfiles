@@ -707,6 +707,61 @@ test('postToolUse enriches file tools when injection is enabled', async () => {
   }
 });
 
+test('postToolUse enriches StrReplace and filePath aliases', async () => {
+  const server = await startMockServer({ context: 'notes for the edit' });
+  try {
+    const strReplace = await runHook(
+      'postToolUse',
+      {
+        conversation_id: 'enrich-alias-session',
+        workspace_roots: [ROOT],
+        tool_name: 'StrReplace',
+        tool_input: { path: 'hooks/agentmemory/shared.mjs' },
+        tool_output: 'ok',
+      },
+      {
+        url: server.url,
+        env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
+      },
+    );
+    assert.equal(strReplace.code, 0);
+    assert.deepEqual(JSON.parse(strReplace.stdout), {
+      additional_context: 'notes for the edit',
+    });
+
+    const readAlias = await runHook(
+      'postToolUse',
+      {
+        conversation_id: 'enrich-alias-session',
+        workspace_roots: [ROOT],
+        tool_name: 'Read',
+        tool_input: { filePath: 'README.md' },
+        tool_output: 'ok',
+      },
+      {
+        url: server.url,
+        env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
+      },
+    );
+    assert.equal(readAlias.code, 0);
+    assert.deepEqual(JSON.parse(readAlias.stdout), {
+      additional_context: 'notes for the edit',
+    });
+
+    const enrichRequests = server.requests.filter(
+      (request) => request.path === '/agentmemory/enrich',
+    );
+    assert.equal(enrichRequests.length, 2);
+    assert.equal(enrichRequests[0].body.toolName, 'StrReplace');
+    assert.deepEqual(enrichRequests[0].body.files, [
+      'hooks/agentmemory/shared.mjs',
+    ]);
+    assert.deepEqual(enrichRequests[1].body.files, ['README.md']);
+  } finally {
+    await server.close();
+  }
+});
+
 test('postToolUse skips enrich for Shell, MCP, and when injection is off', async () => {
   const server = await startMockServer({ context: 'should not appear' });
   try {
