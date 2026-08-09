@@ -1,115 +1,92 @@
 ---
 name: requesting-code-review
-description: Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+description: Use when completing substantial work or before merging to verify the diff meets requirements
 ---
 
 # Requesting Code Review
 
-Dispatch a code review subagent to catch issues before they cascade. The reviewer should get focused context for evaluation, not your full session history. This keeps the review grounded in the actual work product and requirements.
+Get a focused review of the work product and requirements, not your full session history.
 
-**Core principle:** Review early, review often.
+**Core principle:** Review before merge. Review when the change is substantial or risky.
 
-## When to Request Review
+## When to request review
 
-**Mandatory:**
+**Usually worth it:**
 
-- After each task in subagent-driven development
-- After completing major feature
-- Before merge to main
+- Before opening or updating a PR for merge
+- After a substantial feature or risky change
+- When stuck and a fresh read of the diff would help
+- Before a large refactor (baseline check)
+- After fixing a complex bug
 
-**Optional but valuable:**
+**Skip when:**
 
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
-- After fixing complex bug
+- The change is trivial (typo, comment, single-line fix)
+- You already ran the relevant checks and the diff is obviously safe
 
-## How to Request
+Do not treat review as a batch ritual after every small step.
 
-**1. Get git SHAs:**
+## How to request review
+
+Use Cursor's built-in review paths:
+
+- **Bugbot** — Task with `subagent_type="bugbot"` for a general code review of local or branch changes
+- **Security review** — Task with `subagent_type="security-review"` when the diff touches auth, secrets, input handling, or trust boundaries
+- **`/review`** — when available in the editor, for a quick pass on current changes
+
+### 1. Get the git range
 
 ```bash
-BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main
+BASE_SHA=$(git merge-base HEAD origin/master)  # or origin/main, or HEAD~1
 HEAD_SHA=$(git rev-parse HEAD)
+git diff --stat "$BASE_SHA..$HEAD_SHA"
 ```
 
-**2. Dispatch the review subagent:**
+For uncommitted work, say so explicitly instead of inventing SHAs.
 
-Use Cursor's subagent tooling to launch a code review subagent and fill the template at `code-reviewer-template.md`.
+### 2. Fill the prompt
 
-**Placeholders:**
+Use `requesting-code-review/code-reviewer-template.md` as a scaffold. At minimum include:
 
-- `{WHAT_WAS_IMPLEMENTED}` - What you just built
-- `{PLAN_OR_REQUIREMENTS}` - What it should do
-- `{BASE_SHA}` - Starting commit
-- `{HEAD_SHA}` - Ending commit
-- `{DESCRIPTION}` - Brief summary
+- `{WHAT_WAS_IMPLEMENTED}` — what you built or changed
+- `{PLAN_OR_REQUIREMENTS}` — issue link, acceptance criteria, or expected behavior
+- `{BASE_SHA}` / `{HEAD_SHA}` — review range, or "uncommitted changes"
+- `{DESCRIPTION}` — brief summary and anything intentionally out of scope
 
-**3. Act on feedback:**
+Give the reviewer enough context to judge the diff on its own.
 
-- Fix Critical issues immediately
-- Fix Important issues before proceeding
-- Note Minor issues for later
-- Push back if reviewer is wrong (with reasoning)
+### 3. Act on feedback
 
-## Example
+- **Critical** — fix before merge (breaks, security, data loss)
+- **Important** — fix before merge unless you can justify deferring with evidence
+- **Minor** — note for later or fix if cheap
+- Push back when the reviewer lacks context or the suggestion is wrong for this codebase
 
-```
-[Just completed Task 2: Add verification function]
+For PR feedback loops after merge prep, use the `get-pr-comments` skill.
 
-You: Let me request code review before proceeding.
+## Red flags
 
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
+Never:
 
-[Dispatch Cursor code review subagent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from the current implementation plan
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
-
-## Integration with Workflows
-
-**Subagent-Driven Development:**
-
-- Review after EACH task
-- Catch issues before they compound
-- Fix before moving to next task
-
-**Executing Plans:**
-
-- Review after each batch (3 tasks)
-- Get feedback, apply, continue
-
-**Ad-Hoc Development:**
-
-- Review before merge
-- Review when stuck
-
-## Red Flags
-
-**Never:**
-
-- Skip review because "it's simple"
-- Ignore Critical issues
-- Proceed with unfixed Important issues
+- Skip review because "it's simple" when the change is actually substantial
+- Ignore critical issues
+- Proceed with unfixed important issues without explicit acknowledgment
 - Argue with valid technical feedback
 
-**If reviewer wrong:**
+When the reviewer is wrong: push back with technical reasoning, show code or tests that prove it works, or ask for clarification.
 
-- Push back with technical reasoning
-- Show code/tests that prove it works
-- Request clarification
+## Example prompt shape
+
+```
+Review the auth middleware changes on this branch.
+
+WHAT_WAS_IMPLEMENTED: Session validation middleware with optional refresh
+PLAN_OR_REQUIREMENTS: Closes #42 — reject expired tokens, allow refresh within 5 min grace
+BASE_SHA: a7981ec
+HEAD_SHA: 3df7661
+DESCRIPTION: Touches middleware/auth.ts and tests/auth.test.ts only. No migration.
+
+Focus on token expiry edge cases and test coverage gaps.
+```
 
 See template at: `requesting-code-review/code-reviewer-template.md`
