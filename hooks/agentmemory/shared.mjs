@@ -189,6 +189,171 @@ export function truncateText(value) {
   return typeof value === 'string' ? value.slice(0, CAPTURE_LIMIT) : '';
 }
 
+// Truncate tool payloads for observe. Strings are sliced; objects are
+// JSON-stringified when they exceed the capture limit.
+export function truncateValue(value, max = CAPTURE_LIMIT) {
+  if (typeof value === 'string') {
+    return value.length > max
+      ? `${value.slice(0, max)}\n[...truncated]`
+      : value;
+  }
+  if (value && typeof value === 'object') {
+    try {
+      const serialized = JSON.stringify(value);
+      if (serialized.length > max)
+        return `${serialized.slice(0, max)}...[truncated]`;
+      return value;
+    } catch {
+      return String(value).slice(0, max);
+    }
+  }
+  return value;
+}
+
+function isBase64Image(value) {
+  return (
+    typeof value === 'string' &&
+    (value.startsWith('data:image/') ||
+      value.startsWith('iVBORw0KGgo') ||
+      value.startsWith('/9j/'))
+  );
+}
+
+// Adapted from AgentMemory plugin/scripts/post-tool-use.mjs image handling.
+export function extractImageData(output) {
+  if (isBase64Image(output)) {
+    return { imageData: output, cleanOutput: '[image data extracted]' };
+  }
+
+  if (output && typeof output === 'object' && !Array.isArray(output)) {
+    let imageData;
+    const clean = {};
+    for (const [key, value] of Object.entries(output)) {
+      if (!imageData && isBase64Image(value)) {
+        imageData = value;
+        clean[key] = '[image data extracted]';
+      } else {
+        clean[key] = value;
+      }
+    }
+    return { imageData, cleanOutput: clean };
+  }
+
+  return { imageData: undefined, cleanOutput: output };
+}
+
+export function resolveToolName(payload) {
+  return (
+    nonEmptyString(payload?.tool_name) ?? nonEmptyString(payload?.toolName)
+  );
+}
+
+export function resolveToolInput(payload) {
+  return payload?.tool_input ?? payload?.toolArgs;
+}
+
+export function resolveToolOutput(payload) {
+  if (payload?.tool_response !== undefined) return payload.tool_response;
+  if (payload?.tool_output !== undefined) return payload.tool_output;
+  const result = payload?.tool_result ?? payload?.toolResult;
+  if (result && typeof result === 'object' && !Array.isArray(result)) {
+    return result.text_result_for_llm ?? result.textResultForLlm ?? result;
+  }
+  return result;
+}
+
+// File-touching tools: upstream Claude names plus Cursor edit/delete tools.
+// Shell and MCP are skipped (no reliable path list; MCP names look like MCP:…).
+const ENRICH_FILE_TOOLS = new Set([
+  'edit',
+  'write',
+  'create',
+  'read',
+  'view',
+  'glob',
+  'grep',
+  'strreplace',
+  'search_replace',
+  'delete',
+]);
+
+export function isContextInjectionEnabled() {
+  return process.env.AGENTMEMORY_INJECT_CONTEXT === 'true';
+}
+
+// Adapted from AgentMemory src/hooks/pre-tool-use.ts file/term extraction,
+// with Cursor path key aliases (filePath, target_file).
+export function extractEnrichQuery(toolName, toolInput) {
+  const name = nonEmptyString(toolName);
+  if (!name) return null;
+  if (name.startsWith('MCP:') || name.toLowerCase().startsWith('mcp:')) {
+    return null;
+  }
+
+  const normalized = name.toLowerCase();
+  if (!ENRICH_FILE_TOOLS.has(normalized)) return null;
+
+  const input =
+    toolInput && typeof toolInput === 'object' && !Array.isArray(toolInput)
+      ? toolInput
+      : {};
+  const files = [];
+  const fileKeys =
+    normalized === 'grep'
+      ? ['path', 'file', 'file_path', 'filePath']
+      : [
+          'file_path',
+          'filePath',
+          'path',
+          'file',
+          'target_file',
+          'targetFile',
+          'pattern',
+        ];
+  for (const key of fileKeys) {
+    const value = input[key];
+    if (typeof value === 'string' && value.length > 0) files.push(value);
+  }
+  if (files.length === 0) return null;
+
+  const terms = [];
+  if (normalized === 'grep' || normalized === 'glob') {
+    const pattern = input.pattern;
+    if (typeof pattern === 'string' && pattern.length > 0) terms.push(pattern);
+  }
+
+  return { files, terms };
+}
+
+// Cursor-native port of upstream PreToolUse enrich: POST /agentmemory/enrich
+// and return text for postToolUse additional_context. Opt-in only (#143).
+export async function fetchEnrichContext({
+  config,
+  sessionId,
+  project,
+  toolName,
+  toolInput,
+}) {
+  if (!isContextInjectionEnabled() || !config) return '';
+
+  const query = extractEnrichQuery(toolName, toolInput);
+  if (!query) return '';
+
+  const result = await postJson(
+    '/agentmemory/enrich',
+    {
+      sessionId,
+      files: query.files,
+      ...(query.terms.length > 0 ? { terms: query.terms } : {}),
+      toolName,
+      project,
+    },
+    { config, timeoutMs: CONTEXT_TIMEOUT_MS },
+  );
+
+  return truncateText(result?.context);
+}
+
 export function writeCursorOutput(output = {}) {
   process.stdout.write(`${JSON.stringify(output)}\n`);
 }

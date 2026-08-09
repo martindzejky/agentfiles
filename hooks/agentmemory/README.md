@@ -15,7 +15,16 @@ The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
   creates the session from the observation itself when the record is missing,
   which also covers Cloud Agents.
 - `afterAgentResponse` records only the truncated final assistant response.
-  It does not record reasoning or tool activity.
+  It does not record reasoning.
+- `postToolUse` records successful tool calls (`tool_name`, `tool_input`,
+  `tool_output`) for every tool, matching Claude Code's PostToolUse capture.
+  When `AGENTMEMORY_INJECT_CONTEXT=true`, file-touching tools also call
+  `/agentmemory/enrich` and return Cursor `additional_context` (includes
+  Cursor `StrReplace` / `Delete`; Shell and MCP skipped). Cursor's
+  `preToolUse` has no injection field, so this is the Cursor-native home for
+  upstream PreToolUse enrich.
+- `postToolUseFailure` records failed tool calls (skips user interrupts). It
+  does not enrich: Cursor documents no output fields for this event.
 - `preCompact` records documented compaction metadata, then asks AgentMemory to
   summarize the session. It cannot alter Cursor's compaction.
 - `stop` asks AgentMemory to summarize, but deliberately does not end the
@@ -79,8 +88,8 @@ Optional settings:
 
 - `AGENTMEMORY_REQUIRE_HTTPS=1` rejects all non-HTTPS URLs. Without it, plain
   HTTP is accepted only for loopback development hosts.
-- `AGENTMEMORY_INJECT_CONTEXT=true` opts the local `sessionStart` hook into
-  context injection.
+- `AGENTMEMORY_INJECT_CONTEXT=true` opts `sessionStart` and file-tool
+  `postToolUse` into context injection (default off; see upstream #143).
 - `AGENTMEMORY_PROJECT_NAME` overrides Git-based project discovery.
 
 The real `.env` is gitignored and must never be committed. It is still a
@@ -125,9 +134,9 @@ needed for session creation: AgentMemory creates the session from the first
 observation that carries `project` and `cwd`. Cloud sessions may remain active;
 observations and stop summaries are still retained.
 
-This repo currently installs only the six lifecycle hooks in
-[Installed hooks](#installed-hooks). Tool, thought, and subagent Cloud events
-are supported by Cursor but not wired here yet.
+This repo currently installs the lifecycle and tool hooks in
+[Installed hooks](#installed-hooks). Thought and subagent Cloud events are
+supported by Cursor but not wired here yet.
 
 Cloud Agents load project-level `.cursor/hooks.json`, not this user-level
 `~/.cursor/hooks.json`. A project that opts into Cloud capture must add its own
@@ -142,6 +151,10 @@ Adapted from AgentMemory commit
 
 - [`plugin/scripts/session-start.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/session-start.mjs)
 - [`plugin/scripts/prompt-submit.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/prompt-submit.mjs)
+- [`plugin/scripts/post-tool-use.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/post-tool-use.mjs)
+- [`plugin/scripts/post-tool-failure.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/post-tool-failure.mjs)
+- [`plugin/scripts/pre-tool-use.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/pre-tool-use.mjs)
+  (enrich logic only; wired on Cursor `postToolUse`)
 - [`plugin/scripts/pre-compact.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/pre-compact.mjs)
 - [`plugin/scripts/stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/stop.mjs)
 - [`plugin/scripts/session-end.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/session-end.mjs)
@@ -159,8 +172,13 @@ Intentional differences:
   `/session/start` on every prompt and that overwrote the session record.
 - `afterAgentResponse` is Cursor-specific; upstream has no direct equivalent, so
   it borrows the `post_tool_use` shape.
-- Claude memory bridge, Notification, TaskCompleted, tool, thought, file, shell,
-  MCP, and subagent hooks are omitted.
+- `postToolUse` has no matcher (all tools), matching Claude Code's unfiltered
+  PostToolUse capture. Observe always runs; enrich is opt-in and limited to
+  file-touching tools.
+- `preToolUse` is omitted: Cursor cannot inject context there. Upstream enrich
+  is adapted onto `postToolUse` `additional_context` instead.
+- Claude memory bridge, Notification, TaskCompleted, thought, and subagent
+  hooks are omitted.
 
 Open upstream
 [PR #1112](https://github.com/rohitg00/agentmemory/pull/1112) was reviewed for

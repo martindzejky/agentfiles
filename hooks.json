@@ -22,6 +22,20 @@
         "failClosed": false
       }
     ],
+    "postToolUse": [
+      {
+        "command": "./hooks/agentmemory/post-tool-use.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ],
+    "postToolUseFailure": [
+      {
+        "command": "./hooks/agentmemory/post-tool-failure.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ],
     "preCompact": [
       {
         "command": "./hooks/agentmemory/pre-compact.mjs",
