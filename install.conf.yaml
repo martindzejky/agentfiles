@@ -18,7 +18,6 @@
     # cursor
     ~/.cursor/skills: skills
     ~/.cursor/commands: commands
-    ~/.cursor/agents: agents
     ~/.cursor/rules: rules
     ~/.cursor/hooks.json: hooks.json
     ~/.cursor/hooks: hooks
