@@ -20,8 +20,9 @@ calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
 The capture hooks never call `/session/start`; it replaces the session record
 and resets `firstPrompt` and `observationCount`. `/observe` creates the session
 on its own when `project` and `cwd` are present. The assistant response rides on
-the `post_tool_use` shape because AgentMemory summarizes only `toolName`,
-`toolInput`, `toolOutput`, and `userPrompt`.
+the `post_tool_use` shape (`tool_name: "conversation"`) because AgentMemory
+summarizes only `toolName`, `toolInput`, `toolOutput`, and `userPrompt`.
+`tool_input` is the cached user prompt from `beforeSubmitPrompt` (Pi-style).
 
 ## Install targets
 

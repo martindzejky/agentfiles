@@ -39,8 +39,9 @@ Watch captures at `http://localhost:3113` once the server is up.
 - `sessionStart` / `sessionEnd`: frame each local conversation so `handoff` and `session-history` can resume it.
 - `beforeSubmitPrompt`: capture intent from the user prompt, without calling
   `/session/start`, which would reset the session record.
-- `afterAgentResponse`: capture final outcomes without tool or thought content,
-  sent as `post_tool_use` so AgentMemory actually summarizes the text.
+- `afterAgentResponse`: capture the final reply as `post_tool_use` with
+  `tool_name: "conversation"`, `tool_input` from the cached user prompt, and
+  `tool_output` as the assistant text.
 - `preCompact`: record compaction metadata and checkpoint a summary.
 - `stop`: summarize without ending a conversation that may continue.
 
@@ -64,8 +65,8 @@ server must not block the agent.
   `600`. The real file is gitignored.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
 - AgentMemory drops observations whose `sessionId + tool_name + tool_input` hash
-  repeats within five minutes, so capture payloads carry the timestamp as
-  `tool_input` to stay distinct.
+  repeats within five minutes. Both `prompt_submit` and conversation pairing use
+  the user prompt as `tool_input` and accept rare identical-prompt drops.
 - REST bodies hardcode `agentId: "cursor"` for multi-agent tagging on a shared
   server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.

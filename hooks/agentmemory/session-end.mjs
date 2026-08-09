@@ -5,6 +5,7 @@
 // behavior is intentionally omitted.
 
 import {
+  clearCachedPrompt,
   postJson,
   readConfig,
   readPayload,
@@ -14,14 +15,17 @@ import {
 
 async function main() {
   const payload = await readPayload();
-  const config = readConfig();
-  if (!payload || !config) return writeCursorOutput();
+  if (!payload) return writeCursorOutput();
 
-  await postJson(
-    '/agentmemory/session/end',
-    { sessionId: resolveSessionId(payload) },
-    { config },
-  );
+  const sessionId = resolveSessionId(payload);
+  // Always drop the local prompt bridge entry, even when the server is
+  // unreachable, so abandoned chats do not linger in the cache file.
+  clearCachedPrompt(sessionId);
+
+  const config = readConfig();
+  if (!config) return writeCursorOutput();
+
+  await postJson('/agentmemory/session/end', { sessionId }, { config });
 
   writeCursorOutput();
 }
