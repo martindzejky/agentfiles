@@ -54,8 +54,8 @@ Watch captures at `http://localhost:3113` once the server is up.
   enrich via `/agentmemory/enrich` → `additional_context` (Shell/MCP skipped;
   failure hooks cannot inject on Cursor).
 - `subagentStart` / `subagentStop`: capture Task-tool subagent lifecycle on the
-  parent session.
-- `preCompact`: record compaction metadata and checkpoint a summary.
+  parent session as `post_tool_use` with `tool_name: "subagent"`.
+- `preCompact`: checkpoint a summary (no context reinject on Cursor).
 - `stop`: summarize without ending a conversation that may continue.
 
 These Cursor lifecycle hooks do not link git commits. `commit-context` and

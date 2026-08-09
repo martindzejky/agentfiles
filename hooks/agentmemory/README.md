@@ -25,10 +25,12 @@ The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
   upstream PreToolUse enrich.
 - `postToolUseFailure` records failed tool calls (skips user interrupts). It
   does not enrich: Cursor documents no output fields for this event.
-- `subagentStart` / `subagentStop` record Task-tool subagent lifecycle
-  (`agent_id`, `agent_type`, task/summary) on the parent session.
-- `preCompact` records documented compaction metadata, then asks AgentMemory to
-  summarize the session. It cannot alter Cursor's compaction.
+- `subagentStart` / `subagentStop` record Task-tool subagent lifecycle on the
+  parent session as `post_tool_use` with `tool_name: "subagent"` so summarization
+  lifts the task/summary text.
+- `preCompact` only asks AgentMemory to summarize. Upstream Claude PreCompact
+  reinjects `/context` via stdout; Cursor cannot do that, and a metadata-only
+  observe would not be summarized anyway.
 - `stop` asks AgentMemory to summarize, but deliberately does not end the
   session because Cursor may continue the same conversation after a stopped
   turn.
@@ -36,10 +38,10 @@ The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
 
 Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
 so remote HTTPS (for example Railway) has room for TLS without exceeding
-Cursor's usual 3s hook budget. `preCompact` posts observe then summarize, so
-its Cursor timeout is 6s. Prompt, response, authorization, and full Cursor
+Cursor's usual 3s hook budget. Prompt, response, authorization, and full Cursor
 payloads are never logged. Prompt and response captures are capped at 10,000
-characters.
+characters. Base64 image blobs in tool output are replaced with a placeholder
+and are never sent as `image_data`.
 
 Every REST body includes a hardcoded `agentId: "cursor"` so a shared
 AgentMemory server can tell Cursor writes apart from other agents later.
@@ -60,10 +62,15 @@ payloads:
 - `prompt_submit` also sets `tool_input` to the prompt text. Identical prompts
   within five minutes may be deduplicated; that rare drop is accepted. Leaving
   `tool_input` unset would make every `prompt_submit` in a session collide.
+- Subagent start/stop use the same `post_tool_use` + `tool_name: "subagent"`
+  shape. `tool_input` prefers `subagent_id` (unique) and otherwise includes a
+  `start:` / `stop:` prefix so the five-minute dedup window does not collapse
+  the pair. `tool_output` carries the start descriptor or the stop summary.
 - The prompt cache is gitignored (`.prompt-cache/`, one JSON file per session)
   so parallel local agents do not share a single read-modify-write map. Growth
   is bounded by per-session overwrite, a 7-day TTL prune on write, a 200-entry
-  cap, and deletion on `sessionEnd`.
+  cap, and deletion on `sessionEnd`. An old single-file `.prompt-cache.json`
+  path is also gitignored and unused.
 
 ## Runtime configuration
 
@@ -96,6 +103,10 @@ Optional settings:
 - `AGENTMEMORY_INJECT_CONTEXT=true` opts `sessionStart` and file-tool
   `postToolUse` into context injection (default off; see upstream #143).
 - `AGENTMEMORY_PROJECT_NAME` overrides Git-based project discovery.
+
+Server-side (AgentMemory host, not this `.env`): raise `MAX_OBS_PER_SESSION`
+when tool/subagent capture makes busy Cursor sessions hit the default cap
+(this integration's Railway host uses `2000`).
 
 The real `.env` is gitignored and must never be committed. It is still a
 plaintext local secret, so keep its permissions at `600`. Environment variables
@@ -172,7 +183,8 @@ Intentional differences:
 - The manifest uses Cursor's camelCase events and command schema.
 - Cursor's stable `conversation_id` is used when `session_id` is absent.
 - Scripts use Cursor's `workspace_roots` and emit protocol-safe JSON.
-- `preCompact` checkpoints instead of printing context.
+- `preCompact` only summarizes. Upstream Claude prints `/context` to stdout for
+  reinjection; Cursor has no equivalent reinject path, so that side is dropped.
 - `stop` never calls `/session/end`.
 - `beforeSubmitPrompt` never calls `/session/start`. Upstream Claude
   `prompt-submit` also only posts `/observe`; an earlier local draft called
@@ -181,12 +193,13 @@ Intentional differences:
   it borrows the `post_tool_use` shape.
 - `postToolUse` has no matcher (all tools), matching Claude Code's unfiltered
   PostToolUse capture. Observe always runs; enrich is opt-in and limited to
-  file-touching tools.
+  file-touching tools. Image base64 is stripped instead of forwarded as
+  `image_data`.
 - `preToolUse` is omitted: Cursor cannot inject context there. Upstream enrich
   is adapted onto `postToolUse` `additional_context` instead.
-- Subagent hooks map Cursor `subagent_id` / `subagent_type` / `summary` onto
-  upstream `agent_id` / `agent_type` / `last_message`, and set `tool_input` so
-  concurrent subagents do not share one dedup hash.
+- Subagent hooks also borrow `post_tool_use` (`tool_name: "subagent"`) so the
+  summarizer sees task/summary text. Cursor field names (`subagent_id`,
+  `summary`) still drive `tool_input` / `tool_output`.
 - Claude memory bridge, Notification, TaskCompleted, and thought hooks are
   omitted.
 

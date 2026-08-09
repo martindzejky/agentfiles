@@ -5,6 +5,7 @@
 
 import {
   CONTEXT_TIMEOUT_MS,
+  isContextInjectionEnabled,
   postJson,
   readConfig,
   readPayload,
@@ -21,6 +22,7 @@ async function main() {
   if (!payload || !config) return writeCursorOutput();
 
   const cwd = resolveWorkingDirectory(payload);
+  const inject = isContextInjectionEnabled();
   const result = await postJson(
     '/agentmemory/session/start',
     {
@@ -30,17 +32,11 @@ async function main() {
     },
     {
       config,
-      timeoutMs:
-        process.env.AGENTMEMORY_INJECT_CONTEXT === 'true'
-          ? CONTEXT_TIMEOUT_MS
-          : undefined,
+      timeoutMs: inject ? CONTEXT_TIMEOUT_MS : undefined,
     },
   );
 
-  const context =
-    process.env.AGENTMEMORY_INJECT_CONTEXT === 'true'
-      ? truncateText(result?.context)
-      : '';
+  const context = inject ? truncateText(result?.context) : '';
 
   writeCursorOutput(context ? { additional_context: context } : {});
 }

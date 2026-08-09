@@ -170,10 +170,7 @@ test('HTTP timeouts fit inside Cursor hook budgets', async () => {
   assert.equal(CONTEXT_TIMEOUT_MS, 2_500);
   assert.ok(REQUEST_TIMEOUT_MS < manifest.hooks.stop[0].timeout * 1000);
   assert.ok(CONTEXT_TIMEOUT_MS < manifest.hooks.sessionStart[0].timeout * 1000);
-  // preCompact awaits observe then summarize.
-  assert.ok(
-    2 * REQUEST_TIMEOUT_MS <= manifest.hooks.preCompact[0].timeout * 1000,
-  );
+  assert.ok(REQUEST_TIMEOUT_MS < manifest.hooks.preCompact[0].timeout * 1000);
 });
 
 test('sessionStart registers and emits only Cursor additional_context JSON', async () => {
@@ -541,7 +538,7 @@ test('repeated prompts share tool_input and never reset the session', async () =
   }
 });
 
-test('preCompact records metadata, summarizes, and never ends the session', async () => {
+test('preCompact summarizes without observe or ending the session', async () => {
   const server = await startMockServer();
   try {
     const result = await runHook(
@@ -562,31 +559,13 @@ test('preCompact records metadata, summarizes, and never ends the session', asyn
     );
 
     assertSuccessfulNoOp(result);
-    assert.deepEqual(
-      server.requests.map((request) => request.path),
-      ['/agentmemory/observe', '/agentmemory/summarize'],
-    );
-    assert.equal(server.requests[0].body.hookType, 'pre_compact');
-    assert.deepEqual(server.requests[0].body.data, {
-      trigger: 'auto',
-      context_usage_percent: 82,
-      context_tokens: 82_000,
-      context_window_size: 100_000,
-      message_count: 40,
-      messages_to_compact: 20,
-      is_first_compaction: true,
-    });
-    assert.equal(server.requests[0].body.agentId, 'cursor');
-    assert.deepEqual(server.requests[1].body, {
-      sessionId: 'conversation-id',
-      agentId: 'cursor',
-    });
-    assert.equal(
-      server.requests.some(
-        (request) => request.path === '/agentmemory/session/end',
-      ),
-      false,
-    );
+    assert.deepEqual(server.requests, [
+      {
+        path: '/agentmemory/summarize',
+        authorization: 'Bearer test-secret',
+        body: { sessionId: 'conversation-id', agentId: 'cursor' },
+      },
+    ]);
   } finally {
     await server.close();
   }
@@ -634,6 +613,37 @@ test('sessionEnd ends the stable session', async () => {
         body: { sessionId: 'session-id', agentId: 'cursor' },
       },
     ]);
+  } finally {
+    await server.close();
+  }
+});
+
+test('postToolUse strips base64 image blobs from tool_output', async () => {
+  const server = await startMockServer();
+  const png =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUse',
+        {
+          conversation_id: 'image-session',
+          workspace_roots: [ROOT],
+          tool_name: 'Read',
+          tool_input: { path: 'shot.png' },
+          tool_output: { screenshot: png, note: 'ok' },
+        },
+        { url: server.url },
+      ),
+    );
+
+    const [observe] = server.requests;
+    assert.equal(
+      observe.body.data.tool_output.screenshot,
+      '[image data omitted]',
+    );
+    assert.equal(observe.body.data.tool_output.note, 'ok');
+    assert.equal(observe.body.data.image_data, undefined);
   } finally {
     await server.close();
   }
@@ -889,7 +899,7 @@ test('postToolUseFailure records errors and skips interrupts', async () => {
   }
 });
 
-test('subagentStart records Cursor Task-tool lifecycle fields', async () => {
+test('subagentStart maps onto post_tool_use subagent shape', async () => {
   const server = await startMockServer();
   try {
     assertSuccessfulNoOp(
@@ -909,14 +919,16 @@ test('subagentStart records Cursor Task-tool lifecycle fields', async () => {
     assert.equal(server.requests.length, 1);
     const [observe] = server.requests;
     assert.equal(observe.path, '/agentmemory/observe');
-    assert.equal(observe.body.hookType, 'subagent_start');
+    assert.equal(observe.body.hookType, 'post_tool_use');
     assert.equal(observe.body.sessionId, 'parent-session');
     assert.equal(observe.body.agentId, 'cursor');
     assert.equal(observe.body.project, PROJECT);
-    assert.equal(observe.body.data.agent_id, 'abc-123');
-    assert.equal(observe.body.data.agent_type, 'explore');
-    assert.equal(observe.body.data.task, 'Explore the authentication flow');
+    assert.equal(observe.body.data.tool_name, 'subagent');
     assert.equal(observe.body.data.tool_input, 'abc-123');
+    assert.equal(
+      observe.body.data.tool_output,
+      'started: explore: Explore the authentication flow',
+    );
   } finally {
     await server.close();
   }
@@ -939,14 +951,16 @@ test('subagentStart tool_input falls back past empty task', async () => {
     );
 
     assert.equal(server.requests.length, 1);
-    assert.equal(server.requests[0].body.data.tool_input, 'explore');
-    assert.equal(server.requests[0].body.data.task, undefined);
+    assert.equal(server.requests[0].body.hookType, 'post_tool_use');
+    assert.equal(server.requests[0].body.data.tool_name, 'subagent');
+    assert.equal(server.requests[0].body.data.tool_input, 'start:explore');
+    assert.equal(server.requests[0].body.data.tool_output, 'started: explore');
   } finally {
     await server.close();
   }
 });
 
-test('subagentStop records summary status and maps last_message', async () => {
+test('subagentStop maps summary onto post_tool_use tool_output', async () => {
   const server = await startMockServer();
   try {
     assertSuccessfulNoOp(
@@ -966,15 +980,14 @@ test('subagentStop records summary status and maps last_message', async () => {
 
     assert.equal(server.requests.length, 1);
     const [observe] = server.requests;
-    assert.equal(observe.body.hookType, 'subagent_stop');
+    assert.equal(observe.body.hookType, 'post_tool_use');
     assert.equal(observe.body.sessionId, 'parent-session');
-    assert.equal(observe.body.data.agent_type, 'generalPurpose');
-    assert.equal(observe.body.data.status, 'completed');
-    assert.equal(observe.body.data.last_message, 'Auth lives in src/auth.ts');
+    assert.equal(observe.body.data.tool_name, 'subagent');
     assert.equal(
       observe.body.data.tool_input,
-      'generalPurpose:completed:Explore the authentication flow',
+      'stop:generalPurpose:completed:Explore the authentication flow',
     );
+    assert.equal(observe.body.data.tool_output, 'Auth lives in src/auth.ts');
     assert.equal(observe.body.agentId, 'cursor');
   } finally {
     await server.close();
