@@ -117,14 +117,14 @@ State the correction factually. No long apology or re-litigating the pushback.
 
 ## Common mistakes
 
-| Mistake | Fix |
-| --- | --- |
-| Performative agreement | State requirement or just act |
-| Blind implementation | Verify against codebase first |
-| Batch without testing | One at a time, test each |
-| Assuming reviewer is right | Check whether it breaks things |
-| Avoiding pushback | Technical correctness over comfort |
-| Partial implementation | Clarify all items first |
+| Mistake                      | Fix                                 |
+| ---------------------------- | ----------------------------------- |
+| Performative agreement       | State requirement or just act       |
+| Blind implementation         | Verify against codebase first       |
+| Batch without testing        | One at a time, test each            |
+| Assuming reviewer is right   | Check whether it breaks things      |
+| Avoiding pushback            | Technical correctness over comfort  |
+| Partial implementation       | Clarify all items first             |
 | Can't verify, proceed anyway | State limitation, ask for direction |
 
 ## Examples
