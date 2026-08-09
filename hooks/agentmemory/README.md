@@ -216,10 +216,42 @@ not match Claude Code, so these scripts already remap several events onto
 shapes AgentMemory will summarize (`conversation`, `subagent`), strip fields
 that only help other hosts, and paper over dedup / session-reset footguns.
 
-If more of that keeps stacking, prefer forking AgentMemory (or switching hosts)
-so the server understands Cursor-shaped data directly, instead of growing more
-client-side workarounds here. Keep this thin adapter until real usage shows
-whether the upstream server is worth keeping.
+Keep this thin adapter until real usage shows whether AgentMemory's retrieval
+and consolidation consistently save effort on actual coding work. If they do,
+prefer a focused fork so the server understands host-neutral conversation
+events directly instead of growing more client-side workarounds here.
+
+The fork should use these design rules:
+
+- Preserve an immutable raw event log with first-class `user_prompt`,
+  `assistant_response`, `tool_call`, `tool_result`, `subagent`, and `compaction`
+  events. Do not disguise conversation messages as tool observations. Keep raw
+  events so improved summarization can be rerun later.
+- Give every event a stable client-generated event ID. Retrying the same event
+  ID must be idempotent, while two different event IDs with identical content
+  must both be retained. Remove ingestion deduplication based on session,
+  content, or short time windows; semantic deduplication belongs in derived
+  memories, not the source event log.
+- Treat a Cursor conversation as an open-ended stream. A conversation/session
+  ID is useful for grouping when available, but ingestion must not require
+  `sessionStart`, `sessionEnd`, or even a session ID. Sessions have no meaningful
+  `active` or `completed` state because a user can return at any time.
+- Replace end-state gates with processing watermarks such as `lastEventAt`,
+  `lastSummarizedEventId`, `lastReflectedEventId`, and `summaryRevision`.
+  Summarization, reflection, graph extraction, consolidation, crystallization,
+  and skill extraction must work incrementally without a completed session.
+- Trigger processing at turn boundaries, after an idle period, after an
+  event/token threshold, on explicit flush, and from a periodic recovery sweep
+  so missing Cloud hooks do not permanently block memory formation.
+- Keep `/session/end` only as a deprecated compatibility alias for a stateless
+  conversation flush. It must not close the conversation or reject later
+  events. Archiving, if needed for the UI, is an explicit user-controlled flag
+  rather than an ingestion state.
+- Keep host adapters thin. They should translate native hook payloads into the
+  shared event envelope and never compensate for server schema limitations with
+  prompt caches or fake tool events. Do not retain agent thoughts by default;
+  final responses, decisions, prompts, and useful tool outcomes are the durable
+  inputs.
 
 Cursor schema and Cloud support are based on
 [Cursor's hook documentation](https://cursor.com/docs/hooks) and
