@@ -84,6 +84,10 @@ server must not block the agent.
   server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
+- This Cursor adapter remaps several events around AgentMemory summarizer and
+  dedup footguns. If that keeps growing, forking AgentMemory (or switching
+  hosts) may be cleaner than more client patches; see
+  `hooks/agentmemory/README.md` ("Forking AgentMemory").
 
 ## See also
 

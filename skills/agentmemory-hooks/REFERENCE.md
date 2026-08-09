@@ -70,5 +70,5 @@ other endpoints still send it even when the server ignores unknown fields.
 
 The user-level hooks are installed from `hooks.json` and
 `hooks/agentmemory/`. Implementation details, Cloud limitations, smoke-test
-instructions, and the pinned upstream audit trail are in
-`hooks/agentmemory/README.md`.
+instructions, the pinned upstream audit trail, and when to consider forking
+AgentMemory are in `hooks/agentmemory/README.md`.

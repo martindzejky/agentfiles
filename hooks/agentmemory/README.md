@@ -63,9 +63,10 @@ payloads:
   within five minutes may be deduplicated; that rare drop is accepted. Leaving
   `tool_input` unset would make every `prompt_submit` in a session collide.
 - Subagent start/stop use the same `post_tool_use` + `tool_name: "subagent"`
-  shape. `tool_input` prefers `subagent_id` (unique) and otherwise includes a
-  `start:` / `stop:` prefix so the five-minute dedup window does not collapse
-  the pair. `tool_output` carries the start descriptor or the stop summary.
+  shape. `tool_input` always uses a `start:` / `stop:` prefix (then
+  `subagent_id`, else type/task) so the five-minute dedup window does not
+  collapse the pair. `tool_output` carries the start descriptor or the stop
+  summary.
 - The prompt cache is gitignored (`.prompt-cache/`, one JSON file per session)
   so parallel local agents do not share a single read-modify-write map. Growth
   is bounded by per-session overwrite, a 7-day TTL prune on write, a 200-entry
@@ -207,6 +208,18 @@ Open upstream
 [PR #1112](https://github.com/rohitg00/agentmemory/pull/1112) was reviewed for
 Cursor-specific operational gotchas, including duplicate plugin/user hooks and
 workspace attribution. No code was copied from that unmerged implementation.
+
+## Forking AgentMemory
+
+This integration is still experimental. Cursor's hook payloads and lifecycle do
+not match Claude Code, so these scripts already remap several events onto
+shapes AgentMemory will summarize (`conversation`, `subagent`), strip fields
+that only help other hosts, and paper over dedup / session-reset footguns.
+
+If more of that keeps stacking, prefer forking AgentMemory (or switching hosts)
+so the server understands Cursor-shaped data directly, instead of growing more
+client-side workarounds here. Keep this thin adapter until real usage shows
+whether the upstream server is worth keeping.
 
 Cursor schema and Cloud support are based on
 [Cursor's hook documentation](https://cursor.com/docs/hooks) and

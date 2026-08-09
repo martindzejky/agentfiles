@@ -35,12 +35,12 @@ async function main() {
   const summary = truncateText(
     payload.summary ?? payload.last_assistant_message ?? '',
   );
-  // Distinct from subagentStart's tool_input so start/stop do not collide in
-  // the five-minute dedup window when agent_id is missing.
-  const toolInput =
-    agentId ||
-    ['stop', agentType, status, task].filter(Boolean).join(':') ||
-    'stop';
+  // Always prefix stop: so start/stop do not share one five-minute dedup hash
+  // when both carry the same subagent_id.
+  const toolInput = [
+    'stop',
+    agentId || agentType || status || task || 'subagent',
+  ].join(':');
   const toolOutput =
     summary ||
     truncateText(
