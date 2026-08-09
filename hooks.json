@@ -36,6 +36,20 @@
         "failClosed": false
       }
     ],
+    "subagentStart": [
+      {
+        "command": "./hooks/agentmemory/subagent-start.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ],
+    "subagentStop": [
+      {
+        "command": "./hooks/agentmemory/subagent-stop.mjs",
+        "timeout": 3,
+        "failClosed": false
+      }
+    ],
     "preCompact": [
       {
         "command": "./hooks/agentmemory/pre-compact.mjs",

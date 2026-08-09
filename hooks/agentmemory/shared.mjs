@@ -87,7 +87,27 @@ export function resolveSessionId(payload) {
   return (
     nonEmptyString(payload?.session_id) ??
     nonEmptyString(payload?.conversation_id) ??
+    // Cursor subagentStart documents parent_conversation_id when the common
+    // conversation_id field is absent.
+    nonEmptyString(payload?.parent_conversation_id) ??
     `cursor_${randomUUID()}`
+  );
+}
+
+export function resolveSubagentId(payload) {
+  return (
+    nonEmptyString(payload?.subagent_id) ??
+    nonEmptyString(payload?.agent_id) ??
+    nonEmptyString(payload?.agentName)
+  );
+}
+
+export function resolveSubagentType(payload) {
+  return (
+    nonEmptyString(payload?.subagent_type) ??
+    nonEmptyString(payload?.agent_type) ??
+    nonEmptyString(payload?.agentDisplayName) ??
+    nonEmptyString(payload?.agentName)
   );
 }
 

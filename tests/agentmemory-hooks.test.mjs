@@ -26,6 +26,8 @@ const HOOKS = {
   afterAgentResponse: 'after-agent-response.mjs',
   postToolUse: 'post-tool-use.mjs',
   postToolUseFailure: 'post-tool-failure.mjs',
+  subagentStart: 'subagent-start.mjs',
+  subagentStop: 'subagent-stop.mjs',
   preCompact: 'pre-compact.mjs',
   stop: 'stop.mjs',
   sessionEnd: 'session-end.mjs',
@@ -871,6 +873,98 @@ test('postToolUseFailure records errors and skips interrupts', async () => {
   }
 });
 
+test('subagentStart records Cursor Task-tool lifecycle fields', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'subagentStart',
+        {
+          parent_conversation_id: 'parent-session',
+          workspace_roots: [ROOT],
+          subagent_id: 'abc-123',
+          subagent_type: 'explore',
+          task: 'Explore the authentication flow',
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.equal(server.requests.length, 1);
+    const [observe] = server.requests;
+    assert.equal(observe.path, '/agentmemory/observe');
+    assert.equal(observe.body.hookType, 'subagent_start');
+    assert.equal(observe.body.sessionId, 'parent-session');
+    assert.equal(observe.body.agentId, 'cursor');
+    assert.equal(observe.body.project, PROJECT);
+    assert.equal(observe.body.data.agent_id, 'abc-123');
+    assert.equal(observe.body.data.agent_type, 'explore');
+    assert.equal(observe.body.data.task, 'Explore the authentication flow');
+    assert.equal(observe.body.data.tool_input, 'abc-123');
+  } finally {
+    await server.close();
+  }
+});
+
+test('subagentStart tool_input falls back past empty task', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'subagentStart',
+        {
+          conversation_id: 'parent-session',
+          workspace_roots: [ROOT],
+          subagent_type: 'explore',
+          task: '',
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.equal(server.requests.length, 1);
+    assert.equal(server.requests[0].body.data.tool_input, 'explore');
+    assert.equal(server.requests[0].body.data.task, undefined);
+  } finally {
+    await server.close();
+  }
+});
+
+test('subagentStop records summary status and maps last_message', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'subagentStop',
+        {
+          conversation_id: 'parent-session',
+          workspace_roots: [ROOT],
+          subagent_type: 'generalPurpose',
+          status: 'completed',
+          task: 'Explore the authentication flow',
+          summary: 'Auth lives in src/auth.ts',
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.equal(server.requests.length, 1);
+    const [observe] = server.requests;
+    assert.equal(observe.body.hookType, 'subagent_stop');
+    assert.equal(observe.body.sessionId, 'parent-session');
+    assert.equal(observe.body.data.agent_type, 'generalPurpose');
+    assert.equal(observe.body.data.status, 'completed');
+    assert.equal(observe.body.data.last_message, 'Auth lives in src/auth.ts');
+    assert.equal(
+      observe.body.data.tool_input,
+      'generalPurpose:completed:Explore the authentication flow',
+    );
+    assert.equal(observe.body.agentId, 'cursor');
+  } finally {
+    await server.close();
+  }
+});
+
 test('every hook REST body hardcodes agentId cursor', async () => {
   const server = await startMockServer();
   try {
@@ -903,6 +997,20 @@ test('every hook REST body hardcodes agentId cursor', async () => {
         tool_input: { command: 'false' },
         error_message: 'exit 1',
         failure_type: 'error',
+      },
+      subagentStart: {
+        conversation_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+        subagent_id: 'sub-1',
+        subagent_type: 'explore',
+        task: 'look around',
+      },
+      subagentStop: {
+        conversation_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+        subagent_type: 'explore',
+        status: 'completed',
+        summary: 'done',
       },
       preCompact: {
         conversation_id: 'agent-id-session',

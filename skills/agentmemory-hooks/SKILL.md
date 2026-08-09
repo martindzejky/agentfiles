@@ -27,6 +27,8 @@ This repo installs the following local user hooks:
     "postToolUseFailure": [
       { "command": "./hooks/agentmemory/post-tool-failure.mjs" }
     ],
+    "subagentStart": [{ "command": "./hooks/agentmemory/subagent-start.mjs" }],
+    "subagentStop": [{ "command": "./hooks/agentmemory/subagent-stop.mjs" }],
     "preCompact": [{ "command": "./hooks/agentmemory/pre-compact.mjs" }],
     "stop": [{ "command": "./hooks/agentmemory/stop.mjs" }],
     "sessionEnd": [{ "command": "./hooks/agentmemory/session-end.mjs" }]
@@ -51,6 +53,8 @@ Watch captures at `http://localhost:3113` once the server is up.
   `AGENTMEMORY_INJECT_CONTEXT=true`, successful file-touching tools also
   enrich via `/agentmemory/enrich` → `additional_context` (Shell/MCP skipped;
   failure hooks cannot inject on Cursor).
+- `subagentStart` / `subagentStop`: capture Task-tool subagent lifecycle on the
+  parent session.
 - `preCompact`: record compaction metadata and checkpoint a summary.
 - `stop`: summarize without ending a conversation that may continue.
 
