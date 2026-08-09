@@ -906,6 +906,30 @@ test('subagentStart records Cursor Task-tool lifecycle fields', async () => {
   }
 });
 
+test('subagentStart tool_input falls back past empty task', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'subagentStart',
+        {
+          conversation_id: 'parent-session',
+          workspace_roots: [ROOT],
+          subagent_type: 'explore',
+          task: '',
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.equal(server.requests.length, 1);
+    assert.equal(server.requests[0].body.data.tool_input, 'explore');
+    assert.equal(server.requests[0].body.data.task, undefined);
+  } finally {
+    await server.close();
+  }
+});
+
 test('subagentStop records summary status and maps last_message', async () => {
   const server = await startMockServer();
   try {

@@ -27,8 +27,9 @@ async function main() {
   const agentType = resolveSubagentType(payload);
   const task = truncateText(payload.task);
   // Dedup is sessionId + tool_name + tool_input. Without tool_input, every
-  // subagent_start in a session collapses for five minutes.
-  const toolInput = agentId ?? task ?? agentType ?? '';
+  // subagent_start in a session collapses for five minutes. Prefer || over ??
+  // so an empty truncated task does not block agent_type.
+  const toolInput = agentId || task || agentType || '';
 
   await postJson(
     '/agentmemory/observe',
