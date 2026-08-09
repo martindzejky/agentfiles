@@ -62,7 +62,7 @@ Give the reviewer enough context to judge the diff on its own.
 - **Minor** — note for later or fix if cheap
 - Push back when the reviewer lacks context or the suggestion is wrong for this codebase
 
-For PR feedback loops after merge prep, use the `get-pr-comments` skill.
+For PR feedback loops after merge prep, use the `autopilot` skill (`/autopilot`).
 
 ## Red flags
 

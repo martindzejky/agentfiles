@@ -71,7 +71,7 @@ Always pass `branch_name` (and `base_branch` when creating) to `ManagePullReques
 
 **Writes — cloud only:** see **Cloud vs Local** (`ManagePullRequest`: `create_pr`, `update_pr`, `post_comment`, `resolve_comment`, `get_ci_status`, `set_pr_status`).
 
-For CI triage loops, also use the `loop-on-ci` skill.
+For merge-ready PR loops (conflicts, review comments, CI), use the `autopilot` skill (`/autopilot`).
 
 ## Create PR
 
@@ -194,7 +194,7 @@ gh pr checks --json name,bucket,state,workflow,link
 gh pr checks --watch --fail-fast
 ```
 
-For iterating until green, follow the `loop-on-ci` skill.
+For iterating until merge-ready (comments + CI), follow the `autopilot` skill (`/autopilot`).
 
 ## Review Workflow
 
@@ -216,7 +216,7 @@ gh pr review --request-changes -b "message"
 
 Cloud: use `post_comment` when a PR comment is relevant (for example replying after addressing review feedback) or when the user asks. Do not use `gh pr review` for writes.
 
-For summarizing feedback, use the `get-pr-comments` skill.
+For triaging review feedback on an open PR, use the `autopilot` skill (`/autopilot`).
 
 ## Common Mistakes
 
