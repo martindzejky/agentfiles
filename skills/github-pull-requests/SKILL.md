@@ -1,6 +1,6 @@
 ---
 name: github-pull-requests
-description: Work with GitHub pull requests using gh — create, review, comment, check CI, and merge. Use when opening or creating a PR, finishing work on a feature branch, or operating on the current branch's pull request from the terminal.
+description: Work with GitHub pull requests — create, update, comment, check CI, and review. Local IDE uses gh for writes; Cursor Cloud uses ManagePullRequest for writes and gh for reads. Use when opening or creating a PR, finishing work on a feature branch, or operating on the current branch's pull request.
 ---
 
 # GitHub Pull Requests
@@ -15,30 +15,61 @@ Use `gh`, not `glab`.
 - Only pass a number, URL, or branch when intentionally targeting a different PR.
 - If unsure about flags, run `gh pr <subcommand> --help`.
 
+## Cloud vs Local
+
+**Local IDE:** use `gh` for PR reads and writes.
+
+**Cursor Cloud:** `gh` is read-only for PR writes. Use the `ManagePullRequest` tool for writes — do not run `gh pr create`, `gh pr edit`, `gh pr ready`, `gh pr comment`, or `gh pr review` as write operations.
+
+| Task | Local | Cloud (`ManagePullRequest`) |
+| --- | --- | --- |
+| Create PR | `gh pr create` | `create_pr` — always `"draft": false` |
+| Update title/body | `gh pr edit` | `update_pr` |
+| Mark ready | `gh pr ready` | `update_pr` with `"draft": false` |
+| Comment | `gh pr comment` | `post_comment` |
+| Resolve thread | (UI or API) | `resolve_comment` |
+| CI status | `gh pr checks` | `get_ci_status` or `gh pr checks` |
+| Open/close PR | `gh pr close` / `gh pr reopen` | `set_pr_status` |
+
+Reads (`gh pr view`, `gh pr diff`, `gh pr checks`, `--json` inspect) work in both environments.
+
+**Merge:** only when the user explicitly asks. Never merge or enable auto-merge as a default finish step. `ManagePullRequest` has no merge action — local `gh pr merge` only, and only on explicit request.
+
+**Review writes** (`gh pr review --approve`, `--request-changes`): local only. In cloud, read review state with `gh pr view`; post replies with `post_comment` when the user asks.
+
+Always pass `branch_name` (and `base_branch` when creating) to `ManagePullRequest`. Do not use `gh` to create or update PRs in cloud.
+
 ## PR Policy (Critical)
 
 **All agent-opened GitHub PRs must be ready for review — never drafts.**
 
 - Do not use `gh pr create --draft`.
-- When using Cursor cloud APIs, `ManagePullRequest.create_pr` must always include `"draft": false` (do not rely on defaults).
-- If a draft PR is created by mistake, mark it ready before finishing: `gh pr ready`.
+- In cloud, `ManagePullRequest` `create_pr` must always include `"draft": false` (do not rely on defaults).
+- If a draft PR is created by mistake, mark it ready before finishing — local: `gh pr ready`; cloud: `update_pr` with `"draft": false`.
 - Never leave work with an open draft PR.
 
 ## Quick Reference
 
-- Create PR: `gh pr create`
+**Reads (local and cloud):**
+
 - Inspect current branch PR: `gh pr view`
 - Show comments: `gh pr view --comments`
 - View structured PR data: `gh pr view --json number,url,title,body,isDraft,mergeStateStatus,statusCheckRollup`
 - View PR diff: `gh pr diff`
+- PR checks: `gh pr checks`
+- Watch checks: `gh pr checks --watch --fail-fast`
+
+**Writes — local only:**
+
+- Create PR: `gh pr create`
 - Add a comment: `gh pr comment -b "message"`
 - Approve: `gh pr review --approve`
 - Request changes: `gh pr review --request-changes -b "message"`
 - Mark ready: `gh pr ready`
 - Edit title/body: `gh pr edit -t "title" -b "body"` or `-F file`
-- Update PR checks: `gh pr checks`
-- Watch checks: `gh pr checks --watch --fail-fast`
-- Merge current PR: `gh pr merge`
+- Merge: `gh pr merge` — **only when the user explicitly asks**; never as a default finish step
+
+**Writes — cloud only:** see **Cloud vs Local** (`ManagePullRequest`: `create_pr`, `update_pr`, `post_comment`, `resolve_comment`, `get_ci_status`, `set_pr_status`).
 
 For CI triage loops, also use the `loop-on-ci` skill.
 
@@ -83,7 +114,7 @@ Closes #42
 
 Use `[x]` for steps already verified before opening the PR. Skip filler.
 
-Keep the description cumulative and current — it must reflect all commits in the PR as the branch evolves. Update with `gh pr edit -F -` when needed.
+Keep the description cumulative and current — it must reflect all commits in the PR as the branch evolves. Update when needed — local: `gh pr edit -F -`; cloud: `ManagePullRequest` `update_pr`.
 
 For user-visible or cross-service changes (especially in cloud/autonomous runs), include verification artifacts in the description — screenshots or screen recordings of the working flow.
 
@@ -112,6 +143,8 @@ Do not open the PR until preflight passes: changelog handled (updated + committe
 2. Push if needed: `git push -u origin HEAD`
 3. Create PR (never as draft):
 
+**Local:**
+
 ```bash
 gh pr create \
   --title "Fix recorder upload retry on slow networks" \
@@ -133,8 +166,10 @@ EOF
 )"
 ```
 
+**Cloud:** `ManagePullRequest` with `"action": "create_pr"`, same title and body, `"branch_name"`, `"base_branch"`, and `"draft": false`. Do not use `gh pr create`.
+
 4. Confirm the PR is not a draft: `gh pr view --json isDraft,url` — `isDraft` must be `false`.
-5. Return the PR URL from command output.
+5. Return the PR URL.
 
 Do not use `--fill` when applying the title and description conventions above.
 
@@ -163,18 +198,31 @@ For iterating until green, follow the `loop-on-ci` skill.
 
 ## Review Workflow
 
+Reads (local and cloud):
+
 ```bash
 gh pr view --comments
 gh pr diff
-gh pr review --comment -b "addressed in the latest commit"
 gh pr view --json number,url,reviewDecision,statusCheckRollup
 ```
+
+Local review writes:
+
+```bash
+gh pr review --comment -b "addressed in the latest commit"
+gh pr review --approve
+gh pr review --request-changes -b "message"
+```
+
+Cloud: use `post_comment` when the user asks for a PR comment. Do not use `gh pr review` for writes.
 
 For summarizing feedback, use the `get-pr-comments` skill.
 
 ## Common Mistakes
 
-- Creating draft PRs (`--draft`, or omitting `"draft": false` in cloud APIs).
+- Creating draft PRs (`--draft`, or omitting `"draft": false` in cloud `create_pr`).
+- Using `gh pr create` / `gh pr edit` / `gh pr ready` / `gh pr comment` / `gh pr review` as writes in Cursor Cloud — use `ManagePullRequest` instead.
+- Merging or enabling auto-merge without an explicit user request.
 - Looking up the PR number first when the current branch is already enough.
 - Using `gh pr list` for the active branch instead of `gh pr view`.
 - Using `--fill` when a custom title and description are required.
