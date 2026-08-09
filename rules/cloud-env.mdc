@@ -3,7 +3,6 @@ description: Cloud agent, autonomous delivery
 alwaysApply: true
 metadata:
   environments: cloud
-  human: false
 ---
 
 When running in the cloud, run autonomously unless the user is only asking a question.

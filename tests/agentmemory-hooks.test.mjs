@@ -1277,6 +1277,7 @@ test('configuration requires a secret and restricts plain HTTP', async () => {
     assert.equal(readConfig(), null);
 
     process.env.AGENTMEMORY_SECRET = 'test-secret';
+    delete process.env.AGENTMEMORY_REQUIRE_HTTPS;
     assert.equal(readConfig().baseUrl, 'http://127.0.0.1:3111');
 
     process.env.AGENTMEMORY_REQUIRE_HTTPS = '1';

@@ -3,7 +3,6 @@ description: Local development, human in the loop
 alwaysApply: true
 metadata:
   environments: local
-  human: true
 ---
 
 The user is at the keyboard. Prefer collaboration over autonomy.
