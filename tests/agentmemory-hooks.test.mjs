@@ -160,6 +160,22 @@ test('manifest contains exactly the selected executable hooks', async () => {
   }
 });
 
+test('HTTP timeouts fit inside Cursor hook budgets', async () => {
+  const { REQUEST_TIMEOUT_MS, CONTEXT_TIMEOUT_MS } = await import(
+    join(HOOK_DIRECTORY, 'shared.mjs')
+  );
+  const manifest = JSON.parse(await readFile(join(ROOT, 'hooks.json'), 'utf8'));
+
+  assert.equal(REQUEST_TIMEOUT_MS, 2_500);
+  assert.equal(CONTEXT_TIMEOUT_MS, 2_500);
+  assert.ok(REQUEST_TIMEOUT_MS < manifest.hooks.stop[0].timeout * 1000);
+  assert.ok(CONTEXT_TIMEOUT_MS < manifest.hooks.sessionStart[0].timeout * 1000);
+  // preCompact awaits observe then summarize.
+  assert.ok(
+    2 * REQUEST_TIMEOUT_MS <= manifest.hooks.preCompact[0].timeout * 1000,
+  );
+});
+
 test('sessionStart registers and emits only Cursor additional_context JSON', async () => {
   const server = await startMockServer({ context: 'restored memory context' });
   try {

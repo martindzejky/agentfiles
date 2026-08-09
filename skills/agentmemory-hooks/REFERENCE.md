@@ -50,6 +50,8 @@ Use REST from hook scripts:
 - Base URL: required `AGENTMEMORY_URL`
 - Auth: required `Authorization: Bearer $AGENTMEMORY_SECRET`
 - Agent tag: hardcoded `agentId: "cursor"` on every POST body
+- HTTP timeout: 2.5s per REST call (under Cursor's usual 3s hook budget;
+  `preCompact` Cursor timeout is 6s for observe + summarize)
 - Fail open on network errors so a down daemon does not stall Cursor
 
 The hooks load only recognized AgentMemory keys from the local file. Existing
