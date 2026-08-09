@@ -19,25 +19,25 @@ Use `gh`, not `glab`.
 
 **Local IDE:** use `gh` for PR reads and writes.
 
-**Cursor Cloud:** `gh` is read-only for PR writes. Use the `ManagePullRequest` tool for writes — do not run `gh pr create`, `gh pr edit`, `gh pr ready`, `gh pr comment`, or `gh pr review` as write operations.
+**Cursor Cloud:** `gh` is read-only for PR writes. Use the `ManagePullRequest` tool for writes — do not run `gh pr create`, `gh pr edit`, `gh pr ready`, `gh pr comment`, `gh pr review`, `gh pr close`, or `gh pr reopen` as write operations.
 
-| Task | Local | Cloud (`ManagePullRequest`) |
-| --- | --- | --- |
-| Create PR | `gh pr create` | `create_pr` — always `"draft": false` |
-| Update title/body | `gh pr edit` | `update_pr` |
-| Mark ready | `gh pr ready` | `update_pr` with `"draft": false` |
-| Comment | `gh pr comment` | `post_comment` |
-| Resolve thread | (UI or API) | `resolve_comment` |
-| CI status | `gh pr checks` | `get_ci_status` or `gh pr checks` |
-| Open/close PR | `gh pr close` / `gh pr reopen` | `set_pr_status` |
+| Task              | Local                          | Cloud (`ManagePullRequest`)           |
+| ----------------- | ------------------------------ | ------------------------------------- |
+| Create PR         | `gh pr create`                 | `create_pr` — always `"draft": false` |
+| Update title/body | `gh pr edit`                   | `update_pr`                           |
+| Mark ready        | `gh pr ready`                  | `update_pr` with `"draft": false`     |
+| Comment           | `gh pr comment`                | `post_comment`                        |
+| Resolve thread    | (UI or API)                    | `resolve_comment`                     |
+| CI status         | `gh pr checks`                 | `get_ci_status` or `gh pr checks`     |
+| Open/close PR     | `gh pr close` / `gh pr reopen` | `set_pr_status`                       |
 
 Reads (`gh pr view`, `gh pr diff`, `gh pr checks`, `--json` inspect) work in both environments.
 
-**Merge:** only when the user explicitly asks. Never merge or enable auto-merge as a default finish step. `ManagePullRequest` has no merge action — local `gh pr merge` only, and only on explicit request.
+**Merge:** never merge or enable auto-merge. The user merges on their own. `ManagePullRequest` has no merge action — do not run `gh pr merge`.
 
-**Review writes** (`gh pr review --approve`, `--request-changes`): local only. In cloud, read review state with `gh pr view`; post replies with `post_comment` when the user asks.
+**Review writes** (`gh pr review --approve`, `--request-changes`): local only. In cloud, read review state with `gh pr view`; post replies with `post_comment` when relevant or when the user asks.
 
-Always pass `branch_name` (and `base_branch` when creating) to `ManagePullRequest`. Do not use `gh` to create or update PRs in cloud.
+Always pass `branch_name` (and `base_branch` when creating) to `ManagePullRequest`. Do not use `gh` for any PR writes in cloud.
 
 ## PR Policy (Critical)
 
@@ -67,7 +67,7 @@ Always pass `branch_name` (and `base_branch` when creating) to `ManagePullReques
 - Request changes: `gh pr review --request-changes -b "message"`
 - Mark ready: `gh pr ready`
 - Edit title/body: `gh pr edit -t "title" -b "body"` or `-F file`
-- Merge: `gh pr merge` — **only when the user explicitly asks**; never as a default finish step
+- Do not merge: never run `gh pr merge` or enable auto-merge — the user merges
 
 **Writes — cloud only:** see **Cloud vs Local** (`ManagePullRequest`: `create_pr`, `update_pr`, `post_comment`, `resolve_comment`, `get_ci_status`, `set_pr_status`).
 
@@ -214,15 +214,15 @@ gh pr review --approve
 gh pr review --request-changes -b "message"
 ```
 
-Cloud: use `post_comment` when the user asks for a PR comment. Do not use `gh pr review` for writes.
+Cloud: use `post_comment` when a PR comment is relevant (for example replying after addressing review feedback) or when the user asks. Do not use `gh pr review` for writes.
 
 For summarizing feedback, use the `get-pr-comments` skill.
 
 ## Common Mistakes
 
 - Creating draft PRs (`--draft`, or omitting `"draft": false` in cloud `create_pr`).
-- Using `gh pr create` / `gh pr edit` / `gh pr ready` / `gh pr comment` / `gh pr review` as writes in Cursor Cloud — use `ManagePullRequest` instead.
-- Merging or enabling auto-merge without an explicit user request.
+- Using `gh pr create` / `gh pr edit` / `gh pr ready` / `gh pr comment` / `gh pr review` / `gh pr close` / `gh pr reopen` as writes in Cursor Cloud — use `ManagePullRequest` instead.
+- Merging or enabling auto-merge — the user merges on their own.
 - Looking up the PR number first when the current branch is already enough.
 - Using `gh pr list` for the active branch instead of `gh pr view`.
 - Using `--fill` when a custom title and description are required.
