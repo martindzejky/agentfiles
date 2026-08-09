@@ -924,7 +924,10 @@ test('subagentStart maps onto post_tool_use subagent shape', async () => {
     assert.equal(observe.body.agentId, 'cursor');
     assert.equal(observe.body.project, PROJECT);
     assert.equal(observe.body.data.tool_name, 'subagent');
-    assert.equal(observe.body.data.tool_input, 'start:abc-123');
+    assert.equal(
+      observe.body.data.tool_input,
+      'start:abc-123:explore:Explore the authentication flow',
+    );
     assert.equal(
       observe.body.data.tool_output,
       'started: explore: Explore the authentication flow',
@@ -992,8 +995,14 @@ test('subagent start and stop tool_input stay distinct for the same id', async (
     );
 
     assert.equal(server.requests.length, 2);
-    assert.equal(server.requests[0].body.data.tool_input, 'start:same-id');
-    assert.equal(server.requests[1].body.data.tool_input, 'stop:same-id');
+    assert.equal(
+      server.requests[0].body.data.tool_input,
+      'start:same-id:explore:look around',
+    );
+    assert.equal(
+      server.requests[1].body.data.tool_input,
+      'stop:same-id:explore:completed',
+    );
     assert.notEqual(
       server.requests[0].body.data.tool_input,
       server.requests[1].body.data.tool_input,
@@ -1026,7 +1035,10 @@ test('subagentStop maps summary onto post_tool_use tool_output', async () => {
     assert.equal(observe.body.hookType, 'post_tool_use');
     assert.equal(observe.body.sessionId, 'parent-session');
     assert.equal(observe.body.data.tool_name, 'subagent');
-    assert.equal(observe.body.data.tool_input, 'stop:generalPurpose');
+    assert.equal(
+      observe.body.data.tool_input,
+      'stop:generalPurpose:completed:Explore the authentication flow',
+    );
     assert.equal(observe.body.data.tool_output, 'Auth lives in src/auth.ts');
     assert.equal(observe.body.agentId, 'cursor');
   } finally {

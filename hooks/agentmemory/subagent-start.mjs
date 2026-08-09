@@ -30,12 +30,11 @@ async function main() {
   const agentId = resolveSubagentId(payload);
   const agentType = resolveSubagentType(payload);
   const task = truncateText(payload.task);
-  // Dedup is sessionId + tool_name + tool_input. Always prefix start: so this
-  // does not collide with subagentStop within five minutes when both use the
-  // same subagent_id. Prefer id for concurrency; fall back past empty task.
-  const toolInput = ['start', agentId || agentType || task || 'subagent'].join(
-    ':',
-  );
+  // Dedup is sessionId + tool_name + tool_input. Prefix start: so this does
+  // not collide with subagentStop for the same id; include type/task too so
+  // concurrent same-type Task tools without an id do not share one hash.
+  const toolInput =
+    ['start', agentId, agentType, task].filter(Boolean).join(':') || 'start';
   const toolOutput = truncateText(
     ['started', agentType, task].filter(Boolean).join(': '),
   );

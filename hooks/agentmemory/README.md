@@ -63,10 +63,10 @@ payloads:
   within five minutes may be deduplicated; that rare drop is accepted. Leaving
   `tool_input` unset would make every `prompt_submit` in a session collide.
 - Subagent start/stop use the same `post_tool_use` + `tool_name: "subagent"`
-  shape. `tool_input` always uses a `start:` / `stop:` prefix (then
-  `subagent_id`, else type/task) so the five-minute dedup window does not
-  collapse the pair. `tool_output` carries the start descriptor or the stop
-  summary.
+  shape. `tool_input` always uses a `start:` / `stop:` prefix plus id, type,
+  and task/status when present so the five-minute dedup window does not
+  collapse the pair or concurrent same-type Task tools. `tool_output` carries
+  the start descriptor or the stop summary.
 - The prompt cache is gitignored (`.prompt-cache/`, one JSON file per session)
   so parallel local agents do not share a single read-modify-write map. Growth
   is bounded by per-session overwrite, a 7-day TTL prune on write, a 200-entry

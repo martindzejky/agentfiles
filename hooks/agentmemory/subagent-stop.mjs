@@ -35,12 +35,11 @@ async function main() {
   const summary = truncateText(
     payload.summary ?? payload.last_assistant_message ?? '',
   );
-  // Always prefix stop: so start/stop do not share one five-minute dedup hash
-  // when both carry the same subagent_id.
-  const toolInput = [
-    'stop',
-    agentId || agentType || status || task || 'subagent',
-  ].join(':');
+  // Prefix stop: so start/stop do not share one five-minute dedup hash for the
+  // same subagent_id; include type/status/task for concurrency without an id.
+  const toolInput =
+    ['stop', agentId, agentType, status, task].filter(Boolean).join(':') ||
+    'stop';
   const toolOutput =
     summary ||
     truncateText(
