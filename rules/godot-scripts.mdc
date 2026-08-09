@@ -12,7 +12,7 @@ Every variable, function parameter, and return type must be explicitly typed. Us
 
 Usually one root script is enough for simpler objects. Split functionality out into components once there's reusable functionality.
 
-Check a few existing scripts in the codebase to see the used syntax, patterns, and formatting. If anything is unclear or you need to learn more, consult the built-in Godot documentation context, and use the question tool to ask questions to the user.
+Check a few existing scripts in the codebase to see the used syntax, patterns, and formatting. If anything is unclear or you need to learn more, consult the built-in Godot documentation context, and ask the user.
 
 Use 2 spaces for indentation, don't use tabs.
 
