@@ -1,6 +1,6 @@
 ---
 name: unslop-prose
-description: Cut AI tells from prose and chat replies. Must always apply when writing.
+description: Use when editing prose or chat replies to cut AI tells and restore a natural voice
 ---
 
 # Unslop prose
