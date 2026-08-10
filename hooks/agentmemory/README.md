@@ -44,10 +44,9 @@ compatibility workarounds that remain useful until the fork work lands.
 - `preCompact` only asks AgentMemory to summarize. Upstream Claude PreCompact
   reinjects `/context` via stdout; Cursor cannot do that, and a metadata-only
   observe would not be summarized anyway.
-- `stop` asks AgentMemory to summarize, but deliberately does not end the
-  session because Cursor may continue the same conversation after a stopped
-  turn.
-- `sessionEnd` marks the AgentMemory session complete.
+- `stop` asks AgentMemory to summarize only. Cursor has no reliable session
+  end, and a conversation may continue after a stopped turn, so sessions stay
+  open-ended. This hook never calls `/session/end`.
 
 Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
 so remote HTTPS (for example Railway) has room for TLS without exceeding
@@ -84,9 +83,10 @@ payloads:
   the start descriptor or the stop summary.
 - The prompt cache is gitignored (`.prompt-cache/`, one JSON file per session)
   so parallel local agents do not share a single read-modify-write map. Growth
-  is bounded by per-session overwrite, a 7-day TTL prune on write, a 200-entry
-  cap, and deletion on `sessionEnd`. An old single-file `.prompt-cache.json`
-  path is also gitignored and unused.
+  is bounded by per-session overwrite, a 7-day TTL prune on write, and a
+  200-entry cap. There is no `sessionEnd` cleanup; Cursor has no reliable
+  session end. An old single-file `.prompt-cache.json` path is also gitignored
+  and unused.
 
 ## Runtime configuration
 
@@ -161,12 +161,13 @@ including:
 - `preCompact`
 - `stop`
 
-Cursor Cloud does not provide `sessionStart` or `sessionEnd`. Cloud and other
-observe-first paths rely on `/observe` (and `/summarize` with the same
-identity fields) to create the session. Those writes must still tag
-`agentId: "cursor"` so the server can stamp Cursor on lazy create without a
-prior `/session/start`. Cloud sessions may remain active; observations and
-stop summaries are still retained.
+Cursor Cloud does not provide `sessionStart` (and never had `sessionEnd`).
+Locally, `sessionStart` remains installed as best-effort / optional context
+injection. Cloud and other observe-first paths rely on `/observe` (and
+`/summarize` with the same identity fields) to create the session. Those
+writes must still tag `agentId: "cursor"` so the server can stamp Cursor on
+lazy create without a prior `/session/start`. Sessions stay open-ended;
+observations and stop summaries are still retained.
 
 This repo currently installs the lifecycle, tool, and subagent hooks in
 [Installed hooks](#installed-hooks). Thought hooks are supported by Cursor but
@@ -193,8 +194,9 @@ Adapted from AgentMemory commit
 - [`plugin/scripts/subagent-stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-stop.mjs)
 - [`plugin/scripts/pre-compact.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/pre-compact.mjs)
 - [`plugin/scripts/stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/stop.mjs)
-- [`plugin/scripts/session-end.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/session-end.mjs)
 - [`src/hooks/_project.ts`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/src/hooks/_project.ts)
+  (`session-end.mjs` was adapted earlier and later removed; Cursor has no
+  reliable session end)
 
 Intentional differences:
 
@@ -203,7 +205,7 @@ Intentional differences:
 - Scripts use Cursor's `workspace_roots` and emit protocol-safe JSON.
 - `preCompact` only summarizes. Upstream Claude prints `/context` to stdout for
   reinjection; Cursor has no equivalent reinject path, so that side is dropped.
-- `stop` never calls `/session/end`.
+- `stop` never calls `/session/end`. This adapter does not wire `sessionEnd`.
 - `beforeSubmitPrompt` never calls `/session/start`. Upstream Claude
   `prompt-submit` also only posts `/observe`; an earlier local draft called
   `/session/start` on every prompt and that overwrote the session record.
@@ -237,10 +239,10 @@ Today the adapter carries compatibility workarounds because AgentMemory is
 still Claude-shaped. Examples already documented above: assistant messages
 masquerading as tool observations (`conversation` / `subagent`), prompt
 caching and pairing for `afterAgentResponse`, session lifecycle workarounds
-(Cloud missing `sessionStart` / `sessionEnd`, `stop` not ending sessions,
-`beforeSubmitPrompt` avoiding `/session/start`), and dedup workarounds around
-`sessionId + tool_name + tool_input`. Keep documenting that current behavior
-here until the fork work actually lands.
+(no `sessionEnd`, open-ended sessions, `stop` = summarize only, Cloud missing
+`sessionStart`, `beforeSubmitPrompt` avoiding `/session/start`), and dedup
+workarounds around `sessionId + tool_name + tool_input`. Keep documenting that
+current behavior here until the fork work actually lands.
 
 Once the fork gains first-class Cursor / event-stream support, this integration
 should simplify substantially: hooks should mostly translate Cursor payloads

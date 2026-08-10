@@ -33,8 +33,8 @@ export function withAgentId(body) {
 // Pi-style bridge: beforeSubmitPrompt stores the user prompt so
 // afterAgentResponse can send it as conversation tool_input. One JSON file
 // per session avoids read-modify-write races when multiple local agents run
-// in parallel. Growth is bounded by per-session overwrite, TTL prune, a hard
-// cap, and sessionEnd deletion.
+// in parallel. Growth is bounded by per-session overwrite, TTL prune, and a
+// hard cap (no sessionEnd cleanup; Cursor has no reliable session end).
 export const PROMPT_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export const PROMPT_CACHE_MAX_ENTRIES = 200;
 

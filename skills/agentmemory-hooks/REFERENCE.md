@@ -17,10 +17,10 @@ that fork's README is the canonical roadmap.
 | `subagentStart`      | Store Task-tool subagent start as `tool_name: "subagent"`   |
 | `subagentStop`       | Store Task-tool subagent summary as `tool_name: "subagent"` |
 | `preCompact`         | Checkpoint a summary (no Cursor context reinject)           |
-| `stop`               | Summarize without ending the conversation                   |
-| `sessionEnd`         | Mark the local session complete                             |
+| `stop`               | Summarize only (never ends the conversation)                |
 
-No thought hooks are installed.
+No `sessionEnd` hook is installed; Cursor has no reliable session end.
+Sessions stay open-ended. No thought hooks are installed.
 
 Commit linking is outside this Cursor event map. A git `post-commit` hook that
 calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
@@ -44,8 +44,9 @@ Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
 supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
 `afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
 `subagentStart`, `subagentStop`, `preCompact`, `stop`, and others) but not
-`sessionStart` or `sessionEnd`. This repo wires the events in the table above;
-thought hooks are not installed yet.
+`sessionStart`. Cloud never had `sessionEnd`; this adapter does not wire it
+locally either. This repo wires the events in the table above; thought hooks
+are not installed yet.
 
 ## Transport
 
