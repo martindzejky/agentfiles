@@ -63,13 +63,6 @@
         "timeout": 3,
         "failClosed": false
       }
-    ],
-    "sessionEnd": [
-      {
-        "command": "./hooks/agentmemory/session-end.mjs",
-        "timeout": 3,
-        "failClosed": false
-      }
     ]
   }
 }

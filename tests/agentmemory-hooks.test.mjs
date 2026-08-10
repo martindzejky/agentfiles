@@ -30,7 +30,6 @@ const HOOKS = {
   subagentStop: 'subagent-stop.mjs',
   preCompact: 'pre-compact.mjs',
   stop: 'stop.mjs',
-  sessionEnd: 'session-end.mjs',
 };
 
 function hookEnvironment(url, extra = {}) {
@@ -335,44 +334,6 @@ test('afterAgentResponse uses empty tool_input on prompt cache miss', async () =
   }
 });
 
-test('sessionEnd clears the prompt cache entry', async () => {
-  const server = await startMockServer();
-  const { promptCacheDir, promptCacheEntryPath, clearCachedPrompt } =
-    await import(join(HOOK_DIRECTORY, 'shared.mjs'));
-  const sessionId = 'ending-session';
-  const entryPath = promptCacheEntryPath(promptCacheDir(), sessionId);
-  try {
-    assertSuccessfulNoOp(
-      await runHook(
-        'beforeSubmitPrompt',
-        {
-          conversation_id: sessionId,
-          workspace_roots: [ROOT],
-          prompt: 'please forget this cache entry',
-        },
-        { url: server.url },
-      ),
-    );
-    assert.equal(
-      JSON.parse(await readFile(entryPath, 'utf8')).prompt,
-      'please forget this cache entry',
-    );
-
-    assertSuccessfulNoOp(
-      await runHook(
-        'sessionEnd',
-        { conversation_id: sessionId },
-        { url: server.url },
-      ),
-    );
-
-    await assert.rejects(() => access(entryPath), { code: 'ENOENT' });
-  } finally {
-    clearCachedPrompt(sessionId);
-    await server.close();
-  }
-});
-
 test('prompt cache prune drops stale entries and enforces the cap', async () => {
   const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-prune-'));
   const { promptCacheEntryPath, prunePromptCacheDir } = await import(
@@ -601,31 +562,12 @@ test('stop summarizes without ending the session', async () => {
         },
       },
     ]);
-  } finally {
-    await server.close();
-  }
-});
-
-test('sessionEnd ends the stable session', async () => {
-  const server = await startMockServer();
-  try {
-    const result = await runHook(
-      'sessionEnd',
-      {
-        session_id: 'session-id',
-        conversation_id: 'conversation-id',
-      },
-      { url: server.url },
+    assert.equal(
+      server.requests.some(
+        (request) => request.path === '/agentmemory/session/end',
+      ),
+      false,
     );
-
-    assertSuccessfulNoOp(result);
-    assert.deepEqual(server.requests, [
-      {
-        path: '/agentmemory/session/end',
-        authorization: 'Bearer test-secret',
-        body: { sessionId: 'session-id', agentId: 'cursor' },
-      },
-    ]);
   } finally {
     await server.close();
   }
@@ -1116,7 +1058,6 @@ test('every hook REST body hardcodes agentId cursor', async () => {
         conversation_id: 'agent-id-session',
         workspace_roots: [ROOT],
       },
-      sessionEnd: { session_id: 'agent-id-session' },
     };
 
     for (const [event, payload] of Object.entries(payloads)) {
@@ -1214,7 +1155,7 @@ test('hooks load local env files without overriding inherited values', async () 
     );
 
     const fromFile = await runHook(
-      'sessionEnd',
+      'stop',
       {
         conversation_id: 'env-file-session',
         workspace_roots: [ROOT],

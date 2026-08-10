@@ -36,8 +36,7 @@ This repo installs the following local user hooks:
     "subagentStart": [{ "command": "./hooks/agentmemory/subagent-start.mjs" }],
     "subagentStop": [{ "command": "./hooks/agentmemory/subagent-stop.mjs" }],
     "preCompact": [{ "command": "./hooks/agentmemory/pre-compact.mjs" }],
-    "stop": [{ "command": "./hooks/agentmemory/stop.mjs" }],
-    "sessionEnd": [{ "command": "./hooks/agentmemory/session-end.mjs" }]
+    "stop": [{ "command": "./hooks/agentmemory/stop.mjs" }]
   }
 }
 ```
@@ -48,7 +47,10 @@ Watch captures at `http://localhost:3113` once the server is up.
 
 ## What the hooks should do
 
-- `sessionStart` / `sessionEnd`: frame each local conversation so `handoff` and `session-history` can resume it.
+- `sessionStart`: best-effort local / optional open or resume plus optional
+  context injection. Not required for session creation once the server lazy-
+  creates from observe/summarize. Cursor has no reliable `sessionEnd`; sessions
+  stay open-ended.
 - `beforeSubmitPrompt`: capture intent from the user prompt, without calling
   `/session/start`, which would reset the session record.
 - `afterAgentResponse`: capture the final reply as `post_tool_use` with
@@ -62,7 +64,7 @@ Watch captures at `http://localhost:3113` once the server is up.
 - `subagentStart` / `subagentStop`: capture Task-tool subagent lifecycle on the
   parent session as `post_tool_use` with `tool_name: "subagent"`.
 - `preCompact`: checkpoint a summary (no context reinject on Cursor).
-- `stop`: summarize without ending a conversation that may continue.
+- `stop`: summarize only (`POST /summarize`). Never calls `/session/end`.
 
 These Cursor lifecycle hooks do not link git commits. `commit-context` and
 `commit-history` need a separate git `post-commit` hook that POSTs to
