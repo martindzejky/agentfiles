@@ -49,20 +49,6 @@
         "timeout": 3,
         "failClosed": false
       }
-    ],
-    "preCompact": [
-      {
-        "command": "./hooks/agentmemory/pre-compact.mjs",
-        "timeout": 3,
-        "failClosed": false
-      }
-    ],
-    "stop": [
-      {
-        "command": "./hooks/agentmemory/stop.mjs",
-        "timeout": 3,
-        "failClosed": false
-      }
     ]
   }
 }

@@ -21,15 +21,14 @@ This adapter does not manage session open/close. Conversations are open-ended
 on the server (`/session/end` is a deprecated noop there). What the hooks do:
 
 - **Capture** observations via `/observe` (and optional enrich).
-- **Fast summarize** on turn boundaries via `stop` and `preCompact`
-  (`POST /summarize`).
 - **Optional** local `sessionStart` for `/session/start` + context injection.
+- **Server-owned** summarization via idle / observation-count catch-up sweep.
 
 `sessionStart` is not required to create a session: `/observe`, `/summarize`,
 and `/enrich` lazy-create when they send `sessionId` + `project` + `cwd`, and
-they honor `agentId: "cursor"`. There is no `sessionEnd` hook. If a summarize
-hook is missed (common on Cursor Cloud), the server's idle catch-up sweep
-still processes idle sessions in the background. Server details for that
+they honor `agentId: "cursor"`. There is no `sessionEnd` hook and this adapter
+does not call `/summarize` from lifecycle hooks. The server's idle / obs-count
+catch-up sweep processes sessions in the background. Server details for that
 sweep live in the fork README, not here.
 
 ## Installed hooks
@@ -57,12 +56,6 @@ sweep live in the fork README, not here.
 - `subagentStart` / `subagentStop` record Task-tool subagent lifecycle on the
   parent session as `post_tool_use` with `tool_name: "subagent"` so summarization
   lifts the task/summary text.
-- `preCompact` is a fast per-turn summarize path (`POST /summarize`). Upstream
-  Claude PreCompact reinjects `/context` via stdout; Cursor cannot do that,
-  and a metadata-only observe would not be summarized anyway.
-- `stop` is the other fast per-turn summarize path (`POST /summarize` only).
-  It never calls `/session/end`. A conversation may continue after a stopped
-  turn; sessions stay open-ended on the server.
 
 Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
 so remote HTTPS (for example Railway) has room for TLS without exceeding
@@ -173,18 +166,15 @@ including:
 - `afterAgentThought`
 - `preToolUse` / `postToolUse` / `postToolUseFailure`
 - `subagentStart` / `subagentStop`
-- `preCompact`
-- `stop`
 
 Cursor Cloud does not provide `sessionStart` (and never had `sessionEnd`).
 Locally, `sessionStart` remains installed as best-effort / optional context
 injection. Cloud and other observe-first paths rely on `/observe` (and
-`/summarize` with the same identity fields) to create the session. Those
-writes must still tag `agentId: "cursor"` so the server can stamp Cursor on
-lazy create without a prior `/session/start`. Sessions stay open-ended;
-observations and stop/preCompact summaries are still retained. Cloud hooks
-are unreliable, so a missed `stop` / `preCompact` is expected sometimes; the
-server's idle catch-up sweep covers those gaps without any client end signal.
+`/enrich` when enabled) to create the session. Those writes must still tag
+`agentId: "cursor"` so the server can stamp Cursor on lazy create without a
+prior `/session/start`. Sessions stay open-ended; observations are retained.
+Summarization is handled by the server's idle / obs-count catch-up sweep;
+this adapter no longer calls `/summarize` from lifecycle hooks.
 
 This repo currently installs the lifecycle, tool, and subagent hooks in
 [Installed hooks](#installed-hooks). Thought hooks are supported by Cursor but
@@ -209,21 +199,17 @@ Adapted from AgentMemory commit
   (enrich logic only; wired on Cursor `postToolUse`)
 - [`plugin/scripts/subagent-start.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-start.mjs)
 - [`plugin/scripts/subagent-stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-stop.mjs)
-- [`plugin/scripts/pre-compact.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/pre-compact.mjs)
-- [`plugin/scripts/stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/stop.mjs)
 - [`src/hooks/_project.ts`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/src/hooks/_project.ts)
-  (`session-end.mjs` was adapted earlier and later removed; the server treats
-  `/session/end` as a deprecated noop, so this adapter does not wire it)
+  (`pre-compact.mjs`, `stop.mjs`, and `session-end.mjs` were adapted earlier;
+  `pre-compact.mjs` and `stop.mjs` were removed when the server catch-up sweep
+  made per-turn `/summarize` hooks redundant; `session-end.mjs` was removed when
+  the server treated `/session/end` as a deprecated noop)
 
 Intentional differences:
 
 - The manifest uses Cursor's camelCase events and command schema.
 - Cursor's stable `conversation_id` is used when `session_id` is absent.
 - Scripts use Cursor's `workspace_roots` and emit protocol-safe JSON.
-- `preCompact` only summarizes. Upstream Claude prints `/context` to stdout for
-  reinjection; Cursor has no equivalent reinject path, so that side is dropped.
-- `stop` and `preCompact` only summarize. This adapter does not wire
-  `sessionEnd` and never calls `/session/end`.
 - `beforeSubmitPrompt` never calls `/session/start`. Upstream Claude
   `prompt-submit` also only posts `/observe`; an earlier local draft called
   `/session/start` on every prompt and that overwrote the session record.
@@ -259,9 +245,9 @@ remain real: assistant messages masquerading as tool observations
 `afterAgentResponse`, and dedup workarounds around
 `sessionId + tool_name + tool_input`. Session open/close is not something this
 client manages anymore: start is optional, there is no end hook, and the server
-owns open-ended processing plus idle catch-up. Keep documenting the remaining
-client workarounds here until the fork lands first-class Cursor / event-stream
-support.
+owns open-ended processing plus idle / obs-count catch-up for summarization.
+Keep documenting the remaining client workarounds here until the fork lands
+first-class Cursor / event-stream support.
 
 Once that lands, this integration should simplify substantially: hooks should
 mostly translate Cursor payloads into the server's native event envelope and
