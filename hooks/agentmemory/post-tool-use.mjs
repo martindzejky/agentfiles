@@ -57,6 +57,7 @@ async function main() {
       config,
       sessionId,
       project,
+      cwd,
       toolName,
       toolInput,
     }),

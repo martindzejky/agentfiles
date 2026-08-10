@@ -8,12 +8,17 @@
 // is observational only (no useful reinject path), so that half is omitted.
 // Keep a summarize checkpoint while the session still has pre-compact context;
 // stop also summarizes later.
+//
+// project + cwd travel with summarize so a lazy-create server path can stamp
+// them if the session record is still missing (same shape as observe).
 
 import {
   postJson,
   readConfig,
   readPayload,
+  resolveProject,
   resolveSessionId,
+  resolveWorkingDirectory,
   writeCursorOutput,
 } from './shared.mjs';
 
@@ -22,9 +27,14 @@ async function main() {
   const config = readConfig();
   if (!payload || !config) return writeCursorOutput();
 
+  const cwd = resolveWorkingDirectory(payload);
   await postJson(
     '/agentmemory/summarize',
-    { sessionId: resolveSessionId(payload) },
+    {
+      sessionId: resolveSessionId(payload),
+      project: resolveProject(cwd),
+      cwd,
+    },
     { config },
   );
 

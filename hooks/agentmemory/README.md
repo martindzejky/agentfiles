@@ -17,9 +17,11 @@ compatibility workarounds that remain useful until the fork work lands.
 
 ## Installed hooks
 
-- `sessionStart` opens or resumes the AgentMemory session and, when
+- `sessionStart` is optional for session management. Locally it still calls
+  `/session/start` to open or resume and, when
   `AGENTMEMORY_INJECT_CONTEXT=true`, returns server context through Cursor's
-  documented `additional_context` field.
+  documented `additional_context` field. It is not required to create a
+  session once the server honors lazy create on observe/summarize.
 - `beforeSubmitPrompt` records only the truncated user prompt. It never calls
   `/session/start`, because that endpoint replaces the whole session record and
   would clear `firstPrompt` and `observationCount` on every prompt. AgentMemory
@@ -54,11 +56,13 @@ payloads are never logged. Prompt and response captures are capped at 10,000
 characters. Base64 image blobs in tool output are replaced with a placeholder
 and are never sent as `image_data`.
 
-Every REST body includes a hardcoded `agentId: "cursor"` so a shared
-AgentMemory server can tell Cursor writes apart from other agents later.
-`/session/start` is what stamps the session today; `/observe`, `/summarize`,
-and `/session/end` still receive the field for forward compatibility even if
-the current server ignores unknown keys on those routes.
+Every write that can create or process a session sends `sessionId`, `project`,
+`cwd`, and `agentId` where the server needs them for lazy session create:
+`/observe`, `/summarize`, and `/enrich` include that set; `/session/start`
+already did. `agentId` is always `"cursor"` via `postJson` / `withAgentId`
+(not hardcoded a second time in each hook). The server must honor `agentId` on
+lazy create (observe-first and summarize paths); older servers that ignore
+unknown keys stay compatible with the extra fields.
 
 AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
 `userPrompt` fields of an observation, and it deduplicates on
@@ -157,10 +161,12 @@ including:
 - `preCompact`
 - `stop`
 
-Cursor Cloud does not provide `sessionStart` or `sessionEnd`. No fallback is
-needed for session creation: AgentMemory creates the session from the first
-observation that carries `project` and `cwd`. Cloud sessions may remain active;
-observations and stop summaries are still retained.
+Cursor Cloud does not provide `sessionStart` or `sessionEnd`. Cloud and other
+observe-first paths rely on `/observe` (and `/summarize` with the same
+identity fields) to create the session. Those writes must still tag
+`agentId: "cursor"` so the server can stamp Cursor on lazy create without a
+prior `/session/start`. Cloud sessions may remain active; observations and
+stop summaries are still retained.
 
 This repo currently installs the lifecycle, tool, and subagent hooks in
 [Installed hooks](#installed-hooks). Thought hooks are supported by Cursor but

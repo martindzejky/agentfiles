@@ -2,6 +2,10 @@
 
 // Adapted from AgentMemory plugin/scripts/session-start.mjs at
 // d60652a7058773fa9428fa720eda38942f12f014.
+//
+// Best-effort local open/resume for context injection. Session creation does
+// not require this hook: observe (and summarize with project/cwd) can create
+// the record when it is missing. Cursor Cloud never runs sessionStart.
 
 import {
   CONTEXT_TIMEOUT_MS,
