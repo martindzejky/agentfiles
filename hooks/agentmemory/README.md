@@ -72,24 +72,27 @@ already did. `agentId` is always `"cursor"` via `postJson` / `withAgentId`
 lazy create (observe-first and summarize paths); older servers that ignore
 unknown keys stay compatible with the extra fields.
 
+Every `/agentmemory/observe` POST sends a unique top-level `eventId` (a fresh
+UUID per hook invocation). The server deduplicates only on that exact id;
+content-based / five-minute window dedup is gone. Older servers ignore unknown
+fields, so shipping `eventId` is safe before or after the server change.
+`eventId` is not sent on `/summarize`, `/enrich`, or `/context`.
+
 AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
-`userPrompt` fields of an observation, and it deduplicates on
-`sessionId + tool_name + tool_input` for five minutes. Consequences for the
-payloads:
+`userPrompt` fields of an observation. Consequences for the payloads:
 
 - The assistant response is sent as `post_tool_use` with
   `tool_name: "conversation"`, matching Hermes / OpenClaw / Pi. `tool_output`
   is the assistant text. `tool_input` is the user prompt from a local cache
   written by `beforeSubmitPrompt` (Cursor's response hook only documents
-  `text`).
-- `prompt_submit` also sets `tool_input` to the prompt text. Identical prompts
-  within five minutes may be deduplicated; that rare drop is accepted. Leaving
-  `tool_input` unset would make every `prompt_submit` in a session collide.
+  `text`). On cache miss, `tool_input` is empty.
+- `prompt_submit` also sets `tool_input` to the prompt text so the Claude-shaped
+  observe fields stay populated alongside `prompt`.
 - Subagent start/stop use the same `post_tool_use` + `tool_name: "subagent"`
-  shape. `tool_input` always uses a `start:` / `stop:` prefix plus id, type,
-  and task/status when present so the five-minute dedup window does not
-  collapse the pair or concurrent same-type Task tools. `tool_output` carries
-  the start descriptor or the stop summary.
+  shape. `tool_input` uses a `start:` / `stop:` prefix plus id, type, and
+  task/status when present so summarizer input stays distinct for the pair and
+  for concurrent same-type Task tools. `tool_output` carries the start
+  descriptor or the stop summary.
 - The prompt cache is gitignored (`.prompt-cache/`, one JSON file per session)
   so parallel local agents do not share a single read-modify-write map. Growth
   is bounded by per-session overwrite, a 7-day TTL prune on write, and a
@@ -241,17 +244,16 @@ first-class Cursor work.
 
 Today the adapter still carries Claude-shaped compatibility workarounds that
 remain real: assistant messages masquerading as tool observations
-(`conversation` / `subagent`), prompt caching and pairing for
-`afterAgentResponse`, and dedup workarounds around
-`sessionId + tool_name + tool_input`. Session open/close is not something this
-client manages anymore: start is optional, there is no end hook, and the server
-owns open-ended processing plus idle / obs-count catch-up for summarization.
-Keep documenting the remaining client workarounds here until the fork lands
-first-class Cursor / event-stream support.
+(`conversation` / `subagent`), and prompt caching and pairing for
+`afterAgentResponse`. Ingest idempotency is now `eventId` only. Session
+open/close is not something this client manages anymore: start is optional,
+there is no end hook, and the server owns open-ended processing plus idle /
+obs-count catch-up for summarization. Keep documenting the remaining client
+workarounds here until the fork lands first-class Cursor / event-stream support.
 
 Once that lands, this integration should simplify substantially: hooks should
 mostly translate Cursor payloads into the server's native event envelope and
-send them, instead of compensating for Claude Code tool or dedup assumptions
+send them, instead of compensating for Claude Code tool assumptions
 client-side.
 
 Cursor schema and Cloud support are based on

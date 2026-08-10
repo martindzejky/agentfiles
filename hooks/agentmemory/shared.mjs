@@ -30,6 +30,12 @@ export function withAgentId(body) {
   return { ...body, agentId: AGENT_ID };
 }
 
+// Idempotency key for /agentmemory/observe. Fresh UUID per hook invocation;
+// the server dedups only on exact eventId repeats (no content-based dedup).
+export function newEventId() {
+  return randomUUID();
+}
+
 // Pi-style bridge: beforeSubmitPrompt stores the user prompt so
 // afterAgentResponse can send it as conversation tool_input. One JSON file
 // per session avoids read-modify-write races when multiple local agents run

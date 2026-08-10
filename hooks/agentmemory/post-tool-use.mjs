@@ -7,6 +7,7 @@
 
 import {
   fetchEnrichContext,
+  newEventId,
   postJson,
   readConfig,
   readPayload,
@@ -45,6 +46,7 @@ async function main() {
         project,
         cwd,
         timestamp: new Date().toISOString(),
+        eventId: newEventId(),
         data: {
           tool_name: toolName,
           tool_input: truncateValue(toolInput),
