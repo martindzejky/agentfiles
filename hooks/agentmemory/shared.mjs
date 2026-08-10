@@ -191,9 +191,9 @@ export async function postJson(path, body, options = {}) {
         Authorization: `Bearer ${config.secret}`,
         'Content-Type': 'application/json',
       },
-      // Always tag writes as Cursor. /session/start stamps the session;
-      // other endpoints may ignore unknown fields today but stay tagged
-      // for forward compatibility.
+      // Always tag writes as Cursor. Lazy-create paths (observe / summarize)
+      // should honor agentId on the server; extra fields stay compatible with
+      // older servers that ignore unknown keys.
       body: JSON.stringify(withAgentId(body)),
       redirect: 'error',
       signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS),
@@ -347,6 +347,7 @@ export async function fetchEnrichContext({
   config,
   sessionId,
   project,
+  cwd,
   toolName,
   toolInput,
 }) {
@@ -359,10 +360,11 @@ export async function fetchEnrichContext({
     '/agentmemory/enrich',
     {
       sessionId,
+      project,
+      cwd,
       files: query.files,
       ...(query.terms.length > 0 ? { terms: query.terms } : {}),
       toolName,
-      project,
     },
     { config, timeoutMs: CONTEXT_TIMEOUT_MS },
   );

@@ -563,7 +563,12 @@ test('preCompact summarizes without observe or ending the session', async () => 
       {
         path: '/agentmemory/summarize',
         authorization: 'Bearer test-secret',
-        body: { sessionId: 'conversation-id', agentId: 'cursor' },
+        body: {
+          sessionId: 'conversation-id',
+          project: PROJECT,
+          cwd: ROOT,
+          agentId: 'cursor',
+        },
       },
     ]);
   } finally {
@@ -576,7 +581,10 @@ test('stop summarizes without ending the session', async () => {
   try {
     const result = await runHook(
       'stop',
-      { conversation_id: 'conversation-id' },
+      {
+        conversation_id: 'conversation-id',
+        workspace_roots: [ROOT],
+      },
       { url: server.url },
     );
 
@@ -585,7 +593,12 @@ test('stop summarizes without ending the session', async () => {
       {
         path: '/agentmemory/summarize',
         authorization: 'Bearer test-secret',
-        body: { sessionId: 'conversation-id', agentId: 'cursor' },
+        body: {
+          sessionId: 'conversation-id',
+          project: PROJECT,
+          cwd: ROOT,
+          agentId: 'cursor',
+        },
       },
     ]);
   } finally {
@@ -726,6 +739,7 @@ test('postToolUse enriches file tools when injection is enabled', async () => {
     );
     assert.equal(enrich.body.sessionId, 'enrich-session');
     assert.equal(enrich.body.project, PROJECT);
+    assert.equal(enrich.body.cwd, ROOT);
     assert.equal(enrich.body.toolName, 'Read');
     assert.deepEqual(enrich.body.files, ['hooks/agentmemory/shared.mjs']);
     assert.equal(enrich.body.terms, undefined);
@@ -1098,7 +1112,10 @@ test('every hook REST body hardcodes agentId cursor', async () => {
         workspace_roots: [ROOT],
         trigger: 'manual',
       },
-      stop: { conversation_id: 'agent-id-session' },
+      stop: {
+        conversation_id: 'agent-id-session',
+        workspace_roots: [ROOT],
+      },
       sessionEnd: { session_id: 'agent-id-session' },
     };
 
@@ -1108,6 +1125,71 @@ test('every hook REST body hardcodes agentId cursor', async () => {
 
     assert.ok(server.requests.length >= Object.keys(payloads).length);
     for (const request of server.requests) {
+      assert.equal(request.body.agentId, 'cursor');
+    }
+  } finally {
+    await server.close();
+  }
+});
+
+test('observe, summarize, and enrich send sessionId project cwd agentId', async () => {
+  const server = await startMockServer({
+    context: 'enrich context for identity fields',
+  });
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'beforeSubmitPrompt',
+        {
+          conversation_id: 'identity-session',
+          workspace_roots: [ROOT],
+          prompt: 'identity prompt',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runHook(
+        'stop',
+        {
+          conversation_id: 'identity-session',
+          workspace_roots: [ROOT],
+        },
+        { url: server.url },
+      ),
+    );
+    const enrichResult = await runHook(
+      'postToolUse',
+      {
+        conversation_id: 'identity-session',
+        workspace_roots: [ROOT],
+        tool_name: 'Read',
+        tool_input: { path: 'hooks/agentmemory/shared.mjs' },
+        tool_output: 'ok',
+      },
+      {
+        url: server.url,
+        env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
+      },
+    );
+    assert.equal(enrichResult.code, 0);
+    assert.deepEqual(JSON.parse(enrichResult.stdout), {
+      additional_context: 'enrich context for identity fields',
+    });
+
+    const byPath = Object.groupBy(server.requests, (request) => request.path);
+    assert.equal(byPath['/agentmemory/observe']?.length, 2);
+    assert.equal(byPath['/agentmemory/summarize']?.length, 1);
+    assert.equal(byPath['/agentmemory/enrich']?.length, 1);
+
+    for (const request of [
+      ...byPath['/agentmemory/observe'],
+      ...byPath['/agentmemory/summarize'],
+      ...byPath['/agentmemory/enrich'],
+    ]) {
+      assert.equal(request.body.sessionId, 'identity-session');
+      assert.equal(request.body.project, PROJECT);
+      assert.equal(request.body.cwd, ROOT);
       assert.equal(request.body.agentId, 'cursor');
     }
   } finally {
