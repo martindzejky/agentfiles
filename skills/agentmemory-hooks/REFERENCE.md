@@ -1,5 +1,10 @@
 # agentmemory Cursor hooks reference
 
+This reference covers the Cursor-side AgentMemory adapter in this repo.
+Server-side architecture and first-class Cursor / event-stream work live in
+[martindzejky/agentmemory](https://github.com/martindzejky/agentmemory);
+that fork's README is the canonical roadmap.
+
 ## Event map
 
 | Cursor event         | Capture job                                                 |
@@ -70,5 +75,12 @@ other endpoints still send it even when the server ignores unknown fields.
 
 The user-level hooks are installed from `hooks.json` and
 `hooks/agentmemory/`. Implementation details, Cloud limitations, smoke-test
-instructions, the pinned upstream audit trail, and when to consider forking
-AgentMemory are in `hooks/agentmemory/README.md`.
+instructions, the pinned upstream audit trail, and the ownership /
+compatibility-workaround notes are in `hooks/agentmemory/README.md`.
+
+This adapter remains useful while AgentMemory is still Claude-shaped
+(assistant-as-tool observations, prompt caching/pairing, session lifecycle and
+dedup workarounds). After
+[martindzejky/agentmemory](https://github.com/martindzejky/agentmemory) gains
+first-class Cursor / event-stream support, the adapter should shrink to mostly
+translating Cursor payloads into the server's native event envelope.

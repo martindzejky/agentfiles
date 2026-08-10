@@ -6,7 +6,13 @@ user-invocable: false
 
 Cursor hooks are command scripts in `hooks.json`. They get JSON on stdin and can call agentmemory's REST API (or MCP) so memory is captured without a manual `memory_save` on every turn.
 
-This skill is Cursor-only. Prefer user-level hooks in `~/.cursor/hooks.json` for global capture; use project `.cursor/hooks.json` when a repo needs its own wiring (also what cloud agents load).
+This skill documents the Cursor-side AgentMemory adapter in this repo
+(`hooks/agentmemory/`). Server architecture and first-class Cursor /
+event-stream work belong in
+[martindzejky/agentmemory](https://github.com/martindzejky/agentmemory);
+that fork's README is the canonical roadmap. Prefer user-level hooks in
+`~/.cursor/hooks.json` for global capture; use project `.cursor/hooks.json`
+when a repo needs its own wiring (also what cloud agents load).
 
 ## Quick start
 
@@ -84,16 +90,21 @@ server must not block the agent.
   server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
-- This Cursor adapter remaps several events around AgentMemory summarizer and
-  dedup footguns. If that keeps growing, forking AgentMemory (or switching
-  hosts) may be cleaner than more client patches; see
-  `hooks/agentmemory/README.md` ("Forking AgentMemory").
+- This adapter still carries Claude-shaped compatibility workarounds
+  (assistant-as-tool observations, prompt caching/pairing, session lifecycle
+  and dedup remaps). Once
+  [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
+  has first-class Cursor / event-stream support, hooks should mostly translate
+  Cursor payloads and send them. Until then, keep the current implementation
+  docs in `hooks/agentmemory/README.md`.
 
 ## See also
 
 - agentmemory-config for capture and injection flags.
 - agentmemory-agents for Cursor MCP wiring.
 - handoff, recap, and session-history consume what hooks record.
+- [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
+  for server-side Cursor architecture (canonical roadmap).
 
 ## Reference
 

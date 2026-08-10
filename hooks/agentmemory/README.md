@@ -1,10 +1,19 @@
 # AgentMemory hooks for Cursor
 
-This is a local-first, dependency-free Cursor adaptation of AgentMemory's hook
-scripts. Dotbot links `hooks.json` and this directory into `~/.cursor`.
+This directory is the Cursor-side AgentMemory adapter: local-first,
+dependency-free hook scripts that translate Cursor events into AgentMemory
+REST calls. Dotbot links `hooks.json` and this directory into `~/.cursor`.
 The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
 
-The server-side Cursor fork lives at [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory). Its README is the canonical place for the fork's architectural goal; this document describes the current Cursor-side adapter and the workarounds the fork should eventually remove.
+Ownership:
+
+- This repo owns the thin Cursor adapter documented below.
+- Server-side architecture and first-class Cursor / event-stream work belong in
+  [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory).
+  That fork's README is the canonical roadmap; do not duplicate it here.
+
+The rest of this document describes the adapter as it works today, including
+compatibility workarounds that remain useful until the fork work lands.
 
 ## Installed hooks
 
@@ -211,48 +220,26 @@ Open upstream
 Cursor-specific operational gotchas, including duplicate plugin/user hooks and
 workspace attribution. No code was copied from that unmerged implementation.
 
-## Forking AgentMemory
+## Ownership and future direction
 
-This integration is still experimental. Cursor's hook payloads and lifecycle do
-not match Claude Code, so these scripts already remap several events onto
-shapes AgentMemory will summarize (`conversation`, `subagent`), strip fields
-that only help other hosts, and paper over dedup / session-reset footguns.
+These files are the Cursor-side adapter only. Server architecture belongs in
+[`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory);
+its README is the canonical place for the server-side architectural roadmap and
+first-class Cursor work.
 
-Keep this thin adapter until real usage shows whether AgentMemory's retrieval
-and consolidation consistently save effort on actual coding work. If they do,
-prefer the [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory) fork so the server understands host-neutral conversation events directly instead of growing more client-side workarounds here.
+Today the adapter carries compatibility workarounds because AgentMemory is
+still Claude-shaped. Examples already documented above: assistant messages
+masquerading as tool observations (`conversation` / `subagent`), prompt
+caching and pairing for `afterAgentResponse`, session lifecycle workarounds
+(Cloud missing `sessionStart` / `sessionEnd`, `stop` not ending sessions,
+`beforeSubmitPrompt` avoiding `/session/start`), and dedup workarounds around
+`sessionId + tool_name + tool_input`. Keep documenting that current behavior
+here until the fork work actually lands.
 
-The fork should use these design rules:
-
-- Preserve an immutable raw event log with first-class `user_prompt`,
-  `assistant_response`, `tool_call`, `tool_result`, `subagent`, and `compaction`
-  events. Do not disguise conversation messages as tool observations. Keep raw
-  events so improved summarization can be rerun later.
-- Give every event a stable client-generated event ID. Retrying the same event
-  ID must be idempotent, while two different event IDs with identical content
-  must both be retained. Remove ingestion deduplication based on session,
-  content, or short time windows; semantic deduplication belongs in derived
-  memories, not the source event log.
-- Treat a Cursor conversation as an open-ended stream. A conversation/session
-  ID is useful for grouping when available, but ingestion must not require
-  `sessionStart`, `sessionEnd`, or even a session ID. Sessions have no meaningful
-  `active` or `completed` state because a user can return at any time.
-- Replace end-state gates with processing watermarks such as `lastEventAt`,
-  `lastSummarizedEventId`, `lastReflectedEventId`, and `summaryRevision`.
-  Summarization, reflection, graph extraction, consolidation, crystallization,
-  and skill extraction must work incrementally without a completed session.
-- Trigger processing at turn boundaries, after an idle period, after an
-  event/token threshold, on explicit flush, and from a periodic recovery sweep
-  so missing Cloud hooks do not permanently block memory formation.
-- Keep `/session/end` only as a deprecated compatibility alias for a stateless
-  conversation flush. It must not close the conversation or reject later
-  events. Archiving, if needed for the UI, is an explicit user-controlled flag
-  rather than an ingestion state.
-- Keep host adapters thin. They should translate native hook payloads into the
-  shared event envelope and never compensate for server schema limitations with
-  prompt caches or fake tool events. Do not retain agent thoughts by default;
-  final responses, decisions, prompts, and useful tool outcomes are the durable
-  inputs.
+Once the fork gains first-class Cursor / event-stream support, this integration
+should simplify substantially: hooks should mostly translate Cursor payloads
+into the server's native event envelope and send them, instead of compensating
+for Claude Code session, tool, or dedup assumptions client-side.
 
 Cursor schema and Cloud support are based on
 [Cursor's hook documentation](https://cursor.com/docs/hooks) and
