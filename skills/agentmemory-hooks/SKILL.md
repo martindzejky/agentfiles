@@ -34,9 +34,7 @@ This repo installs the following local user hooks:
       { "command": "./hooks/agentmemory/post-tool-failure.mjs" }
     ],
     "subagentStart": [{ "command": "./hooks/agentmemory/subagent-start.mjs" }],
-    "subagentStop": [{ "command": "./hooks/agentmemory/subagent-stop.mjs" }],
-    "preCompact": [{ "command": "./hooks/agentmemory/pre-compact.mjs" }],
-    "stop": [{ "command": "./hooks/agentmemory/stop.mjs" }]
+    "subagentStop": [{ "command": "./hooks/agentmemory/subagent-stop.mjs" }]
   }
 }
 ```
@@ -48,11 +46,12 @@ Watch captures at `http://localhost:3113` once the server is up.
 ## What the hooks should do
 
 Memory formation does not depend on a client-sent session end. Sessions are
-open-ended on the server; this adapter never wires `sessionEnd`.
+open-ended on the server; this adapter never wires `sessionEnd` or calls
+`/summarize` from lifecycle hooks. Summarization is handled by the server's
+idle / obs-count catch-up sweep.
 
 - `sessionStart`: optional local open/resume plus optional context injection.
-  Not required for session creation; the server lazy-creates from
-  observe/summarize/enrich.
+  Not required for session creation; the server lazy-creates from observe/enrich.
 - `beforeSubmitPrompt`: capture intent from the user prompt, without calling
   `/session/start`, which would reset the session record.
 - `afterAgentResponse`: capture the final reply as `post_tool_use` with
@@ -65,9 +64,6 @@ open-ended on the server; this adapter never wires `sessionEnd`.
   failure hooks cannot inject on Cursor).
 - `subagentStart` / `subagentStop`: capture Task-tool subagent lifecycle on the
   parent session as `post_tool_use` with `tool_name: "subagent"`.
-- `preCompact` / `stop`: fast per-turn summarize (`POST /summarize` only; no
-  context reinject on Cursor; never `/session/end`). If a hook is missed, the
-  server's idle catch-up sweep still processes idle sessions later.
 
 These Cursor lifecycle hooks do not link git commits. `commit-context` and
 `commit-history` need a separate git `post-commit` hook that POSTs to
@@ -97,8 +93,8 @@ server must not block the agent.
 - If hooks are unavailable, use `remember` for explicit saves.
 - This adapter still carries Claude-shaped compatibility workarounds
   (assistant-as-tool observations, prompt caching/pairing, and dedup remaps).
-  Session open/close is server-owned now (optional start, no end hook, idle
-  catch-up). Once
+  Session open/close is server-owned now (optional start, no end hook, server
+  catch-up for summarization). Once
   [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
   has first-class Cursor / event-stream support, hooks should mostly translate
   Cursor payloads and send them. Until then, keep the current implementation

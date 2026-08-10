@@ -16,13 +16,11 @@ that fork's README is the canonical roadmap.
 | `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)       |
 | `subagentStart`      | Store Task-tool subagent start as `tool_name: "subagent"`   |
 | `subagentStop`       | Store Task-tool subagent summary as `tool_name: "subagent"` |
-| `preCompact`         | Fast summarize (no Cursor context reinject)                 |
-| `stop`               | Fast summarize only (never ends the conversation)           |
 
 No `sessionEnd` hook is installed. Sessions stay open-ended on the server;
-memory formation does not need a client end signal. `stop` / `preCompact` are
-the fast path; the server's idle catch-up sweep covers missed hooks. No thought
-hooks are installed.
+memory formation does not need a client end signal. Summarization is handled
+by the server's idle / obs-count catch-up sweep; this adapter no longer calls
+`/summarize` from lifecycle hooks. No thought hooks are installed.
 
 Commit linking is outside this Cursor event map. A git `post-commit` hook that
 calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
@@ -46,11 +44,10 @@ summarizes only `toolName`, `toolInput`, `toolOutput`, and `userPrompt`.
 Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
 supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
 `afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
-`subagentStart`, `subagentStop`, `preCompact`, `stop`, and others) but not
-`sessionStart`. Cloud never had `sessionEnd`; this adapter does not wire it
-locally either. Cloud hooks can be missed; the server's idle catch-up sweep is
-a backstop so a missed summarize still gets processed later. This repo wires
-the events in the table above; thought hooks are not installed yet.
+`subagentStart`, `subagentStop`, and others) but not `sessionStart`. Cloud
+never had `sessionEnd`; this adapter does not wire it locally either.
+Summarization depends on the server's idle / obs-count catch-up sweep. This
+repo wires the events in the table above; thought hooks are not installed yet.
 
 ## Transport
 

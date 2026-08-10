@@ -28,8 +28,6 @@ const HOOKS = {
   postToolUseFailure: 'post-tool-failure.mjs',
   subagentStart: 'subagent-start.mjs',
   subagentStop: 'subagent-stop.mjs',
-  preCompact: 'pre-compact.mjs',
-  stop: 'stop.mjs',
 };
 
 function hookEnvironment(url, extra = {}) {
@@ -167,9 +165,11 @@ test('HTTP timeouts fit inside Cursor hook budgets', async () => {
 
   assert.equal(REQUEST_TIMEOUT_MS, 2_500);
   assert.equal(CONTEXT_TIMEOUT_MS, 2_500);
-  assert.ok(REQUEST_TIMEOUT_MS < manifest.hooks.stop[0].timeout * 1000);
+  assert.ok(
+    REQUEST_TIMEOUT_MS < manifest.hooks.beforeSubmitPrompt[0].timeout * 1000,
+  );
   assert.ok(CONTEXT_TIMEOUT_MS < manifest.hooks.sessionStart[0].timeout * 1000);
-  assert.ok(REQUEST_TIMEOUT_MS < manifest.hooks.preCompact[0].timeout * 1000);
+  assert.ok(REQUEST_TIMEOUT_MS < manifest.hooks.postToolUse[0].timeout * 1000);
 });
 
 test('sessionStart registers and emits only Cursor additional_context JSON', async () => {
@@ -494,80 +494,6 @@ test('repeated prompts share tool_input and never reset the session', async () =
     assert.equal(first.body.data.tool_input, second.body.data.tool_input);
     assert.equal(first.body.data.tool_input, 'continue');
     assert.notEqual(first.body.timestamp, second.body.timestamp);
-  } finally {
-    await server.close();
-  }
-});
-
-test('preCompact summarizes without observe or ending the session', async () => {
-  const server = await startMockServer();
-  try {
-    const result = await runHook(
-      'preCompact',
-      {
-        conversation_id: 'conversation-id',
-        workspace_roots: [ROOT],
-        trigger: 'auto',
-        context_usage_percent: 82,
-        context_tokens: 82_000,
-        context_window_size: 100_000,
-        message_count: 40,
-        messages_to_compact: 20,
-        is_first_compaction: true,
-        text: 'must not be captured',
-      },
-      { url: server.url },
-    );
-
-    assertSuccessfulNoOp(result);
-    assert.deepEqual(server.requests, [
-      {
-        path: '/agentmemory/summarize',
-        authorization: 'Bearer test-secret',
-        body: {
-          sessionId: 'conversation-id',
-          project: PROJECT,
-          cwd: ROOT,
-          agentId: 'cursor',
-        },
-      },
-    ]);
-  } finally {
-    await server.close();
-  }
-});
-
-test('stop summarizes without ending the session', async () => {
-  const server = await startMockServer();
-  try {
-    const result = await runHook(
-      'stop',
-      {
-        conversation_id: 'conversation-id',
-        workspace_roots: [ROOT],
-      },
-      { url: server.url },
-    );
-
-    assertSuccessfulNoOp(result);
-    assert.deepEqual(server.requests, [
-      {
-        path: '/agentmemory/summarize',
-        authorization: 'Bearer test-secret',
-        body: {
-          sessionId: 'conversation-id',
-          project: PROJECT,
-          cwd: ROOT,
-          agentId: 'cursor',
-        },
-      },
-    ]);
-    assert.equal(
-      server.requests.some(
-        (request) => request.path === '/agentmemory/session/end',
-      ),
-      false,
-    );
   } finally {
     await server.close();
   }
@@ -1049,15 +975,6 @@ test('every hook REST body hardcodes agentId cursor', async () => {
         status: 'completed',
         summary: 'done',
       },
-      preCompact: {
-        conversation_id: 'agent-id-session',
-        workspace_roots: [ROOT],
-        trigger: 'manual',
-      },
-      stop: {
-        conversation_id: 'agent-id-session',
-        workspace_roots: [ROOT],
-      },
     };
 
     for (const [event, payload] of Object.entries(payloads)) {
@@ -1073,7 +990,7 @@ test('every hook REST body hardcodes agentId cursor', async () => {
   }
 });
 
-test('observe, summarize, and enrich send sessionId project cwd agentId', async () => {
+test('observe and enrich send sessionId project cwd agentId', async () => {
   const server = await startMockServer({
     context: 'enrich context for identity fields',
   });
@@ -1085,16 +1002,6 @@ test('observe, summarize, and enrich send sessionId project cwd agentId', async 
           conversation_id: 'identity-session',
           workspace_roots: [ROOT],
           prompt: 'identity prompt',
-        },
-        { url: server.url },
-      ),
-    );
-    assertSuccessfulNoOp(
-      await runHook(
-        'stop',
-        {
-          conversation_id: 'identity-session',
-          workspace_roots: [ROOT],
         },
         { url: server.url },
       ),
@@ -1120,12 +1027,10 @@ test('observe, summarize, and enrich send sessionId project cwd agentId', async 
 
     const byPath = Object.groupBy(server.requests, (request) => request.path);
     assert.equal(byPath['/agentmemory/observe']?.length, 2);
-    assert.equal(byPath['/agentmemory/summarize']?.length, 1);
     assert.equal(byPath['/agentmemory/enrich']?.length, 1);
 
     for (const request of [
       ...byPath['/agentmemory/observe'],
-      ...byPath['/agentmemory/summarize'],
       ...byPath['/agentmemory/enrich'],
     ]) {
       assert.equal(request.body.sessionId, 'identity-session');
@@ -1155,10 +1060,11 @@ test('hooks load local env files without overriding inherited values', async () 
     );
 
     const fromFile = await runHook(
-      'stop',
+      'beforeSubmitPrompt',
       {
         conversation_id: 'env-file-session',
         workspace_roots: [ROOT],
+        prompt: 'load env from file',
       },
       {
         env: {
