@@ -48,9 +48,9 @@ supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
 `afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
 `subagentStart`, `subagentStop`, `preCompact`, `stop`, and others) but not
 `sessionStart`. Cloud never had `sessionEnd`; this adapter does not wire it
-locally either. Cloud hooks can be missed; the server catch-up sweep is what
-keeps memory formation moving. This repo wires the events in the table above;
-thought hooks are not installed yet.
+locally either. Cloud hooks can be missed; the server's idle catch-up sweep is
+a backstop so a missed summarize still gets processed later. This repo wires
+the events in the table above; thought hooks are not installed yet.
 
 ## Transport
 
