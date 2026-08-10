@@ -15,13 +15,29 @@ Ownership:
 The rest of this document describes the adapter as it works today, including
 compatibility workarounds that remain useful until the fork work lands.
 
+## Lifecycle (adapter vs server)
+
+This adapter does not manage session open/close. Conversations are open-ended
+on the server (`/session/end` is a deprecated noop there). What the hooks do:
+
+- **Capture** observations via `/observe` (and optional enrich).
+- **Fast summarize** on turn boundaries via `stop` and `preCompact`
+  (`POST /summarize`).
+- **Optional** local `sessionStart` for `/session/start` + context injection.
+
+`sessionStart` is not required to create a session: `/observe`, `/summarize`,
+and `/enrich` lazy-create when they send `sessionId` + `project` + `cwd`, and
+they honor `agentId: "cursor"`. There is no `sessionEnd` hook. If a summarize
+hook is missed (common on Cursor Cloud), the server's idle catch-up sweep
+still processes idle sessions in the background. Server details for that
+sweep live in the fork README, not here.
+
 ## Installed hooks
 
-- `sessionStart` is optional for session management. Locally it still calls
-  `/session/start` to open or resume and, when
-  `AGENTMEMORY_INJECT_CONTEXT=true`, returns server context through Cursor's
-  documented `additional_context` field. It is not required to create a
-  session once the server honors lazy create on observe/summarize.
+- `sessionStart` is optional. Locally it still calls `/session/start` to open
+  or resume and, when `AGENTMEMORY_INJECT_CONTEXT=true`, returns server context
+  through Cursor's documented `additional_context` field. It is not required
+  for session creation once the server lazy-creates from observe/summarize.
 - `beforeSubmitPrompt` records only the truncated user prompt. It never calls
   `/session/start`, because that endpoint replaces the whole session record and
   would clear `firstPrompt` and `observationCount` on every prompt. AgentMemory
@@ -41,12 +57,12 @@ compatibility workarounds that remain useful until the fork work lands.
 - `subagentStart` / `subagentStop` record Task-tool subagent lifecycle on the
   parent session as `post_tool_use` with `tool_name: "subagent"` so summarization
   lifts the task/summary text.
-- `preCompact` only asks AgentMemory to summarize. Upstream Claude PreCompact
-  reinjects `/context` via stdout; Cursor cannot do that, and a metadata-only
-  observe would not be summarized anyway.
-- `stop` asks AgentMemory to summarize only. Cursor has no reliable session
-  end, and a conversation may continue after a stopped turn, so sessions stay
-  open-ended. This hook never calls `/session/end`.
+- `preCompact` is a fast per-turn summarize path (`POST /summarize`). Upstream
+  Claude PreCompact reinjects `/context` via stdout; Cursor cannot do that,
+  and a metadata-only observe would not be summarized anyway.
+- `stop` is the other fast per-turn summarize path (`POST /summarize` only).
+  It never calls `/session/end`. A conversation may continue after a stopped
+  turn; sessions stay open-ended on the server.
 
 Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
 so remote HTTPS (for example Railway) has room for TLS without exceeding
@@ -84,9 +100,8 @@ payloads:
 - The prompt cache is gitignored (`.prompt-cache/`, one JSON file per session)
   so parallel local agents do not share a single read-modify-write map. Growth
   is bounded by per-session overwrite, a 7-day TTL prune on write, and a
-  200-entry cap. There is no `sessionEnd` cleanup; Cursor has no reliable
-  session end. An old single-file `.prompt-cache.json` path is also gitignored
-  and unused.
+  200-entry cap. There is no session-end cleanup path (no `sessionEnd` hook).
+  An old single-file `.prompt-cache.json` path is also gitignored and unused.
 
 ## Runtime configuration
 
@@ -167,7 +182,9 @@ injection. Cloud and other observe-first paths rely on `/observe` (and
 `/summarize` with the same identity fields) to create the session. Those
 writes must still tag `agentId: "cursor"` so the server can stamp Cursor on
 lazy create without a prior `/session/start`. Sessions stay open-ended;
-observations and stop summaries are still retained.
+observations and stop/preCompact summaries are still retained. Cloud hooks
+are unreliable, so a missed `stop` / `preCompact` is expected sometimes; the
+server's idle catch-up sweep covers those gaps without any client end signal.
 
 This repo currently installs the lifecycle, tool, and subagent hooks in
 [Installed hooks](#installed-hooks). Thought hooks are supported by Cursor but
@@ -195,8 +212,8 @@ Adapted from AgentMemory commit
 - [`plugin/scripts/pre-compact.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/pre-compact.mjs)
 - [`plugin/scripts/stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/stop.mjs)
 - [`src/hooks/_project.ts`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/src/hooks/_project.ts)
-  (`session-end.mjs` was adapted earlier and later removed; Cursor has no
-  reliable session end)
+  (`session-end.mjs` was adapted earlier and later removed; the server treats
+  `/session/end` as a deprecated noop, so this adapter does not wire it)
 
 Intentional differences:
 
@@ -205,7 +222,8 @@ Intentional differences:
 - Scripts use Cursor's `workspace_roots` and emit protocol-safe JSON.
 - `preCompact` only summarizes. Upstream Claude prints `/context` to stdout for
   reinjection; Cursor has no equivalent reinject path, so that side is dropped.
-- `stop` never calls `/session/end`. This adapter does not wire `sessionEnd`.
+- `stop` and `preCompact` only summarize. This adapter does not wire
+  `sessionEnd` and never calls `/session/end`.
 - `beforeSubmitPrompt` never calls `/session/start`. Upstream Claude
   `prompt-submit` also only posts `/observe`; an earlier local draft called
   `/session/start` on every prompt and that overwrote the session record.
@@ -235,19 +253,20 @@ These files are the Cursor-side adapter only. Server architecture belongs in
 its README is the canonical place for the server-side architectural roadmap and
 first-class Cursor work.
 
-Today the adapter carries compatibility workarounds because AgentMemory is
-still Claude-shaped. Examples already documented above: assistant messages
-masquerading as tool observations (`conversation` / `subagent`), prompt
-caching and pairing for `afterAgentResponse`, session lifecycle workarounds
-(no `sessionEnd`, open-ended sessions, `stop` = summarize only, Cloud missing
-`sessionStart`, `beforeSubmitPrompt` avoiding `/session/start`), and dedup
-workarounds around `sessionId + tool_name + tool_input`. Keep documenting that
-current behavior here until the fork work actually lands.
+Today the adapter still carries Claude-shaped compatibility workarounds that
+remain real: assistant messages masquerading as tool observations
+(`conversation` / `subagent`), prompt caching and pairing for
+`afterAgentResponse`, and dedup workarounds around
+`sessionId + tool_name + tool_input`. Session open/close is not something this
+client manages anymore: start is optional, there is no end hook, and the server
+owns open-ended processing plus idle catch-up. Keep documenting the remaining
+client workarounds here until the fork lands first-class Cursor / event-stream
+support.
 
-Once the fork gains first-class Cursor / event-stream support, this integration
-should simplify substantially: hooks should mostly translate Cursor payloads
-into the server's native event envelope and send them, instead of compensating
-for Claude Code session, tool, or dedup assumptions client-side.
+Once that lands, this integration should simplify substantially: hooks should
+mostly translate Cursor payloads into the server's native event envelope and
+send them, instead of compensating for Claude Code tool or dedup assumptions
+client-side.
 
 Cursor schema and Cloud support are based on
 [Cursor's hook documentation](https://cursor.com/docs/hooks) and

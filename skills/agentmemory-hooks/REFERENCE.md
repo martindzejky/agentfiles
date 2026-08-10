@@ -9,26 +9,29 @@ that fork's README is the canonical roadmap.
 
 | Cursor event         | Capture job                                                 |
 | -------------------- | ----------------------------------------------------------- |
-| `sessionStart`       | Open or resume a memory session; optionally add context     |
+| `sessionStart`       | Optional open/resume + context; not required to create      |
 | `beforeSubmitPrompt` | Store the user prompt                                       |
 | `afterAgentResponse` | Store the final assistant response                          |
 | `postToolUse`        | Store successful tool calls; optional file-tool enrich      |
 | `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)       |
 | `subagentStart`      | Store Task-tool subagent start as `tool_name: "subagent"`   |
 | `subagentStop`       | Store Task-tool subagent summary as `tool_name: "subagent"` |
-| `preCompact`         | Checkpoint a summary (no Cursor context reinject)           |
-| `stop`               | Summarize only (never ends the conversation)                |
+| `preCompact`         | Fast summarize (no Cursor context reinject)                 |
+| `stop`               | Fast summarize only (never ends the conversation)           |
 
-No `sessionEnd` hook is installed; Cursor has no reliable session end.
-Sessions stay open-ended. No thought hooks are installed.
+No `sessionEnd` hook is installed. Sessions stay open-ended on the server;
+memory formation does not need a client end signal. `stop` / `preCompact` are
+the fast path; the server's idle catch-up sweep covers missed hooks. No thought
+hooks are installed.
 
 Commit linking is outside this Cursor event map. A git `post-commit` hook that
 calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
 `commit-history`. This repo does not install that git hook yet.
 
-The capture hooks never call `/session/start`; it replaces the session record
-and resets `firstPrompt` and `observationCount`. `/observe` creates the session
-on its own when `project` and `cwd` are present. The assistant response rides on
+Capture hooks other than optional `sessionStart` never call `/session/start`;
+that route replaces the session record and resets `firstPrompt` and
+`observationCount`. `/observe` (and summarize/enrich) create the session when
+`sessionId`, `project`, and `cwd` are present. The assistant response rides on
 the `post_tool_use` shape (`tool_name: "conversation"`) because AgentMemory
 summarizes only `toolName`, `toolInput`, `toolOutput`, and `userPrompt`.
 `tool_input` is the cached user prompt from `beforeSubmitPrompt` (Pi-style).
@@ -45,8 +48,9 @@ supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
 `afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
 `subagentStart`, `subagentStop`, `preCompact`, `stop`, and others) but not
 `sessionStart`. Cloud never had `sessionEnd`; this adapter does not wire it
-locally either. This repo wires the events in the table above; thought hooks
-are not installed yet.
+locally either. Cloud hooks can be missed; the server catch-up sweep is what
+keeps memory formation moving. This repo wires the events in the table above;
+thought hooks are not installed yet.
 
 ## Transport
 
@@ -61,8 +65,9 @@ Use REST from hook scripts:
 
 The hooks load only recognized AgentMemory keys from the local file. Existing
 process variables take precedence. MCP-scoped environment variables may not be
-inherited by hook processes. `/session/start` stamps `agentId` on the session;
-other endpoints still send it even when the server ignores unknown fields.
+inherited by hook processes. Every write that can lazy-create a session sends
+`agentId: "cursor"` with `sessionId`, `project`, and `cwd` so observe-first
+paths (including Cloud) stamp Cursor without a prior `/session/start`.
 
 ## Debug checklist
 
@@ -80,8 +85,8 @@ instructions, the pinned upstream audit trail, and the ownership /
 compatibility-workaround notes are in `hooks/agentmemory/README.md`.
 
 This adapter remains useful while AgentMemory is still Claude-shaped
-(assistant-as-tool observations, prompt caching/pairing, session lifecycle and
-dedup workarounds). After
+(assistant-as-tool observations, prompt caching/pairing, and dedup
+workarounds). Session open/close is not client-managed. After
 [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory) gains
 first-class Cursor / event-stream support, the adapter should shrink to mostly
 translating Cursor payloads into the server's native event envelope.

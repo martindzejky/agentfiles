@@ -1,6 +1,6 @@
 ---
 name: agentmemory-hooks
-description: Cursor hooks that capture agentmemory observations across the agent session lifecycle. Use when installing or debugging automatic memory capture in Cursor, when observations are missing, or when deciding which hook events to wire.
+description: Cursor hooks that capture agentmemory observations during agent turns. Use when installing or debugging automatic memory capture in Cursor, when observations are missing, or when deciding which hook events to wire.
 user-invocable: false
 ---
 
@@ -47,10 +47,12 @@ Watch captures at `http://localhost:3113` once the server is up.
 
 ## What the hooks should do
 
-- `sessionStart`: best-effort local / optional open or resume plus optional
-  context injection. Not required for session creation once the server lazy-
-  creates from observe/summarize. Cursor has no reliable `sessionEnd`; sessions
-  stay open-ended.
+Memory formation does not depend on a client-sent session end. Sessions are
+open-ended on the server; this adapter never wires `sessionEnd`.
+
+- `sessionStart`: optional local open/resume plus optional context injection.
+  Not required for session creation; the server lazy-creates from
+  observe/summarize/enrich.
 - `beforeSubmitPrompt`: capture intent from the user prompt, without calling
   `/session/start`, which would reset the session record.
 - `afterAgentResponse`: capture the final reply as `post_tool_use` with
@@ -63,8 +65,9 @@ Watch captures at `http://localhost:3113` once the server is up.
   failure hooks cannot inject on Cursor).
 - `subagentStart` / `subagentStop`: capture Task-tool subagent lifecycle on the
   parent session as `post_tool_use` with `tool_name: "subagent"`.
-- `preCompact`: checkpoint a summary (no context reinject on Cursor).
-- `stop`: summarize only (`POST /summarize`). Never calls `/session/end`.
+- `preCompact` / `stop`: fast per-turn summarize (`POST /summarize` only; no
+  context reinject on Cursor; never `/session/end`). If a hook is missed, the
+  server's idle catch-up sweep still processes idle sessions later.
 
 These Cursor lifecycle hooks do not link git commits. `commit-context` and
 `commit-history` need a separate git `post-commit` hook that POSTs to
@@ -93,8 +96,9 @@ server must not block the agent.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
 - This adapter still carries Claude-shaped compatibility workarounds
-  (assistant-as-tool observations, prompt caching/pairing, session lifecycle
-  and dedup remaps). Once
+  (assistant-as-tool observations, prompt caching/pairing, and dedup remaps).
+  Session open/close is server-owned now (optional start, no end hook, idle
+  catch-up). Once
   [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
   has first-class Cursor / event-stream support, hooks should mostly translate
   Cursor payloads and send them. Until then, keep the current implementation
