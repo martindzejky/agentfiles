@@ -4,6 +4,8 @@ This is a local-first, dependency-free Cursor adaptation of AgentMemory's hook
 scripts. Dotbot links `hooks.json` and this directory into `~/.cursor`.
 The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
 
+The server-side Cursor fork lives at [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory). Its README is the canonical place for the fork's architectural goal; this document describes the current Cursor-side adapter and the workarounds the fork should eventually remove.
+
 ## Installed hooks
 
 - `sessionStart` opens or resumes the AgentMemory session and, when
@@ -218,8 +220,7 @@ that only help other hosts, and paper over dedup / session-reset footguns.
 
 Keep this thin adapter until real usage shows whether AgentMemory's retrieval
 and consolidation consistently save effort on actual coding work. If they do,
-prefer a focused fork so the server understands host-neutral conversation
-events directly instead of growing more client-side workarounds here.
+prefer the [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory) fork so the server understands host-neutral conversation events directly instead of growing more client-side workarounds here.
 
 The fork should use these design rules:
 
