@@ -83,9 +83,11 @@ The user-level hooks are installed from `hooks.json` and
 instructions, the pinned upstream audit trail, and the ownership /
 compatibility-workaround notes are in `hooks/agentmemory/README.md`.
 
-This adapter remains useful while AgentMemory is still Claude-shaped
-(assistant-as-tool observations and prompt caching/pairing). Ingest
-idempotency is `eventId` only. Session open/close is not client-managed. After
+This adapter remains useful while AgentMemory still summarizes through
+tool-shaped observe fields (`toolName` / `toolInput` / `toolOutput` /
+`userPrompt`) — including assistant-as-tool observations and prompt
+caching/pairing. Ingest idempotency is `eventId` only. Session open/close is
+not client-managed. After
 [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory) gains
 first-class Cursor / event-stream support, the adapter should shrink to mostly
 translating Cursor payloads into the server's native event envelope.

@@ -73,10 +73,13 @@ lazy create (observe-first and summarize paths); older servers that ignore
 unknown keys stay compatible with the extra fields.
 
 Every `/agentmemory/observe` POST sends a unique top-level `eventId` (a fresh
-UUID per hook invocation). The server deduplicates only on that exact id;
-content-based / five-minute window dedup is gone. Older servers ignore unknown
-fields, so shipping `eventId` is safe before or after the server change.
-`eventId` is not sent on `/summarize`, `/enrich`, or `/context`.
+UUID per hook invocation). On the
+[`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory)
+fork the server deduplicates only on that exact id; content-based /
+five-minute window dedup is gone there. Older servers (including upstream
+that still use content hashing) ignore unknown fields, so shipping `eventId`
+is safe before or after the fork change. `eventId` is not sent on
+`/summarize`, `/enrich`, or `/context`.
 
 AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
 `userPrompt` fields of an observation. Consequences for the payloads:
@@ -86,8 +89,9 @@ AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
   is the assistant text. `tool_input` is the user prompt from a local cache
   written by `beforeSubmitPrompt` (Cursor's response hook only documents
   `text`). On cache miss, `tool_input` is empty.
-- `prompt_submit` also sets `tool_input` to the prompt text so the Claude-shaped
-  observe fields stay populated alongside `prompt`.
+- `prompt_submit` sends only `data.prompt` (lifted to `userPrompt`). It does
+  not set `tool_input`: that field is not lifted for this hookType, and its
+  old role was only defeating content-hash dedup.
 - Subagent start/stop use the same `post_tool_use` + `tool_name: "subagent"`
   shape. `tool_input` uses a `start:` / `stop:` prefix plus id, type, and
   task/status when present so summarizer input stays distinct for the pair and

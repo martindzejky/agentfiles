@@ -46,9 +46,11 @@ async function main() {
         cwd,
         timestamp: new Date().toISOString(),
         eventId: newEventId(),
-        // tool_input mirrors the prompt for Claude-shaped observe fields;
-        // pairing with afterAgentResponse still uses the local prompt cache.
-        data: { prompt, tool_input: prompt },
+        // prompt_submit lifts only data.prompt → userPrompt. tool_input is not
+        // lifted for this hookType and used to exist only to vary the old
+        // content-hash dedup key; omit it. Pairing for afterAgentResponse
+        // still uses the local prompt cache above.
+        data: { prompt },
       },
       { config },
     );

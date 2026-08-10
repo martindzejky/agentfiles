@@ -86,16 +86,18 @@ server must not block the agent.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
 - Every `/agentmemory/observe` POST sends a unique top-level `eventId`. The
   server deduplicates only on that exact id (no content-based / five-minute
-  window dedup). Conversation pairing and `prompt_submit` still put the user
-  prompt in `tool_input` for Claude-shaped observe fields.
+  window dedup on the martindzejky fork). Conversation pairing still fills
+  the server's tool-shaped observe fields (`toolName` / `toolInput` /
+  `toolOutput` / `userPrompt`) for the assistant turn; `prompt_submit` only
+  sends `prompt` → `userPrompt`.
 - REST bodies hardcode `agentId: "cursor"` for multi-agent tagging on a shared
   server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
-- This adapter still carries Claude-shaped compatibility workarounds
-  (assistant-as-tool observations and prompt caching/pairing). Session
-  open/close is server-owned now (optional start, no end hook, server catch-up
-  for summarization). Once
+- This adapter still carries compatibility workarounds that map Cursor events
+  onto the server's tool-shaped observe fields (assistant-as-tool observations
+  and prompt caching/pairing). Session open/close is server-owned now
+  (optional start, no end hook, server catch-up for summarization). Once
   [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
   has first-class Cursor / event-stream support, hooks should mostly translate
   Cursor payloads and send them. Until then, keep the current implementation

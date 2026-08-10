@@ -236,7 +236,7 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
       ['/agentmemory/observe'],
     );
     const [observe] = server.requests;
-    assert.deepEqual(Object.keys(observe.body.data), ['prompt', 'tool_input']);
+    assert.deepEqual(Object.keys(observe.body.data), ['prompt']);
     assert.equal(observe.body.data.prompt.length, 10_000);
     assert.equal(observe.body.hookType, 'prompt_submit');
     assert.equal(observe.body.sessionId, 'conversation-id');
@@ -246,8 +246,7 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
     assert.match(observe.body.timestamp, /^\d{4}-\d{2}-\d{2}T/);
     assert.equal(typeof observe.body.eventId, 'string');
     assert.ok(observe.body.eventId.length > 0);
-    // Prompt text also fills Claude-shaped tool_input alongside prompt.
-    assert.equal(observe.body.data.tool_input, observe.body.data.prompt);
+    assert.equal(observe.body.data.tool_input, undefined);
     assert.equal(result.stdout.includes('prompt-'), false);
   } finally {
     await server.close();
@@ -470,7 +469,7 @@ test('parallel session cache writes keep both prompts', async () => {
   }
 });
 
-test('repeated prompts share tool_input and never reset the session', async () => {
+test('repeated prompts keep distinct eventIds and never reset the session', async () => {
   const server = await startMockServer();
   try {
     for (const prompt of ['continue', 'continue']) {
@@ -491,11 +490,11 @@ test('repeated prompts share tool_input and never reset the session', async () =
       ['/agentmemory/observe', '/agentmemory/observe'],
     );
     const [first, second] = server.requests;
-    // Same prompt => same tool_input content, but each observe gets its own
-    // eventId so repeated prompts are not collapsed by ingest idempotency.
+    // Same prompt content is fine; ingest idempotency keys on eventId only.
     assert.equal(first.body.data.prompt, second.body.data.prompt);
-    assert.equal(first.body.data.tool_input, second.body.data.tool_input);
-    assert.equal(first.body.data.tool_input, 'continue');
+    assert.equal(first.body.data.prompt, 'continue');
+    assert.deepEqual(Object.keys(first.body.data), ['prompt']);
+    assert.deepEqual(Object.keys(second.body.data), ['prompt']);
     assert.notEqual(first.body.timestamp, second.body.timestamp);
     assert.equal(typeof first.body.eventId, 'string');
     assert.equal(typeof second.body.eventId, 'string');
