@@ -40,7 +40,8 @@ for that sweep live in the fork README, not here.
 - `sessionStart` is optional. Locally it still calls `/session/start` to open
   or resume and, when `AGENTMEMORY_INJECT_CONTEXT=true`, returns server context
   through Cursor's documented `additional_context` field. It is not required
-  for session creation once the server lazy-creates from observe/summarize.
+  for session creation once the server lazy-creates from `/observe` or
+  `/enrich`.
 - `beforeSubmitPrompt` records only the truncated user prompt
   (`hookType: prompt_submit`, `data: { prompt }`). It never calls
   `/session/start`, because that endpoint replaces the whole session record and
@@ -243,19 +244,14 @@ Open upstream
 Cursor-specific operational gotchas, including duplicate plugin/user hooks and
 workspace attribution. No code was copied from that unmerged implementation.
 
-## Adapter scope
+## Wire summary
 
-These files are the Cursor-side adapter only. Server architecture belongs in
-[`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory);
-its README is the canonical place for the server-side architectural roadmap and
-first-class Cursor work.
+Writes from this adapter: `prompt_submit`, `assistant_response`,
+`post_tool_use` / `post_tool_failure`, `subagent_start` / `subagent_stop`,
+each `/observe` with a unique `eventId`, plus optional `/session/start` and
+`/enrich`. No client `/summarize` and no session end. Summarization is the
+server idle / obs-count catch-up sweep.
 
-The adapter sends `assistant_response` and `subagent_*` observes, plus
-`eventId` on every `/observe`. Real tool observes use `tool_name` /
-`tool_input` / `tool_output` (or `error`). Session open/close is server-owned:
-start is optional, and the server runs open-ended processing plus idle /
-obs-count catch-up for summarization.
-
-Cursor schema and Cloud support are based on
+Cursor schema and Cloud support follow
 [Cursor's hook documentation](https://cursor.com/docs/hooks) and
 [Cloud Agent hook support](https://cursor.com/docs/hooks#cloud-agent-support).

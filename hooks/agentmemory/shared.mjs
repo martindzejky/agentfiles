@@ -181,9 +181,6 @@ export async function postJson(path, body, options = {}) {
         Authorization: `Bearer ${config.secret}`,
         'Content-Type': 'application/json',
       },
-      // Always tag writes as Cursor. Lazy-create paths (observe / summarize)
-      // should honor agentId on the server; extra fields stay compatible with
-      // older servers that ignore unknown keys.
       body: JSON.stringify(withAgentId(body)),
       redirect: 'error',
       signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS),
@@ -238,9 +235,7 @@ function isBase64Image(value) {
   );
 }
 
-// AgentMemory has no working vision path, so images are dropped rather than
-// forwarded as image_data. Applied at every depth: a blob nested in an array
-// or sub-object would otherwise reach the server as truncated base64 noise.
+// Vision is unsupported; replace base64 image blobs at every depth.
 export function stripImageData(value) {
   if (isBase64Image(value)) return '[image data omitted]';
   if (Array.isArray(value)) return value.map(stripImageData);

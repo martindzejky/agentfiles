@@ -41,7 +41,6 @@ async function main() {
         cwd,
         timestamp: new Date().toISOString(),
         eventId: newEventId(),
-        // prompt_submit lifts only data.prompt → userPrompt.
         data: { prompt },
       },
       { config },

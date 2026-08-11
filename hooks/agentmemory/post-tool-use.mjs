@@ -34,7 +34,6 @@ async function main() {
   const sessionId = resolveSessionId(payload);
   const project = resolveProject(cwd);
   const toolInput = resolveToolInput(payload);
-  // Drop base64 image blobs: they bloat storage and add no useful recall text.
   const cleanOutput = stripImageData(resolveToolOutput(payload));
 
   const [, context] = await Promise.all([
