@@ -3,7 +3,7 @@
 This directory is the Cursor-side AgentMemory adapter: local-first,
 dependency-free hook scripts that translate Cursor events into AgentMemory
 REST calls. Dotbot links `hooks.json` and this directory into `~/.cursor`.
-The scripts require Node.js 20.12 or newer; CI uses Node.js 24.
+The scripts require Node.js 24 (see `package.json` engines, `.nvmrc`, and CI).
 
 Ownership:
 
@@ -12,13 +12,12 @@ Ownership:
   [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory).
   That fork's README is the canonical roadmap; do not duplicate it here.
 
-This adapter targets the
+This adapter requires the
 [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory)
-fork with Pass E
+fork, which summarizes `assistant_response` and `subagent_*` observes
 ([PR #10](https://github.com/martindzejky/agentmemory/pull/10)). Older servers
-that ignore unknown `hookType` values will store assistant/subagent observes
-but will not summarize them. That is accepted; there is no compatibility mode
-that still sends the old remaps.
+that ignore unknown `hookType` values will store those observes without
+summarizing them.
 
 ## Lifecycle (adapter vs server)
 
@@ -31,10 +30,10 @@ on the server (`/session/end` is a deprecated noop there). What the hooks do:
 
 `sessionStart` is not required to create a session: `/observe`, `/summarize`,
 and `/enrich` lazy-create when they send `sessionId` + `project` + `cwd`, and
-they honor `agentId: "cursor"`. There is no `sessionEnd` hook and this adapter
-does not call `/summarize` from lifecycle hooks. The server's idle / obs-count
-catch-up sweep processes sessions in the background. Server details for that
-sweep live in the fork README, not here.
+they honor `agentId: "cursor"`. There is no `sessionEnd` hook. Hooks capture
+observations only; they must not call `/summarize`. The server's idle /
+obs-count catch-up sweep processes sessions in the background. Server details
+for that sweep live in the fork README, not here.
 
 ## Installed hooks
 
@@ -61,9 +60,9 @@ sweep live in the fork README, not here.
 - `postToolUseFailure` records failed tool calls (skips user interrupts). It
   does not enrich: Cursor documents no output fields for this event.
 - `subagentStart` / `subagentStop` record Task-tool subagent lifecycle on the
-  parent session as native `subagent_start` / `subagent_stop` observes. Data
-  keys are exactly `subagent_id`, `subagent_type`, `task`, `status`, and
-  `summary` (blank values omitted). Stop keeps the Cursor summary fallback
+  parent session as `subagent_start` / `subagent_stop` observes. Data keys are
+  exactly `subagent_id`, `subagent_type`, `task`, `status`, and `summary`
+  (blank values omitted). Stop keeps the Cursor summary fallback
   `summary ?? last_assistant_message`.
 
 Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
@@ -82,28 +81,30 @@ lazy create (observe-first and summarize paths); older servers that ignore
 unknown keys stay compatible with the extra fields.
 
 Every `/agentmemory/observe` POST sends a unique top-level `eventId` (a fresh
-UUID per hook invocation). On the
+UUID per hook invocation). The
 [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory)
-fork the server deduplicates only on that exact id; content-based /
-five-minute window dedup is gone there. Older servers (including upstream
-that still use content hashing) ignore unknown fields, so shipping `eventId`
-is safe before or after the fork change. `eventId` is not sent on
-`/summarize`, `/enrich`, or `/context`.
+fork deduplicates on that exact id. Older servers that ignore unknown fields
+still accept the payload. `eventId` is omitted on `/summarize`, `/enrich`, and
+`/context`.
 
-Pass E wire contract for the three native lifecycle observes (fields feed
-compression only; they do not need to survive as raw rows):
+## Observe wire contract
 
-| hookType                              | data keys (exact)                                                 |
-| ------------------------------------- | ----------------------------------------------------------------- |
-| `assistant_response`                  | `assistantResponse`                                               |
-| `subagent_start`                      | `subagent_id`, `subagent_type`, `task`                            |
-| `subagent_stop`                       | `subagent_id`, `subagent_type`, `task`, `status`, `summary`       |
-| `prompt_submit`                       | `prompt` (unchanged)                                              |
-| `post_tool_use` / `post_tool_failure` | `tool_name`, `tool_input`, `tool_output` (or `error`) (unchanged) |
+Fields on lifecycle observes feed compression on the fork. Blank values are
+omitted for subagent keys.
 
-There is no on-disk prompt cache. Assistant replies no longer borrow a fake
-`conversation` tool observation, and subagents no longer borrow
-`tool_name: "subagent"` with `start:` / `stop:` prefixes.
+| hookType             | data keys (exact)                                           |
+| -------------------- | ----------------------------------------------------------- |
+| `assistant_response` | `assistantResponse`                                         |
+| `subagent_start`     | `subagent_id`, `subagent_type`, `task`                      |
+| `subagent_stop`      | `subagent_id`, `subagent_type`, `task`, `status`, `summary` |
+| `prompt_submit`      | `prompt`                                                    |
+
+Tool observes keep tool-shaped fields:
+
+| hookType            | data keys                                                            |
+| ------------------- | -------------------------------------------------------------------- |
+| `post_tool_use`     | `tool_name`, `tool_input`, `tool_output`                             |
+| `post_tool_failure` | `tool_name`, `tool_input`, `error`; optional `failure_type` when set |
 
 ## Runtime configuration
 
@@ -176,14 +177,13 @@ including:
 - `preToolUse` / `postToolUse` / `postToolUseFailure`
 - `subagentStart` / `subagentStop`
 
-Cursor Cloud does not provide `sessionStart` (and never had `sessionEnd`).
-Locally, `sessionStart` remains installed as best-effort / optional context
-injection. Cloud and other observe-first paths rely on `/observe` (and
-`/enrich` when enabled) to create the session. Those writes must still tag
-`agentId: "cursor"` so the server can stamp Cursor on lazy create without a
-prior `/session/start`. Sessions stay open-ended; observations are retained.
-Summarization is handled by the server's idle / obs-count catch-up sweep;
-this adapter no longer calls `/summarize` from lifecycle hooks.
+Cursor Cloud does not provide `sessionStart`. Locally, `sessionStart` remains
+installed as best-effort / optional context injection. Cloud and other
+observe-first paths rely on `/observe` (and `/enrich` when enabled) to create
+the session. Those writes must still tag `agentId: "cursor"` so the server can
+stamp Cursor on lazy create without a prior `/session/start`. Sessions stay
+open-ended; observations are retained. The server owns summarization through
+its idle / obs-count catch-up sweep.
 
 This repo currently installs the lifecycle, tool, and subagent hooks in
 [Installed hooks](#installed-hooks). Thought hooks are supported by Cursor but
@@ -209,29 +209,25 @@ Adapted from AgentMemory commit
 - [`plugin/scripts/subagent-start.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-start.mjs)
 - [`plugin/scripts/subagent-stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-stop.mjs)
 - [`src/hooks/_project.ts`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/src/hooks/_project.ts)
-  (`pre-compact.mjs`, `stop.mjs`, and `session-end.mjs` were adapted earlier;
-  `pre-compact.mjs` and `stop.mjs` were removed when the server catch-up sweep
-  made per-turn `/summarize` hooks redundant; `session-end.mjs` was removed when
-  the server treated `/session/end` as a deprecated noop)
 
 Intentional differences:
 
 - The manifest uses Cursor's camelCase events and command schema.
 - Cursor's stable `conversation_id` is used when `session_id` is absent.
 - Scripts use Cursor's `workspace_roots` and emit protocol-safe JSON.
-- `beforeSubmitPrompt` never calls `/session/start`. Upstream Claude
-  `prompt-submit` also only posts `/observe`; an earlier local draft called
-  `/session/start` on every prompt and that overwrote the session record.
-- `afterAgentResponse` is Cursor-specific; it posts native
-  `assistant_response` for the martindzejky fork Pass E lift.
+- `beforeSubmitPrompt` never calls `/session/start`. That endpoint replaces the
+  whole session record. Upstream Claude `prompt-submit` also only posts
+  `/observe`.
+- `afterAgentResponse` is Cursor-specific; it posts `assistant_response` with
+  `data.assistantResponse`.
 - `postToolUse` has no matcher (all tools), matching Claude Code's unfiltered
   PostToolUse capture. Observe always runs; enrich is opt-in and limited to
   file-touching tools. Image base64 is stripped instead of forwarded as
   `image_data`.
 - `preToolUse` is omitted: Cursor cannot inject context there. Upstream enrich
   is adapted onto `postToolUse` `additional_context` instead.
-- Subagent hooks post native `subagent_start` / `subagent_stop` with Cursor
-  field names (`subagent_id`, `subagent_type`, `task`, `status`, `summary`).
+- Subagent hooks post `subagent_start` / `subagent_stop` with Cursor field
+  names (`subagent_id`, `subagent_type`, `task`, `status`, `summary`).
 - Claude memory bridge, Notification, TaskCompleted, and thought hooks are
   omitted.
 
@@ -240,20 +236,18 @@ Open upstream
 Cursor-specific operational gotchas, including duplicate plugin/user hooks and
 workspace attribution. No code was copied from that unmerged implementation.
 
-## Ownership and future direction
+## Adapter scope
 
 These files are the Cursor-side adapter only. Server architecture belongs in
 [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory);
 its README is the canonical place for the server-side architectural roadmap and
 first-class Cursor work.
 
-With Pass E on the fork, this adapter sends native `assistant_response` and
-`subagent_*` observes instead of fake tool remaps, and the local prompt cache
-is gone. Ingest idempotency remains `eventId` only. Session open/close is not
-something this client manages: start is optional, there is no end hook, and
-the server owns open-ended processing plus idle / obs-count catch-up for
-summarization. Real tool observes still use tool-shaped fields
-(`tool_name` / `tool_input` / `tool_output`).
+The adapter sends `assistant_response` and `subagent_*` observes, plus
+`eventId` on every `/observe`. Real tool observes use `tool_name` /
+`tool_input` / `tool_output` (or `error`). Session open/close is server-owned:
+start is optional, and the server runs open-ended processing plus idle /
+obs-count catch-up for summarization.
 
 Cursor schema and Cloud support are based on
 [Cursor's hook documentation](https://cursor.com/docs/hooks) and

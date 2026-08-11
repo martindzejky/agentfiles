@@ -4,10 +4,8 @@
 // d60652a7058773fa9428fa720eda38942f12f014. Cursor's subagentStop exposes
 // summary/status/task rather than last_assistant_message.
 //
-// The martindzejky agentmemory fork (Pass E) lifts subagent_id, subagent_type,
-// task, status, and summary on hookType subagent_stop for compression, so
-// this adapter sends that native shape instead of remapping onto a fake
-// post_tool_use subagent tool.
+// Posts hookType subagent_stop with subagent_id, subagent_type, task, status,
+// and summary (blanks omitted).
 
 import {
   newEventId,

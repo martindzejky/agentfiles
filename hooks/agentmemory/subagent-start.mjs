@@ -4,9 +4,7 @@
 // d60652a7058773fa9428fa720eda38942f12f014. Field names follow Cursor's
 // subagentStart payload (subagent_id / subagent_type / task).
 //
-// The martindzejky agentmemory fork (Pass E) lifts those keys on hookType
-// subagent_start for compression, so this adapter sends the native shape
-// instead of remapping onto a fake post_tool_use subagent tool.
+// Posts hookType subagent_start with those data keys (blanks omitted).
 
 import {
   newEventId,
