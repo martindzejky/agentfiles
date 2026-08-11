@@ -10,6 +10,7 @@ Registered endpoints (Cursor-irrelevant host bridges omitted):
 
 | Method | Path                                  |
 | ------ | ------------------------------------- |
+| GET    | `/agentmemory/actions`                |
 | POST   | `/agentmemory/actions`                |
 | POST   | `/agentmemory/actions/edges`          |
 | GET    | `/agentmemory/actions/get`            |
@@ -20,6 +21,7 @@ Registered endpoints (Cursor-irrelevant host bridges omitted):
 | GET    | `/agentmemory/branch/sessions`        |
 | GET    | `/agentmemory/branch/worktrees`       |
 | POST   | `/agentmemory/cascade-update`         |
+| GET    | `/agentmemory/checkpoints`            |
 | POST   | `/agentmemory/checkpoints`            |
 | POST   | `/agentmemory/checkpoints/resolve`    |
 | GET    | `/agentmemory/commits`                |
@@ -38,6 +40,7 @@ Registered endpoints (Cursor-irrelevant host bridges omitted):
 | POST   | `/agentmemory/evict`                  |
 | POST   | `/agentmemory/evolve`                 |
 | GET    | `/agentmemory/export`                 |
+| GET    | `/agentmemory/facets`                 |
 | POST   | `/agentmemory/facets`                 |
 | POST   | `/agentmemory/facets/query`           |
 | POST   | `/agentmemory/facets/remove`          |
@@ -63,6 +66,7 @@ Registered endpoints (Cursor-irrelevant host bridges omitted):
 | POST   | `/agentmemory/leases/acquire`         |
 | POST   | `/agentmemory/leases/release`         |
 | POST   | `/agentmemory/leases/renew`           |
+| GET    | `/agentmemory/lessons`                |
 | POST   | `/agentmemory/lessons`                |
 | POST   | `/agentmemory/lessons/delete`         |
 | POST   | `/agentmemory/lessons/search`         |
@@ -71,6 +75,7 @@ Registered endpoints (Cursor-irrelevant host bridges omitted):
 | GET    | `/agentmemory/memories`               |
 | GET    | `/agentmemory/memories/:id`           |
 | GET    | `/agentmemory/mesh/export`            |
+| GET    | `/agentmemory/mesh/peers`             |
 | POST   | `/agentmemory/mesh/peers`             |
 | POST   | `/agentmemory/mesh/receive`           |
 | POST   | `/agentmemory/mesh/sync`              |
@@ -83,16 +88,19 @@ Registered endpoints (Cursor-irrelevant host bridges omitted):
 | GET    | `/agentmemory/procedural`             |
 | GET    | `/agentmemory/profile`                |
 | POST   | `/agentmemory/reflect`                |
+| GET    | `/agentmemory/relations`              |
 | POST   | `/agentmemory/relations`              |
 | POST   | `/agentmemory/remember`               |
 | POST   | `/agentmemory/replay/import-jsonl`    |
 | GET    | `/agentmemory/replay/load`            |
 | GET    | `/agentmemory/replay/sessions`        |
+| GET    | `/agentmemory/routines`               |
 | POST   | `/agentmemory/routines`               |
 | POST   | `/agentmemory/routines/run`           |
 | GET    | `/agentmemory/routines/status`        |
 | POST   | `/agentmemory/search`                 |
 | GET    | `/agentmemory/semantic`               |
+| GET    | `/agentmemory/sentinels`              |
 | POST   | `/agentmemory/sentinels`              |
 | POST   | `/agentmemory/sentinels/cancel`       |
 | POST   | `/agentmemory/sentinels/check`        |
@@ -104,12 +112,15 @@ Registered endpoints (Cursor-irrelevant host bridges omitted):
 | GET    | `/agentmemory/sessions`               |
 | GET    | `/agentmemory/signals`                |
 | POST   | `/agentmemory/signals/send`           |
+| GET    | `/agentmemory/sketches`               |
 | POST   | `/agentmemory/sketches`               |
 | POST   | `/agentmemory/sketches/add`           |
 | POST   | `/agentmemory/sketches/discard`       |
 | POST   | `/agentmemory/sketches/gc`            |
 | POST   | `/agentmemory/sketches/promote`       |
+| DELETE | `/agentmemory/slot`                   |
 | GET    | `/agentmemory/slot`                   |
+| POST   | `/agentmemory/slot`                   |
 | POST   | `/agentmemory/slot/append`            |
 | POST   | `/agentmemory/slot/reflect`           |
 | POST   | `/agentmemory/slot/replace`           |
