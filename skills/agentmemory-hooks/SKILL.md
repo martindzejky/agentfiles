@@ -52,18 +52,20 @@ idle / obs-count catch-up sweep.
 
 - `sessionStart`: optional local open/resume plus optional context injection.
   Not required for session creation; the server lazy-creates from observe/enrich.
-- `beforeSubmitPrompt`: capture intent from the user prompt, without calling
-  `/session/start`, which would reset the session record.
-- `afterAgentResponse`: capture the final reply as `post_tool_use` with
-  `tool_name: "conversation"`, `tool_input` from the cached user prompt, and
-  `tool_output` as the assistant text.
+- `beforeSubmitPrompt`: capture intent from the user prompt
+  (`prompt_submit` → `data.prompt` only), without calling `/session/start`,
+  which would reset the session record.
+- `afterAgentResponse`: capture the final reply as `assistant_response` with
+  `data.assistantResponse`.
 - `postToolUse` / `postToolUseFailure`: capture real tool calls and failures
-  (all tools; interrupts skipped on failure). With
+  with tool-shaped observe fields (`tool_name`, `tool_input`, `tool_output`
+  or `error`; all tools; interrupts skipped on failure). With
   `AGENTMEMORY_INJECT_CONTEXT=true`, successful file-touching tools also
   enrich via `/agentmemory/enrich` → `additional_context` (Shell/MCP skipped;
   failure hooks cannot inject on Cursor).
 - `subagentStart` / `subagentStop`: capture Task-tool subagent lifecycle on the
-  parent session as `post_tool_use` with `tool_name: "subagent"`.
+  parent session as `subagent_start` / `subagent_stop` with
+  `subagent_id`, `subagent_type`, `task`, `status`, and `summary` (omit blanks).
 
 These Cursor lifecycle hooks do not link git commits. `commit-context` and
 `commit-history` need a separate git `post-commit` hook that POSTs to
@@ -86,22 +88,18 @@ server must not block the agent.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
 - Every `/agentmemory/observe` POST sends a unique top-level `eventId`. The
   server deduplicates only on that exact id (no content-based / five-minute
-  window dedup on the martindzejky fork). Conversation pairing still fills
-  the server's tool-shaped observe fields (`toolName` / `toolInput` /
-  `toolOutput` / `userPrompt`) for the assistant turn; `prompt_submit` only
-  sends `prompt` → `userPrompt`.
+  window dedup on the martindzejky fork). `prompt_submit` only sends
+  `prompt` → `userPrompt`; assistant and subagent turns use their native
+  hookTypes, not fake tool remaps.
 - REST bodies hardcode `agentId: "cursor"` for multi-agent tagging on a shared
   server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
-- This adapter still carries compatibility workarounds that map Cursor events
-  onto the server's tool-shaped observe fields (assistant-as-tool observations
-  and prompt caching/pairing). Session open/close is server-owned now
-  (optional start, no end hook, server catch-up for summarization). Once
+- This adapter requires the
   [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
-  has first-class Cursor / event-stream support, hooks should mostly translate
-  Cursor payloads and send them. Until then, keep the current implementation
-  docs in `hooks/agentmemory/README.md`.
+  fork with Pass E for assistant/subagent summarization. Session open/close is
+  server-owned (optional start, no end hook, server catch-up for
+  summarization). Implementation details live in `hooks/agentmemory/README.md`.
 
 ## See also
 

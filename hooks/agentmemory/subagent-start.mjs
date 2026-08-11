@@ -4,9 +4,9 @@
 // d60652a7058773fa9428fa720eda38942f12f014. Field names follow Cursor's
 // subagentStart payload (subagent_id / subagent_type / task).
 //
-// Mapped onto post_tool_use with tool_name "subagent" so AgentMemory's
-// summarizer lifts tool_input / tool_output (custom subagent_* hookTypes are
-// stored but never summarised).
+// The martindzejky agentmemory fork (Pass E) lifts those keys on hookType
+// subagent_start for compression, so this adapter sends the native shape
+// instead of remapping onto a fake post_tool_use subagent tool.
 
 import {
   newEventId,
@@ -28,31 +28,24 @@ async function main() {
   if (!payload || !config) return writeCursorOutput();
 
   const cwd = resolveWorkingDirectory(payload);
-  const agentId = resolveSubagentId(payload);
-  const agentType = resolveSubagentType(payload);
+  const subagentId = resolveSubagentId(payload);
+  const subagentType = resolveSubagentType(payload);
   const task = truncateText(payload.task);
-  // Prefix start: so summarizer tool_input stays distinct from subagentStop
-  // for the same id; include type/task for concurrent same-type Task tools.
-  const toolInput =
-    ['start', agentId, agentType, task].filter(Boolean).join(':') || 'start';
-  const toolOutput = truncateText(
-    ['started', agentType, task].filter(Boolean).join(': '),
-  );
+  const data = {};
+  if (subagentId) data.subagent_id = subagentId;
+  if (subagentType) data.subagent_type = subagentType;
+  if (task) data.task = task;
 
   await postJson(
     '/agentmemory/observe',
     {
-      hookType: 'post_tool_use',
+      hookType: 'subagent_start',
       sessionId: resolveSessionId(payload),
       project: resolveProject(cwd),
       cwd,
       timestamp: new Date().toISOString(),
       eventId: newEventId(),
-      data: {
-        tool_name: 'subagent',
-        tool_input: toolInput,
-        tool_output: toolOutput,
-      },
+      data,
     },
     { config },
   );

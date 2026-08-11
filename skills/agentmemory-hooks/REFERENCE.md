@@ -7,15 +7,15 @@ that fork's README is the canonical roadmap.
 
 ## Event map
 
-| Cursor event         | Capture job                                                 |
-| -------------------- | ----------------------------------------------------------- |
-| `sessionStart`       | Optional open/resume + context; not required to create      |
-| `beforeSubmitPrompt` | Store the user prompt                                       |
-| `afterAgentResponse` | Store the final assistant response                          |
-| `postToolUse`        | Store successful tool calls; optional file-tool enrich      |
-| `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)       |
-| `subagentStart`      | Store Task-tool subagent start as `tool_name: "subagent"`   |
-| `subagentStop`       | Store Task-tool subagent summary as `tool_name: "subagent"` |
+| Cursor event         | Capture job                                               |
+| -------------------- | --------------------------------------------------------- |
+| `sessionStart`       | Optional open/resume + context; not required to create    |
+| `beforeSubmitPrompt` | Store the user prompt (`prompt_submit` / `data.prompt`)   |
+| `afterAgentResponse` | Store the final assistant response (`assistant_response`) |
+| `postToolUse`        | Store successful tool calls; optional file-tool enrich    |
+| `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)     |
+| `subagentStart`      | Store Task-tool subagent start (`subagent_start`)         |
+| `subagentStop`       | Store Task-tool subagent summary (`subagent_stop`)        |
 
 No `sessionEnd` hook is installed. Sessions stay open-ended on the server;
 memory formation does not need a client end signal. Summarization is handled
@@ -29,10 +29,15 @@ calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
 Capture hooks other than optional `sessionStart` never call `/session/start`;
 that route replaces the session record and resets `firstPrompt` and
 `observationCount`. `/observe` (and summarize/enrich) create the session when
-`sessionId`, `project`, and `cwd` are present. The assistant response rides on
-the `post_tool_use` shape (`tool_name: "conversation"`) because AgentMemory
-summarizes only `toolName`, `toolInput`, `toolOutput`, and `userPrompt`.
-`tool_input` is the cached user prompt from `beforeSubmitPrompt` (Pi-style).
+`sessionId`, `project`, and `cwd` are present.
+
+Native observe shapes (Pass E on the martindzejky fork):
+
+- `assistant_response` → `data.assistantResponse`
+- `subagent_start` / `subagent_stop` → `data.subagent_id`, `subagent_type`,
+  `task`, `status`, `summary` (omit blanks)
+- Real tools still use tool-shaped observe fields (`tool_name`, `tool_input`,
+  `tool_output` / `error`)
 
 ## Install targets
 
@@ -80,14 +85,11 @@ paths (including Cloud) stamp Cursor without a prior `/session/start`.
 
 The user-level hooks are installed from `hooks.json` and
 `hooks/agentmemory/`. Implementation details, Cloud limitations, smoke-test
-instructions, the pinned upstream audit trail, and the ownership /
-compatibility-workaround notes are in `hooks/agentmemory/README.md`.
+instructions, the pinned upstream audit trail, and the Pass E wire contract
+are in `hooks/agentmemory/README.md`.
 
-This adapter remains useful while AgentMemory still summarizes through
-tool-shaped observe fields (`toolName` / `toolInput` / `toolOutput` /
-`userPrompt`) — including assistant-as-tool observations and prompt
-caching/pairing. Ingest idempotency is `eventId` only. Session open/close is
-not client-managed. After
-[martindzejky/agentmemory](https://github.com/martindzejky/agentmemory) gains
-first-class Cursor / event-stream support, the adapter should shrink to mostly
-translating Cursor payloads into the server's native event envelope.
+This adapter sends native assistant/subagent hookTypes and always-send
+`eventId`. Real tools still use tool-shaped observe fields. Session open/close
+is not client-managed. Requires
+[martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
+Pass E for those native types to summarize.

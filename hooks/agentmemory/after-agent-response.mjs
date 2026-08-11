@@ -3,19 +3,14 @@
 // Cursor-specific companion to AgentMemory's prompt-submit.mjs, based on the
 // same upstream revision: d60652a7058773fa9428fa720eda38942f12f014.
 //
-// Cursor has no upstream equivalent for this event. AgentMemory only reads
-// toolName, toolInput, toolOutput and userPrompt off an observation, so a
-// custom hookType carrying data.response is stored but never summarised. The
-// response is therefore mapped onto the supported post_tool_use shape, matching
-// Hermes / OpenClaw / Pi: tool_input is the user prompt, tool_output is the
-// assistant reply. The prompt comes from a local cache written by
-// beforeSubmitPrompt because Cursor's afterAgentResponse payload only
-// documents `text`.
+// Cursor has no upstream equivalent for this event. The martindzejky
+// agentmemory fork (Pass E) lifts data.assistantResponse for hookType
+// assistant_response into compression, so this adapter sends that native
+// shape instead of remapping onto a fake post_tool_use conversation tool.
 
 import {
   newEventId,
   postJson,
-  readCachedPrompt,
   readConfig,
   readPayload,
   resolveProject,
@@ -37,17 +32,14 @@ async function main() {
     await postJson(
       '/agentmemory/observe',
       {
-        hookType: 'post_tool_use',
+        hookType: 'assistant_response',
         sessionId,
         project: resolveProject(cwd),
         cwd,
         timestamp: new Date().toISOString(),
         eventId: newEventId(),
         data: {
-          tool_name: 'conversation',
-          // Empty on cache miss (Cursor's response hook only documents text).
-          tool_input: readCachedPrompt(sessionId),
-          tool_output: response,
+          assistantResponse: response,
         },
       },
       { config },

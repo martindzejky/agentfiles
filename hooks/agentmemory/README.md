@@ -12,8 +12,13 @@ Ownership:
   [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory).
   That fork's README is the canonical roadmap; do not duplicate it here.
 
-The rest of this document describes the adapter as it works today, including
-compatibility workarounds that remain useful until the fork work lands.
+This adapter targets the
+[`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory)
+fork with Pass E
+([PR #10](https://github.com/martindzejky/agentmemory/pull/10)). Older servers
+that ignore unknown `hookType` values will store assistant/subagent observes
+but will not summarize them. That is accepted; there is no compatibility mode
+that still sends the old remaps.
 
 ## Lifecycle (adapter vs server)
 
@@ -37,13 +42,15 @@ sweep live in the fork README, not here.
   or resume and, when `AGENTMEMORY_INJECT_CONTEXT=true`, returns server context
   through Cursor's documented `additional_context` field. It is not required
   for session creation once the server lazy-creates from observe/summarize.
-- `beforeSubmitPrompt` records only the truncated user prompt. It never calls
+- `beforeSubmitPrompt` records only the truncated user prompt
+  (`hookType: prompt_submit`, `data: { prompt }`). It never calls
   `/session/start`, because that endpoint replaces the whole session record and
   would clear `firstPrompt` and `observationCount` on every prompt. AgentMemory
   creates the session from the observation itself when the record is missing,
   which also covers Cloud Agents.
-- `afterAgentResponse` records only the truncated final assistant response.
-  It does not record reasoning.
+- `afterAgentResponse` records only the truncated final assistant response as
+  `hookType: assistant_response` with `data: { assistantResponse }` (camelCase;
+  no aliases). It does not record reasoning.
 - `postToolUse` records successful tool calls (`tool_name`, `tool_input`,
   `tool_output`) for every tool, matching Claude Code's PostToolUse capture.
   When `AGENTMEMORY_INJECT_CONTEXT=true`, file-touching tools also call
@@ -54,8 +61,10 @@ sweep live in the fork README, not here.
 - `postToolUseFailure` records failed tool calls (skips user interrupts). It
   does not enrich: Cursor documents no output fields for this event.
 - `subagentStart` / `subagentStop` record Task-tool subagent lifecycle on the
-  parent session as `post_tool_use` with `tool_name: "subagent"` so summarization
-  lifts the task/summary text.
+  parent session as native `subagent_start` / `subagent_stop` observes. Data
+  keys are exactly `subagent_id`, `subagent_type`, `task`, `status`, and
+  `summary` (blank values omitted). Stop keeps the Cursor summary fallback
+  `summary ?? last_assistant_message`.
 
 Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
 so remote HTTPS (for example Railway) has room for TLS without exceeding
@@ -81,27 +90,20 @@ that still use content hashing) ignore unknown fields, so shipping `eventId`
 is safe before or after the fork change. `eventId` is not sent on
 `/summarize`, `/enrich`, or `/context`.
 
-AgentMemory only summarizes the `toolName`, `toolInput`, `toolOutput`, and
-`userPrompt` fields of an observation. Consequences for the payloads:
+Pass E wire contract for the three native lifecycle observes (fields feed
+compression only; they do not need to survive as raw rows):
 
-- The assistant response is sent as `post_tool_use` with
-  `tool_name: "conversation"`, matching Hermes / OpenClaw / Pi. `tool_output`
-  is the assistant text. `tool_input` is the user prompt from a local cache
-  written by `beforeSubmitPrompt` (Cursor's response hook only documents
-  `text`). On cache miss, `tool_input` is empty.
-- `prompt_submit` sends only `data.prompt` (lifted to `userPrompt`). It does
-  not set `tool_input`: that field is not lifted for this hookType, and its
-  old role was only defeating content-hash dedup.
-- Subagent start/stop use the same `post_tool_use` + `tool_name: "subagent"`
-  shape. `tool_input` uses a `start:` / `stop:` prefix plus id, type, and
-  task/status when present so summarizer input stays distinct for the pair and
-  for concurrent same-type Task tools. `tool_output` carries the start
-  descriptor or the stop summary.
-- The prompt cache is gitignored (`.prompt-cache/`, one JSON file per session)
-  so parallel local agents do not share a single read-modify-write map. Growth
-  is bounded by per-session overwrite, a 7-day TTL prune on write, and a
-  200-entry cap. There is no session-end cleanup path (no `sessionEnd` hook).
-  An old single-file `.prompt-cache.json` path is also gitignored and unused.
+| hookType                              | data keys (exact)                                                 |
+| ------------------------------------- | ----------------------------------------------------------------- |
+| `assistant_response`                  | `assistantResponse`                                               |
+| `subagent_start`                      | `subagent_id`, `subagent_type`, `task`                            |
+| `subagent_stop`                       | `subagent_id`, `subagent_type`, `task`, `status`, `summary`       |
+| `prompt_submit`                       | `prompt` (unchanged)                                              |
+| `post_tool_use` / `post_tool_failure` | `tool_name`, `tool_input`, `tool_output` (or `error`) (unchanged) |
+
+There is no on-disk prompt cache. Assistant replies no longer borrow a fake
+`conversation` tool observation, and subagents no longer borrow
+`tool_name: "subagent"` with `start:` / `stop:` prefixes.
 
 ## Runtime configuration
 
@@ -220,17 +222,16 @@ Intentional differences:
 - `beforeSubmitPrompt` never calls `/session/start`. Upstream Claude
   `prompt-submit` also only posts `/observe`; an earlier local draft called
   `/session/start` on every prompt and that overwrote the session record.
-- `afterAgentResponse` is Cursor-specific; upstream has no direct equivalent, so
-  it borrows the `post_tool_use` shape.
+- `afterAgentResponse` is Cursor-specific; it posts native
+  `assistant_response` for the martindzejky fork Pass E lift.
 - `postToolUse` has no matcher (all tools), matching Claude Code's unfiltered
   PostToolUse capture. Observe always runs; enrich is opt-in and limited to
   file-touching tools. Image base64 is stripped instead of forwarded as
   `image_data`.
 - `preToolUse` is omitted: Cursor cannot inject context there. Upstream enrich
   is adapted onto `postToolUse` `additional_context` instead.
-- Subagent hooks also borrow `post_tool_use` (`tool_name: "subagent"`) so the
-  summarizer sees task/summary text. Cursor field names (`subagent_id`,
-  `summary`) still drive `tool_input` / `tool_output`.
+- Subagent hooks post native `subagent_start` / `subagent_stop` with Cursor
+  field names (`subagent_id`, `subagent_type`, `task`, `status`, `summary`).
 - Claude memory bridge, Notification, TaskCompleted, and thought hooks are
   omitted.
 
@@ -246,19 +247,13 @@ These files are the Cursor-side adapter only. Server architecture belongs in
 its README is the canonical place for the server-side architectural roadmap and
 first-class Cursor work.
 
-Today the adapter still carries Claude-shaped compatibility workarounds that
-remain real: assistant messages masquerading as tool observations
-(`conversation` / `subagent`), and prompt caching and pairing for
-`afterAgentResponse`. Ingest idempotency is now `eventId` only. Session
-open/close is not something this client manages anymore: start is optional,
-there is no end hook, and the server owns open-ended processing plus idle /
-obs-count catch-up for summarization. Keep documenting the remaining client
-workarounds here until the fork lands first-class Cursor / event-stream support.
-
-Once that lands, this integration should simplify substantially: hooks should
-mostly translate Cursor payloads into the server's native event envelope and
-send them, instead of compensating for Claude Code tool assumptions
-client-side.
+With Pass E on the fork, this adapter sends native `assistant_response` and
+`subagent_*` observes instead of fake tool remaps, and the local prompt cache
+is gone. Ingest idempotency remains `eventId` only. Session open/close is not
+something this client manages: start is optional, there is no end hook, and
+the server owns open-ended processing plus idle / obs-count catch-up for
+summarization. Real tool observes still use tool-shaped fields
+(`tool_name` / `tool_input` / `tool_output`).
 
 Cursor schema and Cloud support are based on
 [Cursor's hook documentation](https://cursor.com/docs/hooks) and
