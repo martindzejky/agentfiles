@@ -3,10 +3,7 @@
 // Cursor-specific companion to AgentMemory's prompt-submit.mjs, based on the
 // same upstream revision: d60652a7058773fa9428fa720eda38942f12f014.
 //
-// Cursor has no upstream equivalent for this event. The martindzejky
-// agentmemory fork (Pass E) lifts data.assistantResponse for hookType
-// assistant_response into compression, so this adapter sends that native
-// shape instead of remapping onto a fake post_tool_use conversation tool.
+// Posts hookType assistant_response with data.assistantResponse.
 
 import {
   newEventId,

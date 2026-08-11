@@ -17,10 +17,10 @@ that fork's README is the canonical roadmap.
 | `subagentStart`      | Store Task-tool subagent start (`subagent_start`)         |
 | `subagentStop`       | Store Task-tool subagent summary (`subagent_stop`)        |
 
-No `sessionEnd` hook is installed. Sessions stay open-ended on the server;
-memory formation does not need a client end signal. Summarization is handled
-by the server's idle / obs-count catch-up sweep; this adapter no longer calls
-`/summarize` from lifecycle hooks. No thought hooks are installed.
+Sessions stay open-ended on the server. Memory formation does not need a
+client end signal. Summarization is handled by the server's idle / obs-count
+catch-up sweep; hooks must not call `/summarize`. No thought hooks are
+installed.
 
 Commit linking is outside this Cursor event map. A git `post-commit` hook that
 calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
@@ -31,7 +31,7 @@ that route replaces the session record and resets `firstPrompt` and
 `observationCount`. `/observe` (and summarize/enrich) create the session when
 `sessionId`, `project`, and `cwd` are present.
 
-Native observe shapes (Pass E on the martindzejky fork):
+Observe shapes on the martindzejky fork:
 
 - `assistant_response` → `data.assistantResponse`
 - `subagent_start` / `subagent_stop` → `data.subagent_id`, `subagent_type`,
@@ -49,8 +49,7 @@ Native observe shapes (Pass E on the martindzejky fork):
 Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
 supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
 `afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
-`subagentStart`, `subagentStop`, and others) but not `sessionStart`. Cloud
-never had `sessionEnd`; this adapter does not wire it locally either.
+`subagentStart`, `subagentStop`, and others) but not `sessionStart`.
 Summarization depends on the server's idle / obs-count catch-up sweep. This
 repo wires the events in the table above; thought hooks are not installed yet.
 
@@ -85,11 +84,11 @@ paths (including Cloud) stamp Cursor without a prior `/session/start`.
 
 The user-level hooks are installed from `hooks.json` and
 `hooks/agentmemory/`. Implementation details, Cloud limitations, smoke-test
-instructions, the pinned upstream audit trail, and the Pass E wire contract
+instructions, the pinned upstream audit trail, and the observe wire contract
 are in `hooks/agentmemory/README.md`.
 
-This adapter sends native assistant/subagent hookTypes and always-send
-`eventId`. Real tools still use tool-shaped observe fields. Session open/close
-is not client-managed. Requires
-[martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
-Pass E for those native types to summarize.
+This adapter sends `assistant_response` / `subagent_*` hookTypes and an
+`eventId` on every `/observe`. Real tools still use tool-shaped observe
+fields. Session open/close is not client-managed. Requires
+[martindzejky/agentmemory](https://github.com/martindzejky/agentmemory) for
+those types to summarize.

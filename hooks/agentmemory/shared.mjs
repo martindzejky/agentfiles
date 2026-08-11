@@ -23,7 +23,7 @@ export function withAgentId(body) {
 }
 
 // Idempotency key for /agentmemory/observe. Fresh UUID per hook invocation;
-// the server dedups only on exact eventId repeats (no content-based dedup).
+// the server deduplicates on exact eventId match.
 export function newEventId() {
   return randomUUID();
 }

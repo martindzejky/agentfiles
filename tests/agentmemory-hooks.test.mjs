@@ -241,10 +241,6 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
     assert.ok(observe.body.eventId.length > 0);
     assert.equal(observe.body.data.tool_input, undefined);
     assert.equal(result.stdout.includes('prompt-'), false);
-    // Prompt cache is gone; pairing no longer writes on-disk state.
-    await assert.rejects(() => access(join(HOOK_DIRECTORY, '.prompt-cache')), {
-      code: 'ENOENT',
-    });
   } finally {
     await server.close();
   }

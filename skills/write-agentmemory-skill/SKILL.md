@@ -25,7 +25,7 @@ skills/<name>/
 
 ## Keep it current
 
-Facts that exist in source (tool names and parameters, REST endpoints, env vars, connect adapters, hook events) are generated, never hand-typed. Edit the source, then run `npm run skills:gen`. Upstream CI runs `npm run skills:check` and fails on drift.
+Facts that exist in source (tool names and parameters, REST endpoints, env vars, connect adapters, hook events) are generated in the upstream agentmemory repo, never hand-typed there. Edit the source upstream, then run `npm run skills:gen`; upstream CI runs `npm run skills:check` and fails on drift. This repo vendors the skill snapshots and has no `skills:gen` / `skills:check` scripts in its own `package.json`.
 
 ## Style
 

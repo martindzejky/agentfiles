@@ -45,10 +45,9 @@ Watch captures at `http://localhost:3113` once the server is up.
 
 ## What the hooks should do
 
-Memory formation does not depend on a client-sent session end. Sessions are
-open-ended on the server; this adapter never wires `sessionEnd` or calls
-`/summarize` from lifecycle hooks. Summarization is handled by the server's
-idle / obs-count catch-up sweep.
+Sessions are open-ended on the server. Hooks capture observations only; they
+must not call `/summarize`. The server's idle / obs-count catch-up sweep owns
+summarization. See `hooks/agentmemory/README.md` for the lifecycle boundary.
 
 - `sessionStart`: optional local open/resume plus optional context injection.
   Not required for session creation; the server lazy-creates from observe/enrich.
@@ -87,19 +86,17 @@ server must not block the agent.
   `600`. The real file is gitignored.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
 - Every `/agentmemory/observe` POST sends a unique top-level `eventId`. The
-  server deduplicates only on that exact id (no content-based / five-minute
-  window dedup on the martindzejky fork). `prompt_submit` only sends
-  `prompt` → `userPrompt`; assistant and subagent turns use their native
-  hookTypes, not fake tool remaps.
+  martindzejky fork deduplicates on that exact id. `prompt_submit` sends
+  `prompt` → `userPrompt`; assistant and subagent turns use
+  `assistant_response` and `subagent_*` hookTypes.
 - REST bodies hardcode `agentId: "cursor"` for multi-agent tagging on a shared
   server. This value is not configurable; the integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.
 - If hooks are unavailable, use `remember` for explicit saves.
 - This adapter requires the
   [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory)
-  fork with Pass E for assistant/subagent summarization. Session open/close is
-  server-owned (optional start, no end hook, server catch-up for
-  summarization). Implementation details live in `hooks/agentmemory/README.md`.
+  fork, which summarizes `assistant_response` and `subagent_*` observes.
+  Implementation details live in `hooks/agentmemory/README.md`.
 
 ## See also
 
