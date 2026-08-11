@@ -222,30 +222,37 @@ export function truncateValue(value, max = CAPTURE_LIMIT) {
   return value;
 }
 
+// data: URLs cover every format; the bare prefixes are PNG, JPEG, GIF, WEBP.
+const BASE64_IMAGE_PREFIXES = [
+  'data:image/',
+  'iVBORw0KGgo',
+  '/9j/',
+  'R0lGOD',
+  'UklGR',
+];
+
 function isBase64Image(value) {
   return (
     typeof value === 'string' &&
-    (value.startsWith('data:image/') ||
-      value.startsWith('iVBORw0KGgo') ||
-      value.startsWith('/9j/'))
+    BASE64_IMAGE_PREFIXES.some((prefix) => value.startsWith(prefix))
   );
 }
 
-// Strip base64 image blobs from tool output. Upstream Claude post-tool-use
-// extracts them into image_data for vision features; Cursor hooks only need
-// text that AgentMemory can summarize, so replace blobs with a placeholder.
-export function stripImageData(output) {
-  if (isBase64Image(output)) return '[image data omitted]';
-
-  if (output && typeof output === 'object' && !Array.isArray(output)) {
-    const clean = {};
-    for (const [key, value] of Object.entries(output)) {
-      clean[key] = isBase64Image(value) ? '[image data omitted]' : value;
-    }
-    return clean;
+// AgentMemory has no working vision path, so images are dropped rather than
+// forwarded as image_data. Applied at every depth: a blob nested in an array
+// or sub-object would otherwise reach the server as truncated base64 noise.
+export function stripImageData(value) {
+  if (isBase64Image(value)) return '[image data omitted]';
+  if (Array.isArray(value)) return value.map(stripImageData);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nested]) => [
+        key,
+        stripImageData(nested),
+      ]),
+    );
   }
-
-  return output;
+  return value;
 }
 
 export function resolveToolName(payload) {

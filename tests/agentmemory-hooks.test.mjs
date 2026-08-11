@@ -352,6 +352,38 @@ test('postToolUse strips base64 image blobs from tool_output', async () => {
   }
 });
 
+test('postToolUse strips base64 image blobs nested in arrays and sub-objects', async () => {
+  const server = await startMockServer();
+  const jpeg = '/9j/4AAQSkZJRgABAQAAAQABAAD';
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUse',
+        {
+          conversation_id: 'nested-image-session',
+          workspace_roots: [ROOT],
+          tool_name: 'Browser',
+          tool_input: { action: 'screenshot' },
+          tool_output: {
+            content: [{ type: 'image', data: jpeg }],
+            result: { thumbnail: jpeg, label: 'keep me' },
+          },
+        },
+        { url: server.url },
+      ),
+    );
+
+    const [observe] = server.requests;
+    const output = observe.body.data.tool_output;
+    assert.equal(output.content[0].data, '[image data omitted]');
+    assert.equal(output.content[0].type, 'image');
+    assert.equal(output.result.thumbnail, '[image data omitted]');
+    assert.equal(output.result.label, 'keep me');
+  } finally {
+    await server.close();
+  }
+});
+
 test('postToolUse records truncated tool observations', async () => {
   const server = await startMockServer();
   const huge = 'x'.repeat(10_050);

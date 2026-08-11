@@ -69,8 +69,15 @@ Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
 so remote HTTPS (for example Railway) has room for TLS without exceeding
 Cursor's usual 3s hook budget. Prompt, response, authorization, and full Cursor
 payloads are never logged. Prompt and response captures are capped at 10,000
-characters. Base64 image blobs in tool output are replaced with a placeholder
-and are never sent as `image_data`.
+characters.
+
+Images are not captured. AgentMemory's vision path does not work end to end,
+and Cursor's hook payloads carry no image data anyway: `beforeSubmitPrompt`
+attachments are `{ type: "file" | "rule", file_path }` with no image type, and
+`afterAgentResponse` is a single text field. The only place a blob could turn
+up is tool output, so `stripImageData` walks `tool_output` at every depth and
+replaces base64 images with a placeholder. Nothing is ever sent as
+`image_data`.
 
 Every write that can create or process a session sends `sessionId`, `project`,
 `cwd`, and `agentId` where the server needs them for lazy session create:
@@ -223,7 +230,7 @@ Intentional differences:
 - `postToolUse` has no matcher (all tools), matching Claude Code's unfiltered
   PostToolUse capture. Observe always runs; enrich is opt-in and limited to
   file-touching tools. Image base64 is stripped instead of forwarded as
-  `image_data`.
+  `image_data`; vision is unsupported, see above.
 - `preToolUse` is omitted: Cursor cannot inject context there. Upstream enrich
   is adapted onto `postToolUse` `additional_context` instead.
 - Subagent hooks post `subagent_start` / `subagent_stop` with Cursor field
