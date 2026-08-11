@@ -1,14 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { constants } from 'node:fs';
-import {
-  access,
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
+import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
@@ -248,36 +241,23 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
     assert.ok(observe.body.eventId.length > 0);
     assert.equal(observe.body.data.tool_input, undefined);
     assert.equal(result.stdout.includes('prompt-'), false);
+    // Prompt cache is gone; pairing no longer writes on-disk state.
+    await assert.rejects(() => access(join(HOOK_DIRECTORY, '.prompt-cache')), {
+      code: 'ENOENT',
+    });
   } finally {
     await server.close();
   }
 });
 
-test('afterAgentResponse pairs the cached prompt as conversation tool_input', async () => {
+test('afterAgentResponse posts assistant_response with assistantResponse', async () => {
   const server = await startMockServer();
-  const { clearCachedPrompt } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
-  );
-  const sessionId = 'pairing-cache-session';
-  const prompt = 'cached user prompt for pairing';
   const response = `response-${'r'.repeat(10_050)}`;
   try {
-    assertSuccessfulNoOp(
-      await runHook(
-        'beforeSubmitPrompt',
-        {
-          conversation_id: sessionId,
-          workspace_roots: [ROOT],
-          prompt,
-        },
-        { url: server.url },
-      ),
-    );
-
     const result = await runHook(
       'afterAgentResponse',
       {
-        conversation_id: sessionId,
+        conversation_id: 'response-session',
         workspace_roots: [ROOT],
         text: response,
         thought: 'private reasoning',
@@ -287,185 +267,24 @@ test('afterAgentResponse pairs the cached prompt as conversation tool_input', as
     );
 
     assertSuccessfulNoOp(result);
-    assert.equal(server.requests.length, 2);
-    const observe = server.requests[1];
+    assert.equal(server.requests.length, 1);
+    const [observe] = server.requests;
     assert.equal(observe.path, '/agentmemory/observe');
-    // AgentMemory only summarizes known fields, so the response has to travel
-    // as tool_output on a supported hookType rather than a custom one.
-    assert.equal(observe.body.hookType, 'post_tool_use');
-    assert.deepEqual(Object.keys(observe.body.data), [
-      'tool_name',
-      'tool_input',
-      'tool_output',
-    ]);
-    assert.equal(observe.body.data.tool_name, 'conversation');
-    assert.equal(observe.body.data.tool_input, prompt);
-    assert.equal(observe.body.data.tool_output.length, 10_000);
+    assert.equal(observe.body.hookType, 'assistant_response');
+    assert.deepEqual(Object.keys(observe.body.data), ['assistantResponse']);
+    assert.equal(observe.body.data.assistantResponse.length, 10_000);
+    assert.equal(observe.body.sessionId, 'response-session');
+    assert.equal(observe.body.project, PROJECT);
+    assert.equal(observe.body.cwd, ROOT);
     assert.equal(observe.body.agentId, 'cursor');
     assert.equal(typeof observe.body.eventId, 'string');
     assert.ok(observe.body.eventId.length > 0);
+    assert.equal(observe.body.data.tool_name, undefined);
+    assert.equal(observe.body.data.tool_input, undefined);
+    assert.equal(observe.body.data.tool_output, undefined);
     assert.equal(result.stdout.includes('response-'), false);
   } finally {
-    clearCachedPrompt(sessionId);
     await server.close();
-  }
-});
-
-test('afterAgentResponse uses empty tool_input on prompt cache miss', async () => {
-  const server = await startMockServer();
-  const { clearCachedPrompt } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
-  );
-  const sessionId = 'missing-cache-session';
-  clearCachedPrompt(sessionId);
-  try {
-    assertSuccessfulNoOp(
-      await runHook(
-        'afterAgentResponse',
-        {
-          conversation_id: sessionId,
-          workspace_roots: [ROOT],
-          text: 'response without a cached prompt',
-        },
-        { url: server.url },
-      ),
-    );
-    assert.equal(server.requests[0].body.data.tool_input, '');
-  } finally {
-    await server.close();
-  }
-});
-
-test('prompt cache prune drops stale entries and enforces the cap', async () => {
-  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-prune-'));
-  const { promptCacheEntryPath, prunePromptCacheDir } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
-  );
-  await mkdir(cacheDir, { recursive: true });
-
-  const entries = {
-    fresh: {
-      prompt: 'keep me',
-      updatedAt: '2026-08-08T11:00:00.000Z',
-    },
-    stale: {
-      prompt: 'drop me',
-      updatedAt: '2026-07-01T00:00:00.000Z',
-    },
-    old: {
-      prompt: 'also drop for cap',
-      updatedAt: '2026-08-07T00:00:00.000Z',
-    },
-    newer: {
-      prompt: 'keep for cap',
-      updatedAt: '2026-08-08T10:00:00.000Z',
-    },
-  };
-
-  try {
-    for (const [sessionId, entry] of Object.entries(entries)) {
-      await writeFile(
-        promptCacheEntryPath(cacheDir, sessionId),
-        `${JSON.stringify(entry)}\n`,
-      );
-    }
-
-    const remaining = prunePromptCacheDir(cacheDir, {
-      now: Date.parse('2026-08-08T12:00:00.000Z'),
-      ttlMs: 2 * 24 * 60 * 60 * 1000,
-      maxEntries: 2,
-    });
-
-    assert.equal(remaining, 2);
-    assert.equal(
-      JSON.parse(
-        await readFile(promptCacheEntryPath(cacheDir, 'fresh'), 'utf8'),
-      ).prompt,
-      'keep me',
-    );
-    assert.equal(
-      JSON.parse(
-        await readFile(promptCacheEntryPath(cacheDir, 'newer'), 'utf8'),
-      ).prompt,
-      'keep for cap',
-    );
-    await assert.rejects(
-      () => access(promptCacheEntryPath(cacheDir, 'stale')),
-      { code: 'ENOENT' },
-    );
-    await assert.rejects(() => access(promptCacheEntryPath(cacheDir, 'old')), {
-      code: 'ENOENT',
-    });
-  } finally {
-    await rm(cacheDir, { recursive: true, force: true });
-  }
-});
-
-test('parallel session cache writes keep both prompts', async () => {
-  const cacheDir = await mkdtemp(join(tmpdir(), 'agentmemory-prompt-race-'));
-  const { promptCacheEntryPath } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
-  );
-  const sharedModule = join(HOOK_DIRECTORY, 'shared.mjs');
-
-  function writeInChild(sessionId, prompt) {
-    return new Promise((resolve, reject) => {
-      const child = spawn(
-        process.execPath,
-        [
-          '--input-type=module',
-          '-e',
-          `
-            import { writeCachedPrompt } from ${JSON.stringify(sharedModule)};
-            const start = Date.now();
-            while (Date.now() - start < 30) {}
-            writeCachedPrompt(process.argv[1], process.argv[2], process.argv[3]);
-          `,
-          sessionId,
-          prompt,
-          cacheDir,
-        ],
-        {
-          env: {
-            ...process.env,
-            AGENTMEMORY_DISABLE_ENV_FILE: '1',
-          },
-          stdio: ['ignore', 'pipe', 'pipe'],
-        },
-      );
-      let stderr = '';
-      child.stderr.setEncoding('utf8');
-      child.stderr.on('data', (chunk) => {
-        stderr += chunk;
-      });
-      child.once('error', reject);
-      child.once('close', (code) => {
-        if (code === 0) resolve();
-        else reject(new Error(`cache writer exited ${code}: ${stderr}`));
-      });
-    });
-  }
-
-  try {
-    await Promise.all([
-      writeInChild('session-a', 'prompt-a'),
-      writeInChild('session-b', 'prompt-b'),
-    ]);
-
-    assert.equal(
-      JSON.parse(
-        await readFile(promptCacheEntryPath(cacheDir, 'session-a'), 'utf8'),
-      ).prompt,
-      'prompt-a',
-    );
-    assert.equal(
-      JSON.parse(
-        await readFile(promptCacheEntryPath(cacheDir, 'session-b'), 'utf8'),
-      ).prompt,
-      'prompt-b',
-    );
-  } finally {
-    await rm(cacheDir, { recursive: true, force: true });
   }
 });
 
@@ -792,7 +611,7 @@ test('postToolUseFailure records errors and skips interrupts', async () => {
   }
 });
 
-test('subagentStart maps onto post_tool_use subagent shape', async () => {
+test('subagentStart posts native subagent_start data keys', async () => {
   const server = await startMockServer();
   try {
     assertSuccessfulNoOp(
@@ -812,19 +631,16 @@ test('subagentStart maps onto post_tool_use subagent shape', async () => {
     assert.equal(server.requests.length, 1);
     const [observe] = server.requests;
     assert.equal(observe.path, '/agentmemory/observe');
-    assert.equal(observe.body.hookType, 'post_tool_use');
+    assert.equal(observe.body.hookType, 'subagent_start');
     assert.equal(observe.body.sessionId, 'parent-session');
     assert.equal(observe.body.agentId, 'cursor');
     assert.equal(observe.body.project, PROJECT);
-    assert.equal(observe.body.data.tool_name, 'subagent');
-    assert.equal(
-      observe.body.data.tool_input,
-      'start:abc-123:explore:Explore the authentication flow',
-    );
-    assert.equal(
-      observe.body.data.tool_output,
-      'started: explore: Explore the authentication flow',
-    );
+    assert.deepEqual(observe.body.data, {
+      subagent_id: 'abc-123',
+      subagent_type: 'explore',
+      task: 'Explore the authentication flow',
+    });
+    assert.equal(observe.body.data.tool_name, undefined);
     assert.equal(typeof observe.body.eventId, 'string');
     assert.ok(observe.body.eventId.length > 0);
   } finally {
@@ -832,7 +648,7 @@ test('subagentStart maps onto post_tool_use subagent shape', async () => {
   }
 });
 
-test('subagentStart tool_input falls back past empty task', async () => {
+test('subagentStart omits blank task', async () => {
   const server = await startMockServer();
   try {
     assertSuccessfulNoOp(
@@ -849,16 +665,16 @@ test('subagentStart tool_input falls back past empty task', async () => {
     );
 
     assert.equal(server.requests.length, 1);
-    assert.equal(server.requests[0].body.hookType, 'post_tool_use');
-    assert.equal(server.requests[0].body.data.tool_name, 'subagent');
-    assert.equal(server.requests[0].body.data.tool_input, 'start:explore');
-    assert.equal(server.requests[0].body.data.tool_output, 'started: explore');
+    assert.equal(server.requests[0].body.hookType, 'subagent_start');
+    assert.deepEqual(server.requests[0].body.data, {
+      subagent_type: 'explore',
+    });
   } finally {
     await server.close();
   }
 });
 
-test('subagent start and stop tool_input stay distinct for the same id', async () => {
+test('subagent start and stop use distinct native hookTypes', async () => {
   const server = await startMockServer();
   try {
     assertSuccessfulNoOp(
@@ -890,24 +706,29 @@ test('subagent start and stop tool_input stay distinct for the same id', async (
     );
 
     assert.equal(server.requests.length, 2);
-    assert.equal(
-      server.requests[0].body.data.tool_input,
-      'start:same-id:explore:look around',
-    );
-    assert.equal(
-      server.requests[1].body.data.tool_input,
-      'stop:same-id:explore:completed',
-    );
+    assert.equal(server.requests[0].body.hookType, 'subagent_start');
+    assert.equal(server.requests[1].body.hookType, 'subagent_stop');
+    assert.deepEqual(server.requests[0].body.data, {
+      subagent_id: 'same-id',
+      subagent_type: 'explore',
+      task: 'look around',
+    });
+    assert.deepEqual(server.requests[1].body.data, {
+      subagent_id: 'same-id',
+      subagent_type: 'explore',
+      status: 'completed',
+      summary: 'found it',
+    });
     assert.notEqual(
-      server.requests[0].body.data.tool_input,
-      server.requests[1].body.data.tool_input,
+      server.requests[0].body.hookType,
+      server.requests[1].body.hookType,
     );
   } finally {
     await server.close();
   }
 });
 
-test('subagentStop maps summary onto post_tool_use tool_output', async () => {
+test('subagentStop posts native subagent_stop data keys', async () => {
   const server = await startMockServer();
   try {
     assertSuccessfulNoOp(
@@ -927,17 +748,45 @@ test('subagentStop maps summary onto post_tool_use tool_output', async () => {
 
     assert.equal(server.requests.length, 1);
     const [observe] = server.requests;
-    assert.equal(observe.body.hookType, 'post_tool_use');
+    assert.equal(observe.body.hookType, 'subagent_stop');
     assert.equal(observe.body.sessionId, 'parent-session');
-    assert.equal(observe.body.data.tool_name, 'subagent');
-    assert.equal(
-      observe.body.data.tool_input,
-      'stop:generalPurpose:completed:Explore the authentication flow',
-    );
-    assert.equal(observe.body.data.tool_output, 'Auth lives in src/auth.ts');
+    assert.deepEqual(observe.body.data, {
+      subagent_type: 'generalPurpose',
+      task: 'Explore the authentication flow',
+      status: 'completed',
+      summary: 'Auth lives in src/auth.ts',
+    });
+    assert.equal(observe.body.data.tool_name, undefined);
     assert.equal(observe.body.agentId, 'cursor');
     assert.equal(typeof observe.body.eventId, 'string');
     assert.ok(observe.body.eventId.length > 0);
+  } finally {
+    await server.close();
+  }
+});
+
+test('subagentStop falls back to last_assistant_message for summary', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'subagentStop',
+        {
+          conversation_id: 'parent-session',
+          workspace_roots: [ROOT],
+          subagent_id: 'fallback-id',
+          subagent_type: 'explore',
+          last_assistant_message: 'legacy summary field',
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.deepEqual(server.requests[0].body.data, {
+      subagent_id: 'fallback-id',
+      subagent_type: 'explore',
+      summary: 'legacy summary field',
+    });
   } finally {
     await server.close();
   }
@@ -947,11 +796,7 @@ test('every observe POST sends a unique non-empty top-level eventId', async () =
   const server = await startMockServer({
     context: 'enrich should not receive eventId',
   });
-  const { clearCachedPrompt } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
-  );
   const sessionId = 'event-id-session';
-  clearCachedPrompt(sessionId);
   try {
     const payloads = {
       beforeSubmitPrompt: {
@@ -1031,6 +876,34 @@ test('every observe POST sends a unique non-empty top-level eventId', async () =
     );
     assert.equal(observes.length, Object.keys(payloads).length + 1);
 
+    assert.deepEqual(
+      observes.map((request) => request.body.hookType),
+      [
+        'prompt_submit',
+        'assistant_response',
+        'post_tool_use',
+        'post_tool_failure',
+        'subagent_start',
+        'subagent_stop',
+        'prompt_submit',
+      ],
+    );
+    assert.equal(observes[0].body.data.prompt, 'event id prompt');
+    assert.equal(observes[1].body.data.assistantResponse, 'event id response');
+    assert.equal(observes[2].body.data.tool_name, 'Read');
+    assert.equal(observes[3].body.data.tool_name, 'Shell');
+    assert.deepEqual(observes[4].body.data, {
+      subagent_id: 'sub-1',
+      subagent_type: 'explore',
+      task: 'look around',
+    });
+    assert.deepEqual(observes[5].body.data, {
+      subagent_type: 'explore',
+      status: 'completed',
+      summary: 'done',
+    });
+    assert.equal(observes[6].body.data.prompt, 'event id prompt again');
+
     const eventIds = observes.map((request) => request.body.eventId);
     for (const request of observes) {
       assert.equal(typeof request.body.eventId, 'string');
@@ -1045,7 +918,6 @@ test('every observe POST sends a unique non-empty top-level eventId', async () =
     assert.ok(enrich);
     assert.equal(enrich.body.eventId, undefined);
   } finally {
-    clearCachedPrompt(sessionId);
     await server.close();
   }
 });

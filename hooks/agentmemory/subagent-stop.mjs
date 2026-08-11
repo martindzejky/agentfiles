@@ -4,9 +4,10 @@
 // d60652a7058773fa9428fa720eda38942f12f014. Cursor's subagentStop exposes
 // summary/status/task rather than last_assistant_message.
 //
-// Mapped onto post_tool_use with tool_name "subagent" so the summary lands in
-// tool_output and AgentMemory can compress it (custom subagent_* hookTypes are
-// stored but never summarised).
+// The martindzejky agentmemory fork (Pass E) lifts subagent_id, subagent_type,
+// task, status, and summary on hookType subagent_stop for compression, so
+// this adapter sends that native shape instead of remapping onto a fake
+// post_tool_use subagent tool.
 
 import {
   newEventId,
@@ -28,39 +29,31 @@ async function main() {
   if (!payload || !config) return writeCursorOutput();
 
   const cwd = resolveWorkingDirectory(payload);
-  const agentId = resolveSubagentId(payload);
-  const agentType = resolveSubagentType(payload);
+  const subagentId = resolveSubagentId(payload);
+  const subagentType = resolveSubagentType(payload);
   const task = truncateText(payload.task);
   const status =
-    typeof payload.status === 'string' ? payload.status : undefined;
+    typeof payload.status === 'string' ? payload.status.trim() : '';
   const summary = truncateText(
     payload.summary ?? payload.last_assistant_message ?? '',
   );
-  // Prefix stop: so summarizer tool_input stays distinct from subagentStart
-  // for the same subagent_id; include type/status/task without an id.
-  const toolInput =
-    ['stop', agentId, agentType, status, task].filter(Boolean).join(':') ||
-    'stop';
-  const toolOutput =
-    summary ||
-    truncateText(
-      ['finished', agentType, status, task].filter(Boolean).join(': '),
-    );
+  const data = {};
+  if (subagentId) data.subagent_id = subagentId;
+  if (subagentType) data.subagent_type = subagentType;
+  if (task) data.task = task;
+  if (status) data.status = status;
+  if (summary) data.summary = summary;
 
   await postJson(
     '/agentmemory/observe',
     {
-      hookType: 'post_tool_use',
+      hookType: 'subagent_stop',
       sessionId: resolveSessionId(payload),
       project: resolveProject(cwd),
       cwd,
       timestamp: new Date().toISOString(),
       eventId: newEventId(),
-      data: {
-        tool_name: 'subagent',
-        tool_input: toolInput,
-        tool_output: toolOutput,
-      },
+      data,
     },
     { config },
   );

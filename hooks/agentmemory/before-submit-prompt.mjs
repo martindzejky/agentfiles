@@ -12,7 +12,6 @@ import {
   resolveSessionId,
   resolveWorkingDirectory,
   truncateText,
-  writeCachedPrompt,
   writeCursorOutput,
 } from './shared.mjs';
 
@@ -24,10 +23,6 @@ async function main() {
   const cwd = resolveWorkingDirectory(payload);
   const project = resolveProject(cwd);
   const prompt = truncateText(payload.prompt ?? payload.userPrompt);
-
-  // Cache even when the server is unreachable so a later response hook can
-  // still pair conversation tool_input once config/network recover.
-  if (prompt) writeCachedPrompt(sessionId, prompt);
 
   const config = readConfig();
   if (!config) return writeCursorOutput();
@@ -46,10 +41,7 @@ async function main() {
         cwd,
         timestamp: new Date().toISOString(),
         eventId: newEventId(),
-        // prompt_submit lifts only data.prompt → userPrompt. tool_input is not
-        // lifted for this hookType and used to exist only to vary the old
-        // content-hash dedup key; omit it. Pairing for afterAgentResponse
-        // still uses the local prompt cache above.
+        // prompt_submit lifts only data.prompt → userPrompt.
         data: { prompt },
       },
       { config },
