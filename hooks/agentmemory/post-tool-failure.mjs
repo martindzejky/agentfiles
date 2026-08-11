@@ -4,6 +4,7 @@
 // d60652a7058773fa9428fa720eda38942f12f014.
 
 import {
+  newEventId,
   postJson,
   readConfig,
   readPayload,
@@ -46,6 +47,7 @@ async function main() {
       project: resolveProject(cwd),
       cwd,
       timestamp: new Date().toISOString(),
+      eventId: newEventId(),
       data: {
         tool_name: toolName,
         tool_input: truncateValue(resolveToolInput(payload)),

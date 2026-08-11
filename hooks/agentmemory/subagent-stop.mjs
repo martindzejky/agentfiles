@@ -9,6 +9,7 @@
 // stored but never summarised).
 
 import {
+  newEventId,
   postJson,
   readConfig,
   readPayload,
@@ -35,8 +36,8 @@ async function main() {
   const summary = truncateText(
     payload.summary ?? payload.last_assistant_message ?? '',
   );
-  // Prefix stop: so start/stop do not share one five-minute dedup hash for the
-  // same subagent_id; include type/status/task for concurrency without an id.
+  // Prefix stop: so summarizer tool_input stays distinct from subagentStart
+  // for the same subagent_id; include type/status/task without an id.
   const toolInput =
     ['stop', agentId, agentType, status, task].filter(Boolean).join(':') ||
     'stop';
@@ -54,6 +55,7 @@ async function main() {
       project: resolveProject(cwd),
       cwd,
       timestamp: new Date().toISOString(),
+      eventId: newEventId(),
       data: {
         tool_name: 'subagent',
         tool_input: toolInput,

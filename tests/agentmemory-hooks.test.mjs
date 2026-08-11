@@ -236,7 +236,7 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
       ['/agentmemory/observe'],
     );
     const [observe] = server.requests;
-    assert.deepEqual(Object.keys(observe.body.data), ['prompt', 'tool_input']);
+    assert.deepEqual(Object.keys(observe.body.data), ['prompt']);
     assert.equal(observe.body.data.prompt.length, 10_000);
     assert.equal(observe.body.hookType, 'prompt_submit');
     assert.equal(observe.body.sessionId, 'conversation-id');
@@ -244,9 +244,9 @@ test('beforeSubmitPrompt records only the prompt and never resets the session', 
     assert.equal(observe.body.cwd, ROOT);
     assert.equal(observe.body.agentId, 'cursor');
     assert.match(observe.body.timestamp, /^\d{4}-\d{2}-\d{2}T/);
-    // Prompt text doubles as tool_input so different prompts stay distinct;
-    // identical prompts may dedupe within five minutes.
-    assert.equal(observe.body.data.tool_input, observe.body.data.prompt);
+    assert.equal(typeof observe.body.eventId, 'string');
+    assert.ok(observe.body.eventId.length > 0);
+    assert.equal(observe.body.data.tool_input, undefined);
     assert.equal(result.stdout.includes('prompt-'), false);
   } finally {
     await server.close();
@@ -302,6 +302,8 @@ test('afterAgentResponse pairs the cached prompt as conversation tool_input', as
     assert.equal(observe.body.data.tool_input, prompt);
     assert.equal(observe.body.data.tool_output.length, 10_000);
     assert.equal(observe.body.agentId, 'cursor');
+    assert.equal(typeof observe.body.eventId, 'string');
+    assert.ok(observe.body.eventId.length > 0);
     assert.equal(result.stdout.includes('response-'), false);
   } finally {
     clearCachedPrompt(sessionId);
@@ -467,7 +469,7 @@ test('parallel session cache writes keep both prompts', async () => {
   }
 });
 
-test('repeated prompts share tool_input and never reset the session', async () => {
+test('repeated prompts keep distinct eventIds and never reset the session', async () => {
   const server = await startMockServer();
   try {
     for (const prompt of ['continue', 'continue']) {
@@ -488,12 +490,17 @@ test('repeated prompts share tool_input and never reset the session', async () =
       ['/agentmemory/observe', '/agentmemory/observe'],
     );
     const [first, second] = server.requests;
-    // Same prompt => same tool_input. Upstream may dedupe within five minutes;
-    // that is accepted. Different prompts still get different hashes.
+    // Same prompt content is fine; ingest idempotency keys on eventId only.
     assert.equal(first.body.data.prompt, second.body.data.prompt);
-    assert.equal(first.body.data.tool_input, second.body.data.tool_input);
-    assert.equal(first.body.data.tool_input, 'continue');
+    assert.equal(first.body.data.prompt, 'continue');
+    assert.deepEqual(Object.keys(first.body.data), ['prompt']);
+    assert.deepEqual(Object.keys(second.body.data), ['prompt']);
     assert.notEqual(first.body.timestamp, second.body.timestamp);
+    assert.equal(typeof first.body.eventId, 'string');
+    assert.equal(typeof second.body.eventId, 'string');
+    assert.ok(first.body.eventId.length > 0);
+    assert.ok(second.body.eventId.length > 0);
+    assert.notEqual(first.body.eventId, second.body.eventId);
   } finally {
     await server.close();
   }
@@ -567,6 +574,8 @@ test('postToolUse records truncated tool observations', async () => {
       observe.body.data.tool_output.length,
       10_000 + '\n[...truncated]'.length,
     );
+    assert.equal(typeof observe.body.eventId, 'string');
+    assert.ok(observe.body.eventId.length > 0);
   } finally {
     await server.close();
   }
@@ -760,6 +769,8 @@ test('postToolUseFailure records errors and skips interrupts', async () => {
     );
     assert.equal(server.requests[0].body.data.failure_type, 'timeout');
     assert.equal(server.requests[0].body.agentId, 'cursor');
+    assert.equal(typeof server.requests[0].body.eventId, 'string');
+    assert.ok(server.requests[0].body.eventId.length > 0);
 
     assertSuccessfulNoOp(
       await runHook(
@@ -814,6 +825,8 @@ test('subagentStart maps onto post_tool_use subagent shape', async () => {
       observe.body.data.tool_output,
       'started: explore: Explore the authentication flow',
     );
+    assert.equal(typeof observe.body.eventId, 'string');
+    assert.ok(observe.body.eventId.length > 0);
   } finally {
     await server.close();
   }
@@ -923,7 +936,116 @@ test('subagentStop maps summary onto post_tool_use tool_output', async () => {
     );
     assert.equal(observe.body.data.tool_output, 'Auth lives in src/auth.ts');
     assert.equal(observe.body.agentId, 'cursor');
+    assert.equal(typeof observe.body.eventId, 'string');
+    assert.ok(observe.body.eventId.length > 0);
   } finally {
+    await server.close();
+  }
+});
+
+test('every observe POST sends a unique non-empty top-level eventId', async () => {
+  const server = await startMockServer({
+    context: 'enrich should not receive eventId',
+  });
+  const { clearCachedPrompt } = await import(
+    join(HOOK_DIRECTORY, 'shared.mjs')
+  );
+  const sessionId = 'event-id-session';
+  clearCachedPrompt(sessionId);
+  try {
+    const payloads = {
+      beforeSubmitPrompt: {
+        conversation_id: sessionId,
+        workspace_roots: [ROOT],
+        prompt: 'event id prompt',
+      },
+      afterAgentResponse: {
+        conversation_id: sessionId,
+        workspace_roots: [ROOT],
+        text: 'event id response',
+      },
+      postToolUse: {
+        conversation_id: sessionId,
+        workspace_roots: [ROOT],
+        tool_name: 'Read',
+        tool_input: { path: 'README.md' },
+        tool_output: 'ok',
+      },
+      postToolUseFailure: {
+        conversation_id: sessionId,
+        workspace_roots: [ROOT],
+        tool_name: 'Shell',
+        tool_input: { command: 'false' },
+        error_message: 'exit 1',
+        failure_type: 'error',
+      },
+      subagentStart: {
+        conversation_id: sessionId,
+        workspace_roots: [ROOT],
+        subagent_id: 'sub-1',
+        subagent_type: 'explore',
+        task: 'look around',
+      },
+      subagentStop: {
+        conversation_id: sessionId,
+        workspace_roots: [ROOT],
+        subagent_type: 'explore',
+        status: 'completed',
+        summary: 'done',
+      },
+    };
+
+    for (const [event, payload] of Object.entries(payloads)) {
+      const result = await runHook(event, payload, {
+        url: server.url,
+        env:
+          event === 'postToolUse'
+            ? { AGENTMEMORY_INJECT_CONTEXT: 'true' }
+            : undefined,
+      });
+      if (event === 'postToolUse') {
+        assert.equal(result.code, 0);
+        assert.deepEqual(JSON.parse(result.stdout), {
+          additional_context: 'enrich should not receive eventId',
+        });
+      } else {
+        assertSuccessfulNoOp(result);
+      }
+    }
+
+    // Second beforeSubmitPrompt proves two invocations get different ids.
+    assertSuccessfulNoOp(
+      await runHook(
+        'beforeSubmitPrompt',
+        {
+          conversation_id: sessionId,
+          workspace_roots: [ROOT],
+          prompt: 'event id prompt again',
+        },
+        { url: server.url },
+      ),
+    );
+
+    const observes = server.requests.filter(
+      (request) => request.path === '/agentmemory/observe',
+    );
+    assert.equal(observes.length, Object.keys(payloads).length + 1);
+
+    const eventIds = observes.map((request) => request.body.eventId);
+    for (const request of observes) {
+      assert.equal(typeof request.body.eventId, 'string');
+      assert.ok(request.body.eventId.length > 0);
+      assert.equal(request.body.data?.eventId, undefined);
+    }
+    assert.equal(new Set(eventIds).size, eventIds.length);
+
+    const enrich = server.requests.find(
+      (request) => request.path === '/agentmemory/enrich',
+    );
+    assert.ok(enrich);
+    assert.equal(enrich.body.eventId, undefined);
+  } finally {
+    clearCachedPrompt(sessionId);
     await server.close();
   }
 });

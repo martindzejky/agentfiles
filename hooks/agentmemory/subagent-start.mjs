@@ -9,6 +9,7 @@
 // stored but never summarised).
 
 import {
+  newEventId,
   postJson,
   readConfig,
   readPayload,
@@ -30,9 +31,8 @@ async function main() {
   const agentId = resolveSubagentId(payload);
   const agentType = resolveSubagentType(payload);
   const task = truncateText(payload.task);
-  // Dedup is sessionId + tool_name + tool_input. Prefix start: so this does
-  // not collide with subagentStop for the same id; include type/task too so
-  // concurrent same-type Task tools without an id do not share one hash.
+  // Prefix start: so summarizer tool_input stays distinct from subagentStop
+  // for the same id; include type/task for concurrent same-type Task tools.
   const toolInput =
     ['start', agentId, agentType, task].filter(Boolean).join(':') || 'start';
   const toolOutput = truncateText(
@@ -47,6 +47,7 @@ async function main() {
       project: resolveProject(cwd),
       cwd,
       timestamp: new Date().toISOString(),
+      eventId: newEventId(),
       data: {
         tool_name: 'subagent',
         tool_input: toolInput,

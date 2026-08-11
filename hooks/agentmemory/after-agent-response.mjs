@@ -13,6 +13,7 @@
 // documents `text`.
 
 import {
+  newEventId,
   postJson,
   readCachedPrompt,
   readConfig,
@@ -41,10 +42,10 @@ async function main() {
         project: resolveProject(cwd),
         cwd,
         timestamp: new Date().toISOString(),
+        eventId: newEventId(),
         data: {
           tool_name: 'conversation',
-          // Empty on cache miss. Identical prompts within five minutes may be
-          // deduplicated upstream; that rare drop is accepted.
+          // Empty on cache miss (Cursor's response hook only documents text).
           tool_input: readCachedPrompt(sessionId),
           tool_output: response,
         },

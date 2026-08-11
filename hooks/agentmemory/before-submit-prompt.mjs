@@ -4,6 +4,7 @@
 // d60652a7058773fa9428fa720eda38942f12f014.
 
 import {
+  newEventId,
   postJson,
   readConfig,
   readPayload,
@@ -44,11 +45,12 @@ async function main() {
         project,
         cwd,
         timestamp: new Date().toISOString(),
-        // tool_input mirrors the prompt so different prompts stay distinct in
-        // the five-minute dedup window. Identical prompts may dedupe; that is
-        // accepted (same stance as conversation pairing / Pi-style turns).
-        // Leaving tool_input unset would make every prompt_submit collide.
-        data: { prompt, tool_input: prompt },
+        eventId: newEventId(),
+        // prompt_submit lifts only data.prompt → userPrompt. tool_input is not
+        // lifted for this hookType and used to exist only to vary the old
+        // content-hash dedup key; omit it. Pairing for afterAgentResponse
+        // still uses the local prompt cache above.
+        data: { prompt },
       },
       { config },
     );
