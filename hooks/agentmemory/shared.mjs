@@ -78,6 +78,8 @@ export async function readPayload() {
 export function resolveSessionId(payload) {
   return (
     nonEmptyString(payload?.session_id) ??
+    // Claude / marketplace plugin payloads use camelCase sessionId.
+    nonEmptyString(payload?.sessionId) ??
     nonEmptyString(payload?.conversation_id) ??
     // Cursor subagentStart documents parent_conversation_id when the common
     // conversation_id field is absent.
@@ -104,11 +106,14 @@ export function resolveSubagentType(payload) {
 }
 
 export function resolveWorkingDirectory(payload) {
-  const workspaceRoot = Array.isArray(payload?.workspace_roots)
-    ? nonEmptyString(payload.workspace_roots[0])
-    : undefined;
+  if (Array.isArray(payload?.workspace_roots)) {
+    for (const root of payload.workspace_roots) {
+      const workspaceRoot = nonEmptyString(root);
+      if (workspaceRoot) return workspaceRoot;
+    }
+  }
 
-  return workspaceRoot ?? nonEmptyString(payload?.cwd) ?? process.cwd();
+  return nonEmptyString(payload?.cwd) ?? process.cwd();
 }
 
 export function resolveProject(cwd) {

@@ -150,6 +150,51 @@ test('manifest contains exactly the selected executable hooks', async () => {
   }
 });
 
+test('session id and workspace root fallbacks match Cursor plus plugin payloads', async () => {
+  const { resolveSessionId, resolveWorkingDirectory } = await import(
+    join(HOOK_DIRECTORY, 'shared.mjs')
+  );
+
+  assert.equal(
+    resolveSessionId({
+      session_id: 'snake-session',
+      sessionId: 'camel-session',
+      conversation_id: 'conversation-id',
+    }),
+    'snake-session',
+  );
+  assert.equal(
+    resolveSessionId({
+      sessionId: 'camel-session',
+      conversation_id: 'conversation-id',
+    }),
+    'camel-session',
+  );
+  assert.equal(
+    resolveSessionId({ conversation_id: 'conversation-id' }),
+    'conversation-id',
+  );
+  assert.equal(
+    resolveSessionId({ parent_conversation_id: 'parent-session' }),
+    'parent-session',
+  );
+
+  assert.equal(
+    resolveWorkingDirectory({
+      workspace_roots: ['', '   ', ROOT],
+      cwd: '/should-not-win',
+    }),
+    ROOT,
+  );
+  assert.equal(
+    resolveWorkingDirectory({
+      workspace_roots: ['', null],
+      cwd: ROOT,
+    }),
+    ROOT,
+  );
+});
+
 test('HTTP timeouts fit inside Cursor hook budgets', async () => {
   const { REQUEST_TIMEOUT_MS, CONTEXT_TIMEOUT_MS } = await import(
     join(HOOK_DIRECTORY, 'shared.mjs')
@@ -199,6 +244,30 @@ test('sessionStart registers and emits only Cursor additional_context JSON', asy
         },
       },
     ]);
+  } finally {
+    await server.close();
+  }
+});
+
+test('beforeSubmitPrompt accepts camelCase sessionId and skips blank workspace roots', async () => {
+  const server = await startMockServer();
+  try {
+    const result = await runHook(
+      'beforeSubmitPrompt',
+      {
+        sessionId: 'camel-session',
+        workspace_roots: ['', ROOT],
+        cwd: '/should-not-win',
+        prompt: 'plugin-shaped payload',
+      },
+      { url: server.url },
+    );
+
+    assertSuccessfulNoOp(result);
+    assert.equal(server.requests.length, 1);
+    assert.equal(server.requests[0].body.sessionId, 'camel-session');
+    assert.equal(server.requests[0].body.cwd, ROOT);
+    assert.equal(server.requests[0].body.project, PROJECT);
   } finally {
     await server.close();
   }
