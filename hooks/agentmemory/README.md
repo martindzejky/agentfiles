@@ -222,7 +222,9 @@ Intentional differences:
 
 - The manifest uses Cursor's camelCase events and command schema.
 - Cursor's stable `conversation_id` is used when `session_id` is absent.
-- Scripts use Cursor's `workspace_roots` and emit protocol-safe JSON.
+  Claude / marketplace plugin payloads also accept camelCase `sessionId`.
+- Scripts prefer the first non-empty `workspace_roots` entry over `cwd`, then
+  emit protocol-safe JSON.
 - `beforeSubmitPrompt` never calls `/session/start`. That endpoint replaces the
   whole session record. Upstream Claude `prompt-submit` also only posts
   `/observe`.
@@ -243,6 +245,22 @@ Open upstream
 [PR #1112](https://github.com/rohitg00/agentmemory/pull/1112) was reviewed for
 Cursor-specific operational gotchas, including duplicate plugin/user hooks and
 workspace attribution. No code was copied from that unmerged implementation.
+
+Merged upstream
+[PR #1213](https://github.com/rohitg00/agentmemory/pull/1213) ships a Cursor
+marketplace plugin (hooks + MCP + skills) and a `sessionEnd` transcript
+backfill for CLI print mode. This adapter already had the useful Cursor-native
+pieces (`conversation_id`, `workspace_roots`, `additional_context` JSON,
+capture-only `/observe`). Taken from that PR: camelCase `sessionId` fallback
+and first-non-empty `workspace_roots` scan. Skipped on purpose:
+
+- Marketplace plugin / MCP package: this repo stays on Dotbot user hooks.
+- `sessionEnd` prompt backfill + `/session/end`: sessions stay open-ended;
+  `/session/end` is a noop on the fork; the fork dedups on `eventId` only, so
+  a GUI live capture plus transcript re-post would duplicate `prompt_submit`.
+  Historical JSONL/cloud import is the importer, not a session-end hook.
+- `stop` / `preToolUse` / `preCompact`: no client `/summarize`; Cursor cannot
+  inject on `preToolUse` (enrich stays on `postToolUse`).
 
 ## Wire summary
 
