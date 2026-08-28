@@ -9,23 +9,30 @@ The first line of a commit message is the title.
 
 ## Instructions
 
-- keep it lowercase
+- start with a capital letter, rest lowercase
+- proper names keep their usual capitals (Prettier, Eslint, Svelte)
 - keep it simple
 - 2-8 words max
 - prefer no verb
-- no punctuation
+- no punctuation, no trailing period
 
 ## Examples
 
-- update wording
-- new downloadable for product
-- follow-up emails implementation
-- job scheduling
-- rewrite the readme file
+- Initial commit
+- Add Prettier config
+- Update dependencies to latest
+- Checkout page
+- Analytics setup
 
 ## Ticket
 
-If we are on a feature branch and this branch contains a Jira ticket number, prefix it to the commit message title. For example, on a branch named `EPIK-552-settings-view`, commits should be `EPIK-552 commit message`. Do NOT use unnecessary parentheses like `[EPIK-552] commit message`.
+If we are on a feature branch and this branch contains a Jira ticket number, prefix it to the commit message title. For example, on a branch named `EPIK-552-settings-view`, commits should be `EPIK-552 Commit message`. Do NOT use unnecessary parentheses like `[EPIK-552] Commit message`.
+
+The part after the ticket also starts with a capital letter.
+
+- EPIK-482 Bump headless components
+- APP-6899 New login flow components
+- EBOX-113 Storybook stories for the checkout page
 
 This does not apply to GitHub issues. Do not prefix commits with GitHub issue numbers (e.g. `#42`); link the issue in the pull request instead.
 
