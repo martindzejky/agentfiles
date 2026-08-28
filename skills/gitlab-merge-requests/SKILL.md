@@ -40,7 +40,7 @@ Use `glab`, not `gh`.
 ### Title
 
 - Include jira ticket number in title if you have any
-- After the ticket, start the MR name with a capital letter (unlike commits, which stay lowercase)
+- After the ticket, start the MR name with a capital letter
 
 **Good example:**
 
@@ -157,6 +157,6 @@ glab mr view --output json
 - Looking up the MR ID first when the current branch is already enough.
 - Using `glab mr list` for the active branch instead of `glab mr view`.
 - Using `--fill` when a custom title and description are required.
-- Lowercase titles or bullets copied from commit message style.
+- Lowercase titles or bullets.
 - Assuming `glab mr note list` is fully stable; it is marked experimental.
 - Assuming `glab mr note -m` posts an in-thread reply. Check `glab mr note --help` first if thread-specific behavior matters.

@@ -77,7 +77,7 @@ For merge-ready PR loops (conflicts, review comments, CI), use the `autopilot` s
 
 ### Title
 
-- Start with a capital letter (unlike commits, which stay lowercase).
+- Start with a capital letter.
 - Keep it short and descriptive.
 - Do not prefix commits with GitHub issue numbers; link issues in the PR body instead (see Description).
 
@@ -90,7 +90,7 @@ Add Notion export settings page
 
 ### Description
 
-Keep it short and concise — bullet points when possible. Start each bullet with a capital letter (unlike commits, which stay lowercase). Use prose only when the change is large, risky, or needs context that bullets would hide.
+Keep it short and concise — bullet points when possible. Start each bullet with a capital letter. Use prose only when the change is large, risky, or needs context that bullets would hide.
 
 Default structure:
 
@@ -226,7 +226,7 @@ For triaging review feedback on an open PR, use the `autopilot` skill (`/autopil
 - Looking up the PR number first when the current branch is already enough.
 - Using `gh pr list` for the active branch instead of `gh pr view`.
 - Using `--fill` when a custom title and description are required.
-- Lowercase titles or bullets copied from commit message style.
+- Lowercase titles or bullets.
 - Prefixing commits with `#42` instead of linking the issue in the PR body.
 - Letting the PR description go stale as new commits land.
 - Using `gh run list` alone for PR CI status — prefer `gh pr checks`.
