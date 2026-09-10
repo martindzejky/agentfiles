@@ -24,24 +24,19 @@ summarizing them.
 This adapter does not manage session open/close. Conversations are open-ended
 on the server (`/session/end` is a deprecated noop there). What the hooks do:
 
-- **Capture** observations via `/observe` (and optional enrich).
-- **Optional** local `sessionStart` for `/session/start` + context injection.
+- **Capture** observations via `/observe`.
 - **Server-owned** summarization via idle / observation-count catch-up sweep.
 
-`sessionStart` is not required to create a session: `/observe`, `/summarize`,
-and `/enrich` lazy-create when they send `sessionId` + `project` + `cwd`, and
-they honor `agentId: "cursor"`. There is no `sessionEnd` hook. Hooks capture
-observations only; they must not call `/summarize`. The server's idle /
-obs-count catch-up sweep processes sessions in the background. Server details
-for that sweep live in the fork README, not here.
+Hooks never inject context and never call `/enrich`, `/session/start`, or
+`/summarize`. Agents query memory with MCP (`recall`, `memory_smart_search`).
+`/observe` lazy-creates the session when it sends `sessionId` + `project` +
+`cwd`, and it honors `agentId: "cursor"`. There is no `sessionStart` or
+`sessionEnd` hook. The server's idle / obs-count catch-up sweep processes
+sessions in the background. Server details for that sweep live in the fork
+README, not here.
 
 ## Installed hooks
 
-- `sessionStart` is optional. Locally it still calls `/session/start` to open
-  or resume and, when `AGENTMEMORY_INJECT_CONTEXT=true`, returns server context
-  through Cursor's documented `additional_context` field. It is not required
-  for session creation once the server lazy-creates from `/observe` or
-  `/enrich`.
 - `beforeSubmitPrompt` records only the truncated user prompt
   (`hookType: prompt_submit`, `data: { prompt }`). It never calls
   `/session/start`, because that endpoint replaces the whole session record and
@@ -53,24 +48,22 @@ for that sweep live in the fork README, not here.
   no aliases). It does not record reasoning.
 - `postToolUse` records successful tool calls (`tool_name`, `tool_input`,
   `tool_output`) for every tool, matching Claude Code's PostToolUse capture.
-  When `AGENTMEMORY_INJECT_CONTEXT=true`, file-touching tools also call
-  `/agentmemory/enrich` and return Cursor `additional_context` (includes
-  Cursor `StrReplace` / `Delete`; Shell and MCP skipped). Cursor's
-  `preToolUse` has no injection field, so this is the Cursor-native home for
-  upstream PreToolUse enrich.
-- `postToolUseFailure` records failed tool calls (skips user interrupts). It
-  does not enrich: Cursor documents no output fields for this event.
+  It does not enrich or return `additional_context`.
+- `postToolUseFailure` records failed tool calls (skips user interrupts).
 - `subagentStart` / `subagentStop` record Task-tool subagent lifecycle on the
   parent session as `subagent_start` / `subagent_stop` observes. Data keys are
   exactly `subagent_id`, `subagent_type`, `task`, `status`, and `summary`
   (blank values omitted). Stop keeps the Cursor summary fallback
   `summary ?? last_assistant_message`.
 
-Every hook fails open and returns Cursor JSON. REST calls use a 2.5s timeout
-so remote HTTPS (for example Railway) has room for TLS without exceeding
-Cursor's usual 3s hook budget. Prompt, response, authorization, and full Cursor
-payloads are never logged. Prompt and response captures are capped at 10,000
-characters.
+`sessionStart` is not installed. It only injected context, and Cursor Cloud
+never runs it.
+
+Every hook fails open and returns Cursor JSON (`{}`). REST calls use a 2.5s
+timeout so remote HTTPS (for example Railway) has room for TLS without
+exceeding Cursor's usual 3s hook budget. Prompt, response, authorization, and
+full Cursor payloads are never logged. Prompt and response captures are capped
+at 10,000 characters.
 
 Images are not captured. AgentMemory's vision path does not work end to end,
 and Cursor's hook payloads carry no image data anyway: `beforeSubmitPrompt`
@@ -80,20 +73,17 @@ up is tool output, so `stripImageData` walks `tool_output` at every depth and
 replaces base64 images with a placeholder. Nothing is ever sent as
 `image_data`.
 
-Every write that can create or process a session sends `sessionId`, `project`,
-`cwd`, and `agentId` where the server needs them for lazy session create:
-`/observe`, `/summarize`, and `/enrich` include that set; `/session/start`
-already did. `agentId` is always `"cursor"` via `postJson` / `withAgentId`
-(not hardcoded a second time in each hook). The server must honor `agentId` on
-lazy create (observe-first and summarize paths); older servers that ignore
-unknown keys stay compatible with the extra fields.
+Every write that can create a session sends `sessionId`, `project`, `cwd`, and
+`agentId` where the server needs them for lazy session create. `agentId` is
+always `"cursor"` via `postJson` / `withAgentId` (not hardcoded a second time
+in each hook). The server must honor `agentId` on lazy create; older servers
+that ignore unknown keys stay compatible with the extra fields.
 
 Every `/agentmemory/observe` POST sends a unique top-level `eventId` (a fresh
 UUID per hook invocation). The
 [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory)
 fork deduplicates on that exact id. Older servers that ignore unknown fields
-still accept the payload. `eventId` is omitted on `/summarize`, `/enrich`, and
-`/context`.
+still accept the payload.
 
 ## Observe wire contract
 
@@ -135,15 +125,12 @@ loaded:
 - `AGENTMEMORY_URL`
 - `AGENTMEMORY_SECRET`
 - `AGENTMEMORY_REQUIRE_HTTPS`
-- `AGENTMEMORY_INJECT_CONTEXT`
 - `AGENTMEMORY_PROJECT_NAME`
 
 Optional settings:
 
 - `AGENTMEMORY_REQUIRE_HTTPS=1` rejects all non-HTTPS URLs. Without it, plain
   HTTP is accepted only for loopback development hosts.
-- `AGENTMEMORY_INJECT_CONTEXT=true` opts `sessionStart` and file-tool
-  `postToolUse` into context injection (default off; see upstream #143).
 - `AGENTMEMORY_PROJECT_NAME` overrides Git-based project discovery.
 
 Server-side (AgentMemory host, not this `.env`): raise `MAX_OBS_PER_SESSION`
@@ -185,13 +172,11 @@ including:
 - `preToolUse` / `postToolUse` / `postToolUseFailure`
 - `subagentStart` / `subagentStop`
 
-Cursor Cloud does not provide `sessionStart`. Locally, `sessionStart` remains
-installed as best-effort / optional context injection. Cloud and other
-observe-first paths rely on `/observe` (and `/enrich` when enabled) to create
-the session. Those writes must still tag `agentId: "cursor"` so the server can
-stamp Cursor on lazy create without a prior `/session/start`. Sessions stay
-open-ended; observations are retained. The server owns summarization through
-its idle / obs-count catch-up sweep.
+Cursor Cloud does not provide `sessionStart`. This adapter does not install it
+locally either. Observe-first paths rely on `/observe` to create the session.
+Those writes must still tag `agentId: "cursor"` so the server can stamp Cursor
+on lazy create. Sessions stay open-ended; observations are retained. The
+server owns summarization through its idle / obs-count catch-up sweep.
 
 This repo currently installs the lifecycle, tool, and subagent hooks in
 [Installed hooks](#installed-hooks). Thought hooks are supported by Cursor but
@@ -208,12 +193,9 @@ required there. This repository does not install hooks into unrelated projects.
 Adapted from AgentMemory commit
 [`d60652a7058773fa9428fa720eda38942f12f014`](https://github.com/rohitg00/agentmemory/commit/d60652a7058773fa9428fa720eda38942f12f014):
 
-- [`plugin/scripts/session-start.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/session-start.mjs)
 - [`plugin/scripts/prompt-submit.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/prompt-submit.mjs)
 - [`plugin/scripts/post-tool-use.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/post-tool-use.mjs)
 - [`plugin/scripts/post-tool-failure.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/post-tool-failure.mjs)
-- [`plugin/scripts/pre-tool-use.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/pre-tool-use.mjs)
-  (enrich logic only; wired on Cursor `postToolUse`)
 - [`plugin/scripts/subagent-start.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-start.mjs)
 - [`plugin/scripts/subagent-stop.mjs`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/plugin/scripts/subagent-stop.mjs)
 - [`src/hooks/_project.ts`](https://github.com/rohitg00/agentmemory/blob/d60652a7058773fa9428fa720eda38942f12f014/src/hooks/_project.ts)
@@ -231,11 +213,10 @@ Intentional differences:
 - `afterAgentResponse` is Cursor-specific; it posts `assistant_response` with
   `data.assistantResponse`.
 - `postToolUse` has no matcher (all tools), matching Claude Code's unfiltered
-  PostToolUse capture. Observe always runs; enrich is opt-in and limited to
-  file-touching tools. Image base64 is stripped instead of forwarded as
-  `image_data`; vision is unsupported, see above.
-- `preToolUse` is omitted: Cursor cannot inject context there. Upstream enrich
-  is adapted onto `postToolUse` `additional_context` instead.
+  PostToolUse capture. Observe always runs. Image base64 is stripped instead of
+  forwarded as `image_data`; vision is unsupported, see above.
+- `sessionStart` and `preToolUse` are omitted: this adapter captures only and
+  does not inject context.
 - Subagent hooks post `subagent_start` / `subagent_stop` with Cursor field
   names (`subagent_id`, `subagent_type`, `task`, `status`, `summary`).
 - Claude memory bridge, Notification, TaskCompleted, and thought hooks are
@@ -250,25 +231,25 @@ Merged upstream
 [PR #1213](https://github.com/rohitg00/agentmemory/pull/1213) ships a Cursor
 marketplace plugin (hooks + MCP + skills) and a `sessionEnd` transcript
 backfill for CLI print mode. This adapter already had the useful Cursor-native
-pieces (`conversation_id`, `workspace_roots`, `additional_context` JSON,
-capture-only `/observe`). Taken from that PR: camelCase `sessionId` fallback
-and first-non-empty `workspace_roots` scan. Skipped on purpose:
+pieces (`conversation_id`, `workspace_roots`, capture-only `/observe`). Taken
+from that PR: camelCase `sessionId` fallback and first-non-empty
+`workspace_roots` scan. Skipped on purpose:
 
 - Marketplace plugin / MCP package: this repo stays on Dotbot user hooks.
 - `sessionEnd` prompt backfill + `/session/end`: sessions stay open-ended;
   `/session/end` is a noop on the fork; the fork dedups on `eventId` only, so
   a GUI live capture plus transcript re-post would duplicate `prompt_submit`.
   Historical JSONL/cloud import is the importer, not a session-end hook.
-- `stop` / `preToolUse` / `preCompact`: no client `/summarize`; Cursor cannot
-  inject on `preToolUse` (enrich stays on `postToolUse`).
+- `stop` / `preToolUse` / `preCompact` / `sessionStart`: no client
+  `/summarize`, no context injection.
 
 ## Wire summary
 
 Writes from this adapter: `prompt_submit`, `assistant_response`,
 `post_tool_use` / `post_tool_failure`, `subagent_start` / `subagent_stop`,
-each `/observe` with a unique `eventId`, plus optional `/session/start` and
-`/enrich`. No client `/summarize` and no session end. Summarization is the
-server idle / obs-count catch-up sweep.
+each `/observe` with a unique `eventId`. No `/session/start`, no `/enrich`, no
+client `/summarize`, and no session end. Summarization is the server idle /
+obs-count catch-up sweep.
 
 Cursor schema and Cloud support follow
 [Cursor's hook documentation](https://cursor.com/docs/hooks) and

@@ -29,6 +29,7 @@ Confirm the agent lists agentmemory's tools (the full set, not a tiny stub). A t
 ## Notes
 
 - The action skills (remember, recall, and the rest) live in this repo under `skills/`. `connect` makes tools available. Skills teach the agent when to use them.
+- Hooks capture observations only. Agents query memory with MCP; hooks do not inject context.
 - Windows: use WSL2. Native Windows can run the server, but `connect` is not supported there.
 
 ## See also

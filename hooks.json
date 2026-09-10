@@ -1,13 +1,6 @@
 {
   "version": 1,
   "hooks": {
-    "sessionStart": [
-      {
-        "command": "./hooks/agentmemory/session-start.mjs",
-        "timeout": 3,
-        "failClosed": false
-      }
-    ],
     "beforeSubmitPrompt": [
       {
         "command": "./hooks/agentmemory/before-submit-prompt.mjs",

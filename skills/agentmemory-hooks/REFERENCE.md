@@ -9,13 +9,16 @@ that fork's README is the canonical roadmap.
 
 | Cursor event         | Capture job                                               |
 | -------------------- | --------------------------------------------------------- |
-| `sessionStart`       | Optional open/resume + context; not required to create    |
 | `beforeSubmitPrompt` | Store the user prompt (`prompt_submit` / `data.prompt`)   |
 | `afterAgentResponse` | Store the final assistant response (`assistant_response`) |
-| `postToolUse`        | Store successful tool calls; optional file-tool enrich    |
-| `postToolUseFailure` | Store failed tool calls (skips interrupts; no enrich)     |
+| `postToolUse`        | Store successful tool calls                               |
+| `postToolUseFailure` | Store failed tool calls (skips interrupts)                |
 | `subagentStart`      | Store Task-tool subagent start (`subagent_start`)         |
 | `subagentStop`       | Store Task-tool subagent summary (`subagent_stop`)        |
+
+Hooks capture only. They never inject `additional_context`, never call
+`/enrich` or `/session/start`, and do not install `sessionStart`. Agents query
+memory with MCP (`recall` / `memory_smart_search`).
 
 Sessions stay open-ended on the server. Memory formation does not need a
 client end signal. Summarization is handled by the server's idle / obs-count
@@ -26,10 +29,9 @@ Commit linking is outside this Cursor event map. A git `post-commit` hook that
 calls `POST /agentmemory/session/commit` is what feeds `commit-context` and
 `commit-history`. This repo does not install that git hook yet.
 
-Capture hooks other than optional `sessionStart` never call `/session/start`;
-that route replaces the session record and resets `firstPrompt` and
-`observationCount`. `/observe` (and summarize/enrich) create the session when
-`sessionId`, `project`, and `cwd` are present.
+`/session/start` replaces the session record and resets `firstPrompt` and
+`observationCount`, so capture hooks never call it. `/observe` creates the
+session when `sessionId`, `project`, and `cwd` are present.
 
 Observe shapes on the martindzejky fork:
 
@@ -49,9 +51,11 @@ Observe shapes on the martindzejky fork:
 Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
 supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
 `afterAgentThought`, `preToolUse`, `postToolUse`, `postToolUseFailure`,
-`subagentStart`, `subagentStop`, and others) but not `sessionStart`.
-Summarization depends on the server's idle / obs-count catch-up sweep. This
-repo wires the events in the table above; thought hooks are not installed yet.
+`subagentStart`, `subagentStop`, and others) but not `sessionStart`. That is
+why this adapter dropped `sessionStart`: it was injection-only and never ran
+in Cloud. Summarization depends on the server's idle / obs-count catch-up
+sweep. This repo wires the events in the table above; thought hooks are not
+installed yet.
 
 ## Transport
 
@@ -62,7 +66,7 @@ Use REST from hook scripts:
 - Auth: required `Authorization: Bearer $AGENTMEMORY_SECRET`
 - Agent tag: hardcoded `agentId: "cursor"` on every POST body
 - Observe idempotency: unique top-level `eventId` on every `/observe` POST
-  (server dedups on that id only; not sent on summarize/enrich/context)
+  (server dedups on that id only)
 - HTTP timeout: 2.5s per REST call (under Cursor's usual 3s hook budget)
 - Fail open on network errors so a down daemon does not stall Cursor
 
