@@ -9,7 +9,7 @@ const ALWAYS_APPLY_RE = /^alwaysApply\s*:/;
 const README_NAMES = new Set(['readme.md']);
 
 function parseArgs(argv) {
-  const args = { root: undefined, cursorOut: undefined };
+  const args = { root: undefined, cursorOut: undefined, codexOut: undefined };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--root') {
@@ -17,6 +17,9 @@ function parseArgs(argv) {
       i += 1;
     } else if (arg === '--cursor-out') {
       args.cursorOut = argv[i + 1];
+      i += 1;
+    } else if (arg === '--codex-out') {
+      args.codexOut = argv[i + 1];
       i += 1;
     } else {
       throw new Error(`Unknown argument: ${arg}`);
@@ -55,7 +58,11 @@ function renderCursorRule(text) {
   return cursorFrontmatter(parsed.frontmatter) + (body ? `\n${body}` : '\n');
 }
 
-async function generateCursorRules(sourceDir, destDir) {
+function renderCodexBody(text) {
+  return parseRule(text).body.replace(/^\n+/, '').replace(/\n+$/, '');
+}
+
+async function listRuleFiles(sourceDir) {
   let entries;
   try {
     entries = await readdir(sourceDir, { withFileTypes: true });
@@ -66,6 +73,14 @@ async function generateCursorRules(sourceDir, destDir) {
     throw error;
   }
 
+  return entries
+    .filter((item) => item.isFile() && item.name.endsWith('.md'))
+    .filter((item) => !README_NAMES.has(item.name.toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+async function generateCursorRules(sourceDir, destDir) {
+  const entries = await listRuleFiles(sourceDir);
   await mkdir(destDir, { recursive: true });
   const existing = await readdir(destDir);
   await Promise.all(
@@ -75,12 +90,7 @@ async function generateCursorRules(sourceDir, destDir) {
   );
 
   const written = [];
-  for (const entry of entries
-    .filter((item) => item.isFile() && item.name.endsWith('.md'))
-    .sort((a, b) => a.name.localeCompare(b.name))) {
-    if (README_NAMES.has(entry.name.toLowerCase())) {
-      continue;
-    }
+  for (const entry of entries) {
     const dest = join(destDir, `${entry.name.slice(0, -3)}.mdc`);
     const text = await readFile(join(sourceDir, entry.name), 'utf8');
     await writeFile(dest, renderCursorRule(text));
@@ -89,15 +99,40 @@ async function generateCursorRules(sourceDir, destDir) {
   return written;
 }
 
+async function generateCodexAgents(sourceDir, destFile) {
+  const entries = await listRuleFiles(sourceDir);
+  const bodies = [];
+  for (const entry of entries) {
+    const text = await readFile(join(sourceDir, entry.name), 'utf8');
+    const body = renderCodexBody(text);
+    if (body) {
+      bodies.push(body);
+    }
+  }
+
+  await mkdir(dirname(destFile), { recursive: true });
+  await writeFile(
+    destFile,
+    bodies.length > 0 ? `${bodies.join('\n\n')}\n` : '',
+  );
+  return destFile;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const here = dirname(fileURLToPath(import.meta.url));
   const root = resolve(args.root ?? join(here, '..'));
+  const rulesDir = join(root, 'rules');
   const cursorOut = resolve(
     args.cursorOut ?? join(root, 'dist', 'cursor', 'rules'),
   );
-  const written = await generateCursorRules(join(root, 'rules'), cursorOut);
+  const codexOut = resolve(
+    args.codexOut ?? join(root, 'dist', 'codex', 'AGENTS.md'),
+  );
+  const written = await generateCursorRules(rulesDir, cursorOut);
+  await generateCodexAgents(rulesDir, codexOut);
   console.log(`Wrote ${written.length} Cursor rule(s) to ${cursorOut}`);
+  console.log(`Wrote Codex AGENTS.md to ${codexOut}`);
 }
 
 const invokedDirectly =
