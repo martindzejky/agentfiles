@@ -64,7 +64,7 @@ After presenting the design, ask for approval or corrections before moving on.
 
 - Do not assume brainstorming output should be saved to the repository.
 - If written output would be useful, ask the user whether they want it saved and where.
-- When saving is requested, use Cursor's available tools to create or update the file.
+- When saving is requested, use the editor's file tools (Cursor, Codex, or your IDE) to create or update the file.
 
 ## Principles
 

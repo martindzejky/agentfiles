@@ -28,11 +28,11 @@ Do not treat review as a batch ritual after every small step.
 
 ## How to request review
 
-Use Cursor's built-in review paths:
+Use built-in review tools when your environment provides them; otherwise review the diff manually (section 2 below).
 
-- **Bugbot** — Task with `subagent_type="bugbot"` for a general code review of local or branch changes
-- **Security review** — Task with `subagent_type="security-review"` when the diff touches auth, secrets, input handling, or trust boundaries
-- **`/review`** — when available in the editor, for a quick pass on current changes
+- **Cursor:** Task with `subagent_type="bugbot"` for a general code review; `subagent_type="security-review"` when the diff touches auth, secrets, input handling, or trust boundaries; or `/review` when available
+- **Codex:** `/review` in the CLI or IDE extension when available
+- **Fallback:** manual diff review using the template below
 
 ### 1. Get the git range
 

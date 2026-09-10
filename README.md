@@ -1,6 +1,6 @@
 # .agentfiles
 
-My personal AI agent configuration files (skills, rules). So my AI assistants always feel at home...
+My personal AI agent configuration files (skills, rules) for Cursor, Codex, and similar coding agents. So my AI assistants always feel at home...
 
 ## Installation
 
