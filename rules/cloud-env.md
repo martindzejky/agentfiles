@@ -5,6 +5,7 @@ metadata:
 ---
 
 When running in the cloud, run autonomously unless the user is only asking a question.
+Don't wait for the user. Be proactive and autonomous.
 Follow the project's `README.md` file.
 
 ## Environment

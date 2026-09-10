@@ -127,7 +127,7 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
       'utf8',
     );
     assert.match(personality, /\nalwaysApply: true\n---\n/);
-    assert.match(personality, /You are called Cutty\./);
+    assert.match(personality, /Keep replies concise\./);
   } finally {
     await rm(cursorOut, { recursive: true, force: true });
   }
