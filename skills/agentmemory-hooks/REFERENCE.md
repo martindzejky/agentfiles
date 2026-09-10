@@ -16,7 +16,8 @@ that fork's README is the canonical roadmap.
 | `subagentStart`      | Store Task-tool subagent start (`subagent_start`)         |
 | `subagentStop`       | Store Task-tool subagent summary (`subagent_stop`)        |
 
-Codex sidecar `~/.codex/hooks.json` (generated; do not edit `config.toml`):
+Codex sidecar `~/.codex/hooks.json` (committed `codex/hooks.json`; do not
+edit `config.toml`):
 
 | Codex event        | Script                   | Notes                                     |
 | ------------------ | ------------------------ | ----------------------------------------- |
@@ -55,11 +56,11 @@ Observe shapes on the martindzejky fork:
 
 ## Install targets
 
-| Scope         | Config                      | Scripts run from                 |
-| ------------- | --------------------------- | -------------------------------- |
-| User (global) | `~/.cursor/hooks.json`      | `~/.cursor/` (`cursor/` adapter) |
-| Codex (user)  | `~/.codex/hooks.json`       | session cwd; `codex/` adapter    |
-| Project       | `<repo>/.cursor/hooks.json` | project root                     |
+| Scope         | Config                      | Scripts run from                  |
+| ------------- | --------------------------- | --------------------------------- |
+| User (global) | `~/.cursor/hooks.json`      | `~/.cursor/hooks/...` (`cursor/`) |
+| Codex (user)  | `~/.codex/hooks.json`       | `~/.codex/hooks/...` (`codex/`)   |
+| Project       | `<repo>/.cursor/hooks.json` | project root                      |
 
 Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
 supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
@@ -101,12 +102,12 @@ inherited by hook processes. Every write that can lazy-create a session sends
 
 ## Status in this repo
 
-Cursor user-level hooks are installed from `hooks.json` and
-`hooks/agentmemory/cursor/`. Codex user-level hooks are generated into
-`dist/codex/hooks.json` and linked to `~/.codex/hooks.json`, with scripts
-linked at `~/.codex/hooks`. Implementation
-details, Cloud limitations, smoke-test instructions, the pinned upstream audit
-trail, and the observe wire contract are in `hooks/agentmemory/README.md`.
+Cursor user-level hooks are installed from `hooks/agentmemory/cursor/hooks.json`
+and `hooks/agentmemory/cursor/`. Codex user-level hooks are installed from
+`hooks/agentmemory/codex/hooks.json`, with scripts linked at `~/.codex/hooks`.
+Implementation details, Cloud limitations, smoke-test instructions, the pinned
+upstream audit trail, and the observe wire contract are in
+`hooks/agentmemory/README.md`.
 
 This adapter sends `assistant_response` / `subagent_*` hookTypes and an
 `eventId` on every `/observe`. Real tools still use tool-shaped observe

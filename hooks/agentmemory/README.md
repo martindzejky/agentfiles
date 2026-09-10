@@ -5,11 +5,12 @@ calls. Capture logic lives in `core/`. Vendor-specific entrypoints live in
 `cursor/` and `codex/`: each hardcodes its `agentId` and log directory, and
 normalizes that product's stdin JSON for the core.
 
-Dotbot links this tree into both `~/.cursor/hooks` and `~/.codex/hooks`.
-Cursor uses the committed root `hooks.json` with relative `./hooks/agentmemory/cursor/`
-commands. Codex uses generated `dist/codex/hooks.json` with absolute
-`codex/` script paths, because Codex runs hooks from the session cwd. The
-scripts require Node.js 24 (see `package.json` engines, `.nvmrc`, and CI).
+Dotbot links this tree into both `~/.cursor/hooks` and `~/.codex/hooks`, and
+links each adapter's committed `hooks.json` to `~/.cursor/hooks.json` and
+`~/.codex/hooks.json`. Commands use those install paths
+(`~/.cursor/hooks/agentmemory/cursor/...` and
+`~/.codex/hooks/agentmemory/codex/...`) so cwd does not matter. The scripts
+require Node.js 24 (see `package.json` engines, `.nvmrc`, and CI).
 
 Ownership:
 
@@ -65,16 +66,16 @@ README, not here.
 `sessionStart` is not installed. It only injected context, and Cursor Cloud
 never runs it.
 
-Codex mapping (`codex/` adapter, generated `dist/codex/hooks.json`):
+Codex mapping (`codex/` adapter, `codex/hooks.json`):
 
 - `UserPromptSubmit` → `user-prompt-submit.mjs`
 - `Stop` → `stop.mjs` (`last_assistant_message`)
 - `PostToolUse` → `post-tool-use.mjs` (includes non-zero Bash)
 - `SubagentStart` / `SubagentStop` → matching Codex scripts
 
-Codex has no `postToolUseFailure` event. Commands are absolute paths. Timeout
-is 3 seconds. After install, trust the hooks in Codex with `/hooks`. Do not
-put these hooks inline in `config.toml`.
+Codex has no `postToolUseFailure` event. Commands use `~/.codex/hooks/...`.
+Timeout is 3 seconds. After install, trust the hooks in Codex with `/hooks`.
+Do not put these hooks inline in `config.toml`.
 
 Every hook fails open and returns Cursor JSON (`{}`). REST calls use a 2.5s
 timeout so remote HTTPS (for example Railway) has room for TLS without

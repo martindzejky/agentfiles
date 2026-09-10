@@ -3,42 +3,42 @@
   "hooks": {
     "beforeSubmitPrompt": [
       {
-        "command": "./hooks/agentmemory/cursor/before-submit-prompt.mjs",
+        "command": "~/.cursor/hooks/agentmemory/cursor/before-submit-prompt.mjs",
         "timeout": 3,
         "failClosed": false
       }
     ],
     "afterAgentResponse": [
       {
-        "command": "./hooks/agentmemory/cursor/after-agent-response.mjs",
+        "command": "~/.cursor/hooks/agentmemory/cursor/after-agent-response.mjs",
         "timeout": 3,
         "failClosed": false
       }
     ],
     "postToolUse": [
       {
-        "command": "./hooks/agentmemory/cursor/post-tool-use.mjs",
+        "command": "~/.cursor/hooks/agentmemory/cursor/post-tool-use.mjs",
         "timeout": 3,
         "failClosed": false
       }
     ],
     "postToolUseFailure": [
       {
-        "command": "./hooks/agentmemory/cursor/post-tool-failure.mjs",
+        "command": "~/.cursor/hooks/agentmemory/cursor/post-tool-failure.mjs",
         "timeout": 3,
         "failClosed": false
       }
     ],
     "subagentStart": [
       {
-        "command": "./hooks/agentmemory/cursor/subagent-start.mjs",
+        "command": "~/.cursor/hooks/agentmemory/cursor/subagent-start.mjs",
         "timeout": 3,
         "failClosed": false
       }
     ],
     "subagentStop": [
       {
-        "command": "./hooks/agentmemory/cursor/subagent-stop.mjs",
+        "command": "~/.cursor/hooks/agentmemory/cursor/subagent-stop.mjs",
         "timeout": 3,
         "failClosed": false
       }

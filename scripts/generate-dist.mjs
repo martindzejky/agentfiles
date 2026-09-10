@@ -3,7 +3,6 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CODEX_HOOK_SCRIPTS } from '../hooks/agentmemory/codex/manifest.mjs';
 
 const FRONTMATTER_RE = /^---\r?\n(.*?)\r?\n---(?:\r?\n)?(.*)$/s;
 const ALWAYS_APPLY_RE = /^alwaysApply\s*:/;
@@ -119,37 +118,6 @@ async function generateCodexAgents(sourceDir, destFile) {
   return destFile;
 }
 
-function renderCodexHooks(root) {
-  const hooks = {};
-  for (const [event, script] of CODEX_HOOK_SCRIPTS) {
-    hooks[event] = [
-      {
-        hooks: [
-          {
-            type: 'command',
-            command: join(root, 'hooks', 'agentmemory', 'codex', script),
-            timeout: 3,
-          },
-        ],
-      },
-    ];
-  }
-  return `${JSON.stringify(
-    {
-      description: 'AgentMemory observation capture',
-      hooks,
-    },
-    null,
-    2,
-  )}\n`;
-}
-
-async function generateCodexHooks(root, destFile) {
-  await mkdir(dirname(destFile), { recursive: true });
-  await writeFile(destFile, renderCodexHooks(root));
-  return destFile;
-}
-
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const here = dirname(fileURLToPath(import.meta.url));
@@ -162,7 +130,6 @@ async function main() {
   const written = await generateCursorRules(rulesDir, cursorOut);
   await mkdir(codexOut, { recursive: true });
   await generateCodexAgents(rulesDir, join(codexOut, 'AGENTS.md'));
-  await generateCodexHooks(root, join(codexOut, 'hooks.json'));
   console.log(`Wrote ${written.length} Cursor rule(s) to ${cursorOut}`);
   console.log(`Wrote Codex dist to ${codexOut}`);
 }

@@ -177,26 +177,41 @@ function assertSuccessfulNoOp(result) {
 }
 
 test('manifest contains exactly the selected executable hooks', async () => {
-  const manifest = JSON.parse(await readFile(join(ROOT, 'hooks.json'), 'utf8'));
+  const cursorManifest = JSON.parse(
+    await readFile(join(HOOK_DIRECTORY, 'hooks.json'), 'utf8'),
+  );
+  const codexManifest = JSON.parse(
+    await readFile(join(CODEX_HOOK_DIRECTORY, 'hooks.json'), 'utf8'),
+  );
 
-  assert.equal(manifest.version, 1);
+  assert.equal(cursorManifest.version, 1);
   assert.deepEqual(
-    Object.keys(manifest.hooks).sort(),
+    Object.keys(cursorManifest.hooks).sort(),
     Object.keys(HOOKS).sort(),
   );
 
   for (const [event, script] of Object.entries(HOOKS)) {
-    assert.equal(manifest.hooks[event].length, 1);
+    assert.equal(cursorManifest.hooks[event].length, 1);
     assert.equal(
-      manifest.hooks[event][0].command,
-      `./hooks/agentmemory/cursor/${script}`,
+      cursorManifest.hooks[event][0].command,
+      `~/.cursor/hooks/agentmemory/cursor/${script}`,
     );
-    assert.equal(manifest.hooks[event][0].failClosed, false);
-    assert.equal(manifest.hooks[event][0].type, undefined);
+    assert.equal(cursorManifest.hooks[event][0].failClosed, false);
+    assert.equal(cursorManifest.hooks[event][0].type, undefined);
     await access(join(HOOK_DIRECTORY, script), constants.X_OK);
   }
 
-  for (const script of Object.values(CODEX_HOOKS)) {
+  assert.deepEqual(Object.keys(codexManifest.hooks), Object.keys(CODEX_HOOKS));
+  assert.equal(codexManifest.hooks.SessionStart, undefined);
+  assert.equal(codexManifest.hooks.PostToolUseFailure, undefined);
+
+  for (const [event, script] of Object.entries(CODEX_HOOKS)) {
+    assert.equal(codexManifest.hooks[event][0].hooks[0].type, 'command');
+    assert.equal(
+      codexManifest.hooks[event][0].hooks[0].command,
+      `~/.codex/hooks/agentmemory/codex/${script}`,
+    );
+    assert.equal(codexManifest.hooks[event][0].hooks[0].timeout, 3);
     await access(join(CODEX_HOOK_DIRECTORY, script), constants.X_OK);
   }
 });
@@ -276,7 +291,9 @@ test('HTTP timeouts fit inside Cursor hook budgets', async () => {
   const { REQUEST_TIMEOUT_MS } = await import(
     join(CORE_DIRECTORY, 'shared.mjs')
   );
-  const manifest = JSON.parse(await readFile(join(ROOT, 'hooks.json'), 'utf8'));
+  const manifest = JSON.parse(
+    await readFile(join(HOOK_DIRECTORY, 'hooks.json'), 'utf8'),
+  );
 
   assert.equal(REQUEST_TIMEOUT_MS, 2_500);
   assert.ok(

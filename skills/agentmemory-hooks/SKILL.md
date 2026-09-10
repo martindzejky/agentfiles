@@ -7,8 +7,9 @@ user-invocable: false
 Agent hooks are command scripts in `hooks.json` (Cursor) or Codex hook config. They get JSON on stdin and POST `/agentmemory/observe` so the turn is recorded without a manual `memory_save`. They never inject context. Agents query memory with MCP (`recall`, `memory_smart_search`).
 
 This skill documents the AgentMemory adapter in this repo (`hooks/agentmemory/`).
-Cursor uses `hooks.json`. Codex uses generated `~/.codex/hooks.json`. Server
-architecture belongs in
+Cursor and Codex each have a committed `hooks.json` in their adapter folder.
+Install links those files to `~/.cursor/hooks.json` and `~/.codex/hooks.json`.
+Server architecture belongs in
 [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory);
 that fork's README is the canonical roadmap. Prefer user-level hooks for global
 capture; use project `.cursor/hooks.json` when a repo needs its own wiring
@@ -23,28 +24,34 @@ This repo installs the following local user hooks:
   "version": 1,
   "hooks": {
     "beforeSubmitPrompt": [
-      { "command": "./hooks/agentmemory/cursor/before-submit-prompt.mjs" }
+      {
+        "command": "~/.cursor/hooks/agentmemory/cursor/before-submit-prompt.mjs"
+      }
     ],
     "afterAgentResponse": [
-      { "command": "./hooks/agentmemory/cursor/after-agent-response.mjs" }
+      {
+        "command": "~/.cursor/hooks/agentmemory/cursor/after-agent-response.mjs"
+      }
     ],
     "postToolUse": [
-      { "command": "./hooks/agentmemory/cursor/post-tool-use.mjs" }
+      { "command": "~/.cursor/hooks/agentmemory/cursor/post-tool-use.mjs" }
     ],
     "postToolUseFailure": [
-      { "command": "./hooks/agentmemory/cursor/post-tool-failure.mjs" }
+      { "command": "~/.cursor/hooks/agentmemory/cursor/post-tool-failure.mjs" }
     ],
     "subagentStart": [
-      { "command": "./hooks/agentmemory/cursor/subagent-start.mjs" }
+      { "command": "~/.cursor/hooks/agentmemory/cursor/subagent-start.mjs" }
     ],
     "subagentStop": [
-      { "command": "./hooks/agentmemory/cursor/subagent-stop.mjs" }
+      { "command": "~/.cursor/hooks/agentmemory/cursor/subagent-stop.mjs" }
     ]
   }
 }
 ```
 
-User-level Cursor paths run from `~/.cursor/`, so `./hooks/...` is correct there. Codex commands use absolute paths because Codex runs hooks from the session cwd. After install, trust new Codex hooks with `/hooks`.
+Commands use `~/.cursor/hooks/...` and `~/.codex/hooks/...` so they
+resolve after install regardless of session cwd. After install, trust new
+Codex hooks with `/hooks`.
 
 Watch captures at `http://localhost:3113` once the server is up.
 
