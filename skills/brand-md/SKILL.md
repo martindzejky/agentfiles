@@ -137,8 +137,8 @@ Default: omit. Include the spec's YAML frontmatter (`name`, `tagline`, `version`
 6. **Cross-doc sweep.** Update files that should now reference `BRAND.md`:
    - `README.md` documentation map / file index.
    - `AGENTS.md` source-of-truth list and any "follow X for copy" lines.
-   - `.cursor/rules/global.mdc` required-reads list (if the project uses one).
-   - Skills under `.cursor/skills/*` that touch UI or copy (for example `frontend-design`) — make sure their constraints reference `BRAND.md` and that any conflicting generic guidance is explicitly overridden.
+   - Agent rules that list required reads (for example `.cursor/rules/global.mdc` or project `AGENTS.md`) — update if the project uses them.
+   - Skills that touch UI or copy (for example `frontend-design` under `.cursor/skills/` or `.agents/skills/`) — make sure their constraints reference `BRAND.md` and that any conflicting generic guidance is explicitly overridden.
 7. **Flag conflicts.** If `BRAND.md` describes visuals that disagree with `DESIGN.md`, fix the brand kit to defer rather than duplicate.
 
 ## Workflow — updating an existing BRAND.md

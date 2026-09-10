@@ -1,6 +1,6 @@
 ---
 name: github-pull-requests
-description: Work with GitHub pull requests — create, update, comment, check CI, and review. Local IDE uses gh for writes; Cursor Cloud uses ManagePullRequest for writes and gh for reads. Use when opening or creating a PR, finishing work on a feature branch, or operating on the current branch's pull request.
+description: Work with GitHub pull requests — create, update, comment, check CI, and review. Local and CLI workflows use gh for writes; Cursor Cloud uses ManagePullRequest for writes when available. Use when opening or creating a PR, finishing work on a feature branch, or operating on the current branch's pull request.
 ---
 
 # GitHub Pull Requests
@@ -15,13 +15,13 @@ Use `gh`, not `glab`.
 - Only pass a number, URL, or branch when intentionally targeting a different PR.
 - If unsure about flags, run `gh pr <subcommand> --help`.
 
-## Cloud vs Local
+## Hosted vs local
 
-**Local IDE:** use `gh` for PR reads and writes.
+**Local (Cursor IDE, Codex CLI, terminal):** use `gh` for PR reads and writes.
 
-**Cursor Cloud:** `gh` is read-only for PR writes. Use the `ManagePullRequest` tool for writes — do not run `gh pr create`, `gh pr edit`, `gh pr ready`, `gh pr comment`, `gh pr review`, `gh pr close`, or `gh pr reopen` as write operations.
+**Cursor Cloud:** if you have the `ManagePullRequest` tool, use it for PR writes and `gh` for reads only — do not run `gh pr create`, `gh pr edit`, `gh pr ready`, `gh pr comment`, `gh pr review`, `gh pr close`, or `gh pr reopen` as write operations. In Codex and other environments without that tool, use `gh` when PR writes are allowed.
 
-| Task              | Local                          | Cloud (`ManagePullRequest`)           |
+| Task              | Local / Codex                  | Cursor Cloud (`ManagePullRequest`)    |
 | ----------------- | ------------------------------ | ------------------------------------- |
 | Create PR         | `gh pr create`                 | `create_pr` — always `"draft": false` |
 | Update title/body | `gh pr edit`                   | `update_pr`                           |
@@ -31,21 +31,21 @@ Use `gh`, not `glab`.
 | CI status         | `gh pr checks`                 | `get_ci_status` or `gh pr checks`     |
 | Open/close PR     | `gh pr close` / `gh pr reopen` | `set_pr_status`                       |
 
-Reads (`gh pr view`, `gh pr diff`, `gh pr checks`, `--json` inspect) work in both environments.
+Reads (`gh pr view`, `gh pr diff`, `gh pr checks`, `--json` inspect) work in all environments.
 
 **Merge:** never merge or enable auto-merge. The user merges on their own. `ManagePullRequest` has no merge action — do not run `gh pr merge`.
 
-**Review writes** (`gh pr review --approve`, `--request-changes`): local only. In cloud, read review state with `gh pr view`; post replies with `post_comment` when relevant or when the user asks.
+**Review writes** (`gh pr review --approve`, `--request-changes`): local and Codex when `gh` writes are allowed. In Cursor Cloud, read review state with `gh pr view`; post replies with `post_comment` when relevant or when the user asks.
 
-Always pass `branch_name` (and `base_branch` when creating) to `ManagePullRequest`. Do not use `gh` for any PR writes in cloud.
+When using `ManagePullRequest`, always pass `branch_name` (and `base_branch` when creating). Do not use `gh` for PR writes in Cursor Cloud.
 
 ## PR Policy (Critical)
 
 **All agent-opened GitHub PRs must be ready for review — never drafts.**
 
 - Do not use `gh pr create --draft`.
-- In cloud, `ManagePullRequest` `create_pr` must always include `"draft": false` (do not rely on defaults).
-- If a draft PR is created by mistake, mark it ready before finishing — local: `gh pr ready`; cloud: `update_pr` with `"draft": false`.
+- In Cursor Cloud, `ManagePullRequest` `create_pr` must always include `"draft": false` (do not rely on defaults).
+- If a draft PR is created by mistake, mark it ready before finishing — local/Codex: `gh pr ready`; Cursor Cloud: `update_pr` with `"draft": false`.
 - Never leave work with an open draft PR.
 
 ## Quick Reference
@@ -69,7 +69,7 @@ Always pass `branch_name` (and `base_branch` when creating) to `ManagePullReques
 - Edit title/body: `gh pr edit -t "title" -b "body"` or `-F file`
 - Do not merge: never run `gh pr merge` or enable auto-merge — the user merges
 
-**Writes — cloud only:** see **Cloud vs Local** (`ManagePullRequest`: `create_pr`, `update_pr`, `post_comment`, `resolve_comment`, `get_ci_status`, `set_pr_status`).
+**Writes — Cursor Cloud only:** see **Hosted vs local** (`ManagePullRequest`: `create_pr`, `update_pr`, `post_comment`, `resolve_comment`, `get_ci_status`, `set_pr_status`).
 
 For merge-ready PR loops (conflicts, review comments, CI), use the `autopilot` skill (`/autopilot`).
 
@@ -114,7 +114,7 @@ Closes #42
 
 Use `[x]` for steps already verified before opening the PR. Skip filler.
 
-Keep the description cumulative and current — it must reflect all commits in the PR as the branch evolves. Update when needed — local: `gh pr edit -F -`; cloud: `ManagePullRequest` `update_pr`.
+Keep the description cumulative and current — it must reflect all commits in the PR as the branch evolves. Update when needed — local/Codex: `gh pr edit -F -`; Cursor Cloud: `ManagePullRequest` `update_pr`.
 
 For user-visible or cross-service changes (especially in cloud/autonomous runs), include verification artifacts in the description — screenshots or screen recordings of the working flow.
 
@@ -166,7 +166,7 @@ EOF
 )"
 ```
 
-**Cloud:** `ManagePullRequest` with `"action": "create_pr"`, same title and body, `"branch_name"`, `"base_branch"`, and `"draft": false`. Do not use `gh pr create`.
+**Cursor Cloud:** `ManagePullRequest` with `"action": "create_pr"`, same title and body, `"branch_name"`, `"base_branch"`, and `"draft": false`. Do not use `gh pr create`.
 
 4. Confirm the PR is not a draft: `gh pr view --json isDraft,url` — `isDraft` must be `false`.
 5. Return the PR URL.
@@ -214,14 +214,14 @@ gh pr review --approve
 gh pr review --request-changes -b "message"
 ```
 
-Cloud: use `post_comment` when a PR comment is relevant (for example replying after addressing review feedback) or when the user asks. Do not use `gh pr review` for writes.
+Cursor Cloud: use `post_comment` when a PR comment is relevant (for example replying after addressing review feedback) or when the user asks. Do not use `gh pr review` for writes.
 
 For triaging review feedback on an open PR, use the `autopilot` skill (`/autopilot`).
 
 ## Common Mistakes
 
-- Creating draft PRs (`--draft`, or omitting `"draft": false` in cloud `create_pr`).
-- Using `gh pr create` / `gh pr edit` / `gh pr ready` / `gh pr comment` / `gh pr review` / `gh pr close` / `gh pr reopen` as writes in Cursor Cloud — use `ManagePullRequest` instead.
+- Creating draft PRs (`--draft`, or omitting `"draft": false` in Cursor Cloud `create_pr`).
+- Using `gh pr create` / `gh pr edit` / `gh pr ready` / `gh pr comment` / `gh pr review` / `gh pr close` / `gh pr reopen` as writes in Cursor Cloud when `ManagePullRequest` is available — use that tool instead.
 - Merging or enabling auto-merge — the user merges on their own.
 - Looking up the PR number first when the current branch is already enough.
 - Using `gh pr list` for the active branch instead of `gh pr view`.

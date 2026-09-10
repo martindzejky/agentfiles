@@ -1,24 +1,30 @@
 ---
 name: agentmemory-agents
-description: How agentmemory wires into Cursor via MCP. Use when installing or repairing the agentmemory MCP connection in Cursor, or when tools are missing after a config change.
+description: How agentmemory wires into coding agents via MCP. Use when installing or repairing the agentmemory MCP connection in Cursor or Codex, or when tools are missing after a config change.
 user-invocable: false
 ---
 
-Cursor talks to agentmemory over MCP only. REST still runs underneath (default `http://localhost:3111`), and the MCP bridge exposes the `memory_*` tools.
+Coding agents talk to agentmemory over MCP. REST still runs underneath (default `http://localhost:3111`), and the MCP bridge exposes the `memory_*` tools.
 
 ## Quick start
+
+**Cursor:**
 
 ```bash
 agentmemory connect cursor
 ```
 
-Then restart Cursor or reload MCP so it picks up the server. Confirm the agent lists agentmemory's tools (the full set, not a tiny stub).
+Then restart Cursor or reload MCP.
+
+**Codex:** add the agentmemory MCP server in `~/.codex/config.toml` (or project `.codex/config.toml`), then restart Codex.
+
+Confirm the agent lists agentmemory's tools (the full set, not a tiny stub). A tiny subset (around 7 tools) usually means the MCP bridge could not reach the memory server.
 
 ## Workflow
 
-1. Run `agentmemory connect cursor` (or add the MCP server in Cursor settings by hand).
-2. Restart Cursor / reload MCP.
-3. Verify: Cursor should show the full tool set with the server live. A tiny subset (around 7 tools) usually means the MCP bridge could not reach the memory server.
+1. **Cursor:** run `agentmemory connect cursor` (or add the MCP server in Cursor settings by hand), then restart / reload MCP.
+2. **Codex:** configure the MCP server in `config.toml`, then restart Codex.
+3. Verify the full tool set is live in whichever agent you use.
 
 ## Notes
 
@@ -28,8 +34,8 @@ Then restart Cursor or reload MCP so it picks up the server. Confirm the agent l
 ## See also
 
 - agentmemory-mcp-tools, agentmemory-rest-api, agentmemory-config.
-- agentmemory-hooks for automatic capture via Cursor hooks.
+- agentmemory-hooks for automatic capture via hooks (Cursor adapter in this repo today).
 
 ## Reference
 
-Cursor-specific wiring notes live in REFERENCE.md.
+Agent-specific wiring notes live in REFERENCE.md.

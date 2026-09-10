@@ -1,13 +1,13 @@
 ---
 name: agentmemory-hooks
-description: Cursor hooks that capture agentmemory observations during agent turns. Use when installing or debugging automatic memory capture in Cursor, when observations are missing, or when deciding which hook events to wire.
+description: Hooks that capture agentmemory observations during agent turns. Use when installing or debugging automatic memory capture; today this repo ships a Cursor adapter (Codex hooks planned). Use when observations are missing or when deciding which hook events to wire.
 user-invocable: false
 ---
 
-Cursor hooks are command scripts in `hooks.json`. They get JSON on stdin and can call agentmemory's REST API (or MCP) so memory is captured without a manual `memory_save` on every turn.
+Agent hooks are command scripts in `hooks.json` (Cursor) or Codex hook config. They get JSON on stdin and can call agentmemory's REST API (or MCP) so memory is captured without a manual `memory_save` on every turn.
 
-This skill documents the Cursor-side AgentMemory adapter in this repo
-(`hooks/agentmemory/`). Server architecture and first-class Cursor /
+This skill documents the **Cursor-side** AgentMemory adapter in this repo
+(`hooks/agentmemory/`). A Codex adapter is planned. Server architecture and first-class Cursor /
 event-stream work belong in
 [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory);
 that fork's README is the canonical roadmap. Prefer user-level hooks in

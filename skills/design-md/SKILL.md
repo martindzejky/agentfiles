@@ -150,8 +150,8 @@ Default: omit. Include the spec's YAML token frontmatter (`colors`, `typography`
    - `BRAND.md` visual paragraph — make sure it agrees with the new palette roles.
    - `README.md` documentation map / file index.
    - `AGENTS.md` source-of-truth list and any "follow X for UI" lines.
-   - `.cursor/rules/global.mdc` required-reads list (if the project uses one).
-   - Skills under `.cursor/skills/*` that touch UI (for example `frontend-design`) — make sure their constraints reference `DESIGN.md` and that any conflicting generic guidance is explicitly overridden.
+   - Agent rules that list required reads (for example `.cursor/rules/global.mdc` or project `AGENTS.md`) — update if the project uses them.
+   - Skills that touch UI (for example `frontend-design` under `.cursor/skills/` or `.agents/skills/`) — make sure their constraints reference `DESIGN.md` and that any conflicting generic guidance is explicitly overridden.
 
 ## Workflow — updating an existing DESIGN.md
 
