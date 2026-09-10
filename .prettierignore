@@ -3,3 +3,4 @@ dotbot
 
 # generated files
 pnpm-lock.yaml
+dist/

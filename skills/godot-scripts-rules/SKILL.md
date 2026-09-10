@@ -1,5 +1,10 @@
 ---
-globs: *.gd,*.gdscript
+name: godot-scripts-rules
+description: Godot 4 GDScript conventions for typing, signals, timers, naming, and composition. Always apply when creating, editing, or reviewing *.gd or *.gdscript files.
+user-invocable: false
+paths:
+  - '**/*.gd'
+  - '**/*.gdscript'
 ---
 
 # General approach

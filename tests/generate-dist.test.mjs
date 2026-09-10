@@ -1,0 +1,134 @@
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import test from 'node:test';
+
+const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+const SCRIPT = join(ROOT, 'scripts', 'generate-dist.py');
+
+function runGenerate(args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn('python3', [SCRIPT, ...args], {
+      cwd: ROOT,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+    child.once('error', reject);
+    child.once('close', (code) => {
+      resolve({ code, stdout, stderr });
+    });
+  });
+}
+
+test('generate-dist writes always-on Cursor mdc from markdown rules', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'agentfiles-dist-'));
+  const rulesDir = join(root, 'rules');
+  const cursorOut = join(root, 'dist', 'cursor', 'rules');
+
+  try {
+    await mkdir(rulesDir);
+    await writeFile(
+      join(rulesDir, 'personality.md'),
+      '# Personality\n\nKeep replies concise.\n',
+    );
+    await writeFile(
+      join(rulesDir, 'local-env.md'),
+      [
+        '---',
+        'description: Local development, human in the loop',
+        'metadata:',
+        '  environments: local',
+        'alwaysApply: false',
+        '---',
+        '',
+        'Prefer collaboration over autonomy.',
+        '',
+      ].join('\n'),
+    );
+    await writeFile(join(rulesDir, 'README.md'), 'Not a rule.\n');
+    await mkdir(cursorOut, { recursive: true });
+    await writeFile(join(cursorOut, 'stale.mdc'), 'stale\n');
+
+    const result = await runGenerate([
+      '--root',
+      root,
+      '--cursor-out',
+      cursorOut,
+    ]);
+    assert.equal(result.code, 0, result.stderr);
+
+    const personality = await readFile(
+      join(cursorOut, 'personality.mdc'),
+      'utf8',
+    );
+    assert.equal(
+      personality,
+      [
+        '---',
+        'alwaysApply: true',
+        '---',
+        '',
+        '# Personality',
+        '',
+        'Keep replies concise.',
+        '',
+      ].join('\n'),
+    );
+
+    const localEnv = await readFile(join(cursorOut, 'local-env.mdc'), 'utf8');
+    assert.match(localEnv, /^---\n/);
+    assert.match(
+      localEnv,
+      /\ndescription: Local development, human in the loop\n/,
+    );
+    assert.match(localEnv, /\nmetadata:\n {2}environments: local\n/);
+    assert.match(localEnv, /\nalwaysApply: true\n---\n/);
+    assert.doesNotMatch(localEnv, /alwaysApply: false/);
+    assert.match(localEnv, /Prefer collaboration over autonomy\./);
+
+    await assert.rejects(readFile(join(cursorOut, 'README.mdc')), {
+      code: 'ENOENT',
+    });
+    await assert.rejects(readFile(join(cursorOut, 'stale.mdc')), {
+      code: 'ENOENT',
+    });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('repo rules generate Cursor mdc with env metadata copied', async () => {
+  const cursorOut = await mkdtemp(join(tmpdir(), 'agentfiles-repo-dist-'));
+  try {
+    const result = await runGenerate(['--cursor-out', cursorOut]);
+    assert.equal(result.code, 0, result.stderr);
+
+    const localEnv = await readFile(join(cursorOut, 'local-env.mdc'), 'utf8');
+    assert.match(localEnv, /\nmetadata:\n {2}environments: local\n/);
+    assert.match(localEnv, /\nalwaysApply: true\n---\n/);
+
+    const cloudEnv = await readFile(join(cursorOut, 'cloud-env.mdc'), 'utf8');
+    assert.match(cloudEnv, /\nmetadata:\n {2}environments: cloud\n/);
+
+    const personality = await readFile(
+      join(cursorOut, 'personality.mdc'),
+      'utf8',
+    );
+    assert.match(personality, /\nalwaysApply: true\n---\n/);
+    assert.match(personality, /You are called Cutty\./);
+  } finally {
+    await rm(cursorOut, { recursive: true, force: true });
+  }
+});

@@ -1,5 +1,9 @@
 ---
-globs: *.tscn
+name: godot-scenes-rules
+description: Godot scene composition, naming, signal wiring, and juice checklist conventions. Always apply when creating, editing, or reviewing *.tscn files.
+user-invocable: false
+paths:
+  - '**/*.tscn'
 ---
 
 # Instructions

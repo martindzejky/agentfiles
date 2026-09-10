@@ -1,5 +1,11 @@
 ---
-globs: '**/*.svelte,**/*.vue,**/*.css'
+name: tailwind-rules
+description: Build visuals with Tailwind utility classes only; no custom CSS classes or selectors. Always apply when creating, editing, or reviewing *.svelte, *.vue, or *.css files.
+user-invocable: false
+paths:
+  - '**/*.svelte'
+  - '**/*.vue'
+  - '**/*.css'
 ---
 
 Never write custom CSS classes or selectors. Always use Tailwind utility classes to construct visuals.

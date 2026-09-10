@@ -13,6 +13,8 @@ cd ~/.agentfiles
 ./install
 ```
 
+`./install` generates Cursor rule files under `dist/cursor/rules` from the portable markdown in `rules/`, then symlinks skills, rules, and hooks into `~/.cursor`. File-type conventions live in `skills/*-rules` rather than always-on rules. Codex install comes later.
+
 ## Development
 
 Use Node.js 24 and pnpm:

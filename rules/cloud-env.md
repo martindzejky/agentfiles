@@ -1,6 +1,5 @@
 ---
 description: Cloud agent, autonomous delivery
-alwaysApply: true
 metadata:
   environments: cloud
 ---
