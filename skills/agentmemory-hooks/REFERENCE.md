@@ -18,13 +18,13 @@ that fork's README is the canonical roadmap.
 
 Codex sidecar `~/.codex/hooks.json` (generated; do not edit `config.toml`):
 
-| Codex event        | Script                     | Notes                                     |
-| ------------------ | -------------------------- | ----------------------------------------- |
-| `UserPromptSubmit` | `before-submit-prompt.mjs` | Same `prompt` field                       |
-| `Stop`             | `after-agent-response.mjs` | Reads `last_assistant_message`            |
-| `PostToolUse`      | `post-tool-use.mjs`        | Also fires after non-zero Bash            |
-| `SubagentStart`    | `subagent-start.mjs`       | `agent_id` / `agent_type`                 |
-| `SubagentStop`     | `subagent-stop.mjs`        | Summary falls back to last assistant text |
+| Codex event        | Script                   | Notes                                     |
+| ------------------ | ------------------------ | ----------------------------------------- |
+| `UserPromptSubmit` | `user-prompt-submit.mjs` | Same `prompt` field                       |
+| `Stop`             | `stop.mjs`               | Reads `last_assistant_message`            |
+| `PostToolUse`      | `post-tool-use.mjs`      | Also fires after non-zero Bash            |
+| `SubagentStart`    | `subagent-start.mjs`     | `agent_id` / `agent_type`                 |
+| `SubagentStop`     | `subagent-stop.mjs`      | Summary falls back to last assistant text |
 
 Codex has no `postToolUseFailure` event. `SessionStart` is not installed.
 
@@ -55,11 +55,11 @@ Observe shapes on the martindzejky fork:
 
 ## Install targets
 
-| Scope         | Config                      | Scripts run from                   |
-| ------------- | --------------------------- | ---------------------------------- |
-| User (global) | `~/.cursor/hooks.json`      | `~/.cursor/`                       |
-| Codex (user)  | `~/.codex/hooks.json`       | session cwd; absolute script paths |
-| Project       | `<repo>/.cursor/hooks.json` | project root                       |
+| Scope         | Config                      | Scripts run from                 |
+| ------------- | --------------------------- | -------------------------------- |
+| User (global) | `~/.cursor/hooks.json`      | `~/.cursor/` (`cursor/` adapter) |
+| Codex (user)  | `~/.codex/hooks.json`       | session cwd; `codex/` adapter    |
+| Project       | `<repo>/.cursor/hooks.json` | project root                     |
 
 Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
 supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
@@ -77,7 +77,7 @@ Use REST from hook scripts:
 - Local config: gitignored `hooks/agentmemory/.env`, copied from `.env.example`
 - Base URL: required `AGENTMEMORY_URL`
 - Auth: required `Authorization: Bearer $AGENTMEMORY_SECRET`
-- Agent tag: `agentId: "cursor"` or `"codex"` from the hook event (`hook_event_name`)
+- Agent tag: hardcoded per adapter (`cursor/` → `cursor`, `codex/` → `codex`)
 - Observe idempotency: unique top-level `eventId` on every `/observe` POST
   (server dedups on that id only)
 - HTTP timeout: 2.5s per REST call (under Cursor's usual 3s hook budget)
@@ -102,8 +102,9 @@ inherited by hook processes. Every write that can lazy-create a session sends
 ## Status in this repo
 
 Cursor user-level hooks are installed from `hooks.json` and
-`hooks/agentmemory/`. Codex user-level hooks are generated into
-`dist/codex/hooks.json` and linked to `~/.codex/hooks.json`. Implementation
+`hooks/agentmemory/cursor/`. Codex user-level hooks are generated into
+`dist/codex/hooks.json` and linked to `~/.codex/hooks.json`, with scripts
+linked at `~/.codex/hooks`. Implementation
 details, Cloud limitations, smoke-test instructions, the pinned upstream audit
 trail, and the observe wire contract are in `hooks/agentmemory/README.md`.
 

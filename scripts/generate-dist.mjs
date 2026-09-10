@@ -3,18 +3,14 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CODEX_HOOK_SCRIPTS } from '../hooks/agentmemory/codex/manifest.mjs';
 
 const FRONTMATTER_RE = /^---\r?\n(.*?)\r?\n---(?:\r?\n)?(.*)$/s;
 const ALWAYS_APPLY_RE = /^alwaysApply\s*:/;
 const README_NAMES = new Set(['readme.md']);
 
 function parseArgs(argv) {
-  const args = {
-    root: undefined,
-    cursorOut: undefined,
-    codexOut: undefined,
-    codexHooksOut: undefined,
-  };
+  const args = { root: undefined, cursorOut: undefined, codexOut: undefined };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === '--root') {
@@ -25,9 +21,6 @@ function parseArgs(argv) {
       i += 1;
     } else if (arg === '--codex-out') {
       args.codexOut = argv[i + 1];
-      i += 1;
-    } else if (arg === '--codex-hooks-out') {
-      args.codexHooksOut = argv[i + 1];
       i += 1;
     } else {
       throw new Error(`Unknown argument: ${arg}`);
@@ -126,23 +119,15 @@ async function generateCodexAgents(sourceDir, destFile) {
   return destFile;
 }
 
-const CODEX_HOOKS = [
-  ['UserPromptSubmit', 'before-submit-prompt.mjs'],
-  ['Stop', 'after-agent-response.mjs'],
-  ['PostToolUse', 'post-tool-use.mjs'],
-  ['SubagentStart', 'subagent-start.mjs'],
-  ['SubagentStop', 'subagent-stop.mjs'],
-];
-
 function renderCodexHooks(root) {
   const hooks = {};
-  for (const [event, script] of CODEX_HOOKS) {
+  for (const [event, script] of CODEX_HOOK_SCRIPTS) {
     hooks[event] = [
       {
         hooks: [
           {
             type: 'command',
-            command: join(root, 'hooks', 'agentmemory', script),
+            command: join(root, 'hooks', 'agentmemory', 'codex', script),
             timeout: 3,
           },
         ],
@@ -173,18 +158,13 @@ async function main() {
   const cursorOut = resolve(
     args.cursorOut ?? join(root, 'dist', 'cursor', 'rules'),
   );
-  const codexOut = resolve(
-    args.codexOut ?? join(root, 'dist', 'codex', 'AGENTS.md'),
-  );
+  const codexOut = resolve(args.codexOut ?? join(root, 'dist', 'codex'));
   const written = await generateCursorRules(rulesDir, cursorOut);
-  await generateCodexAgents(rulesDir, codexOut);
-  const codexHooksOut = resolve(
-    args.codexHooksOut ?? join(dirname(codexOut), 'hooks.json'),
-  );
-  await generateCodexHooks(root, codexHooksOut);
+  await mkdir(codexOut, { recursive: true });
+  await generateCodexAgents(rulesDir, join(codexOut, 'AGENTS.md'));
+  await generateCodexHooks(root, join(codexOut, 'hooks.json'));
   console.log(`Wrote ${written.length} Cursor rule(s) to ${cursorOut}`);
-  console.log(`Wrote Codex AGENTS.md to ${codexOut}`);
-  console.log(`Wrote Codex hooks.json to ${codexHooksOut}`);
+  console.log(`Wrote Codex dist to ${codexOut}`);
 }
 
 const invokedDirectly =

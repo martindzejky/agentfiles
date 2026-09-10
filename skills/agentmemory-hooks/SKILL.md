@@ -23,17 +23,23 @@ This repo installs the following local user hooks:
   "version": 1,
   "hooks": {
     "beforeSubmitPrompt": [
-      { "command": "./hooks/agentmemory/before-submit-prompt.mjs" }
+      { "command": "./hooks/agentmemory/cursor/before-submit-prompt.mjs" }
     ],
     "afterAgentResponse": [
-      { "command": "./hooks/agentmemory/after-agent-response.mjs" }
+      { "command": "./hooks/agentmemory/cursor/after-agent-response.mjs" }
     ],
-    "postToolUse": [{ "command": "./hooks/agentmemory/post-tool-use.mjs" }],
+    "postToolUse": [
+      { "command": "./hooks/agentmemory/cursor/post-tool-use.mjs" }
+    ],
     "postToolUseFailure": [
-      { "command": "./hooks/agentmemory/post-tool-failure.mjs" }
+      { "command": "./hooks/agentmemory/cursor/post-tool-failure.mjs" }
     ],
-    "subagentStart": [{ "command": "./hooks/agentmemory/subagent-start.mjs" }],
-    "subagentStop": [{ "command": "./hooks/agentmemory/subagent-stop.mjs" }]
+    "subagentStart": [
+      { "command": "./hooks/agentmemory/cursor/subagent-start.mjs" }
+    ],
+    "subagentStop": [
+      { "command": "./hooks/agentmemory/cursor/subagent-stop.mjs" }
+    ]
   }
 }
 ```
@@ -77,7 +83,7 @@ open: missing configuration or a down server must not block the agent.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
 - Per-session debug log (local only, not uploaded): `~/.cursor/hooks-logs/<id>.jsonl` or `~/.codex/hooks-logs/<id>.jsonl`.
 - Every `/agentmemory/observe` POST sends a unique top-level `eventId`.
-- REST bodies set `agentId` to `"cursor"` or `"codex"` from the hook event.
+- REST bodies set `agentId` from the adapter (`cursor` or `codex`).
 - MCP server environment variables may not be inherited by hook processes.
 - Use `remember` for explicit saves and `recall` when you need past context.
 - This adapter requires the

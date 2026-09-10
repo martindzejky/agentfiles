@@ -1,7 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseEnv } from 'node:util';
@@ -14,43 +13,6 @@ export const CAPTURE_LIMIT = 10_000;
 // 3s hook budget.
 export const REQUEST_TIMEOUT_MS = 2_500;
 
-// Default when the payload is not a Codex lifecycle event.
-// Multi-agent setups that share one AgentMemory server use agentId to tag
-// which client wrote the memory.
-export const AGENT_ID = 'cursor';
-
-export const CODEX_HOOK_EVENTS = new Set([
-  'UserPromptSubmit',
-  'Stop',
-  'PostToolUse',
-  'SubagentStart',
-  'SubagentStop',
-  'SessionStart',
-  'SessionEnd',
-  'PreToolUse',
-  'PermissionRequest',
-  'PreCompact',
-  'PostCompact',
-]);
-
-export function resolveAgentId(payload) {
-  const override = nonEmptyString(process.env.AGENTMEMORY_AGENT_ID);
-  if (override) return override;
-  const event = nonEmptyString(payload?.hook_event_name);
-  if (event && CODEX_HOOK_EVENTS.has(event)) return 'codex';
-  return AGENT_ID;
-}
-
-export function withAgentId(body, payload) {
-  return { ...body, agentId: resolveAgentId(payload) };
-}
-
-// Idempotency key for /agentmemory/observe. Fresh UUID per hook invocation;
-// the server deduplicates on exact eventId match.
-export function newEventId() {
-  return randomUUID();
-}
-
 const LOCAL_ENV_KEYS = [
   'AGENTMEMORY_URL',
   'AGENTMEMORY_SECRET',
@@ -59,7 +21,7 @@ const LOCAL_ENV_KEYS = [
   'AGENTMEMORY_HOOK_LOG_DIR',
 ];
 
-function nonEmptyString(value) {
+export function nonEmptyString(value) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
@@ -68,7 +30,7 @@ export function loadLocalEnv() {
 
   const envFile =
     nonEmptyString(process.env.AGENTMEMORY_ENV_FILE) ??
-    fileURLToPath(new URL('.env', import.meta.url));
+    fileURLToPath(new URL('../.env', import.meta.url));
 
   try {
     const values = parseEnv(readFileSync(envFile, 'utf8'));
@@ -78,7 +40,7 @@ export function loadLocalEnv() {
       }
     }
   } catch {
-    // Missing or invalid local configuration must not break Cursor.
+    // Missing or invalid local configuration must not break the hook.
   }
 }
 
@@ -98,21 +60,6 @@ export async function readPayload() {
   }
 }
 
-export function defaultHookLogDirectory(payload) {
-  return join(
-    homedir(),
-    resolveAgentId(payload) === 'codex' ? '.codex' : '.cursor',
-    'hooks-logs',
-  );
-}
-
-function hookLogDirectory(payload) {
-  return (
-    nonEmptyString(process.env.AGENTMEMORY_HOOK_LOG_DIR) ??
-    defaultHookLogDirectory(payload)
-  );
-}
-
 function resolveLogSessionId(payload) {
   const sessionId =
     nonEmptyString(payload?.session_id) ??
@@ -123,10 +70,14 @@ function resolveLogSessionId(payload) {
   return sessionId.replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 200) || 'unknown';
 }
 
+function resolveLogDirectory(logDirectory) {
+  return nonEmptyString(process.env.AGENTMEMORY_HOOK_LOG_DIR) ?? logDirectory;
+}
+
 // Local debug log only. Never uploaded; never printed to stdout/stderr.
-export function appendHookLog(hook, payload) {
+export function appendHookLog(hook, payload, { logDirectory }) {
   try {
-    const directory = hookLogDirectory(payload);
+    const directory = resolveLogDirectory(logDirectory);
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     const line = JSON.stringify({
       ts: new Date().toISOString(),
@@ -141,53 +92,6 @@ export function appendHookLog(hook, payload) {
   } catch {
     // Logging must not break the hook.
   }
-}
-
-export async function readHookPayload(hook) {
-  const payload = await readPayload();
-  appendHookLog(hook, payload);
-  return payload;
-}
-
-export function resolveSessionId(payload) {
-  return (
-    nonEmptyString(payload?.session_id) ??
-    // Claude / marketplace plugin payloads use camelCase sessionId.
-    nonEmptyString(payload?.sessionId) ??
-    nonEmptyString(payload?.conversation_id) ??
-    // Cursor subagentStart documents parent_conversation_id when the common
-    // conversation_id field is absent.
-    nonEmptyString(payload?.parent_conversation_id) ??
-    `${resolveAgentId(payload)}_${randomUUID()}`
-  );
-}
-
-export function resolveSubagentId(payload) {
-  return (
-    nonEmptyString(payload?.subagent_id) ??
-    nonEmptyString(payload?.agent_id) ??
-    nonEmptyString(payload?.agentName)
-  );
-}
-
-export function resolveSubagentType(payload) {
-  return (
-    nonEmptyString(payload?.subagent_type) ??
-    nonEmptyString(payload?.agent_type) ??
-    nonEmptyString(payload?.agentDisplayName) ??
-    nonEmptyString(payload?.agentName)
-  );
-}
-
-export function resolveWorkingDirectory(payload) {
-  if (Array.isArray(payload?.workspace_roots)) {
-    for (const root of payload.workspace_roots) {
-      const workspaceRoot = nonEmptyString(root);
-      if (workspaceRoot) return workspaceRoot;
-    }
-  }
-
-  return nonEmptyString(payload?.cwd) ?? process.cwd();
 }
 
 export function resolveProject(cwd) {
@@ -249,6 +153,10 @@ export function readConfig() {
   }
 }
 
+export function newEventId() {
+  return randomUUID();
+}
+
 export async function postJson(path, body, options = {}) {
   const config = options.config ?? readConfig();
   if (!config) return null;
@@ -260,7 +168,7 @@ export async function postJson(path, body, options = {}) {
         Authorization: `Bearer ${config.secret}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(withAgentId(body, options.payload)),
+      body: JSON.stringify({ ...body, agentId: options.agentId }),
       redirect: 'error',
       signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS),
     });
@@ -271,6 +179,22 @@ export async function postJson(path, body, options = {}) {
   } catch {
     return null;
   }
+}
+
+export async function postObserve({ hookType, sessionId, cwd, data }, ctx) {
+  return postJson(
+    '/agentmemory/observe',
+    {
+      hookType,
+      sessionId,
+      project: resolveProject(cwd),
+      cwd,
+      timestamp: new Date().toISOString(),
+      eventId: newEventId(),
+      data,
+    },
+    ctx,
+  );
 }
 
 export function truncateText(value) {
@@ -329,26 +253,6 @@ export function stripImageData(value) {
   return value;
 }
 
-export function resolveToolName(payload) {
-  return (
-    nonEmptyString(payload?.tool_name) ?? nonEmptyString(payload?.toolName)
-  );
-}
-
-export function resolveToolInput(payload) {
-  return payload?.tool_input ?? payload?.toolArgs;
-}
-
-export function resolveToolOutput(payload) {
-  if (payload?.tool_response !== undefined) return payload.tool_response;
-  if (payload?.tool_output !== undefined) return payload.tool_output;
-  const result = payload?.tool_result ?? payload?.toolResult;
-  if (result && typeof result === 'object' && !Array.isArray(result)) {
-    return result.text_result_for_llm ?? result.textResultForLlm ?? result;
-  }
-  return result;
-}
-
-export function writeCursorOutput(output = {}) {
+export function writeHookOutput(output = {}) {
   process.stdout.write(`${JSON.stringify(output)}\n`);
 }

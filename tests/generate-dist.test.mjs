@@ -68,7 +68,7 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
       cursorOut,
     ]);
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /Wrote Codex AGENTS.md/);
+    assert.match(result.stdout, /Wrote Codex dist/);
 
     const personality = await readFile(
       join(cursorOut, 'personality.mdc'),
@@ -131,7 +131,7 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
     assert.equal(hooks.hooks.UserPromptSubmit[0].hooks[0].type, 'command');
     assert.equal(
       hooks.hooks.UserPromptSubmit[0].hooks[0].command,
-      join(root, 'hooks', 'agentmemory', 'before-submit-prompt.mjs'),
+      join(root, 'hooks', 'agentmemory', 'codex', 'user-prompt-submit.mjs'),
     );
   } finally {
     await rm(root, { recursive: true, force: true });
@@ -140,10 +140,7 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
 
 test('repo rules generate Cursor mdc with env metadata copied', async () => {
   const cursorOut = await mkdtemp(join(tmpdir(), 'agentfiles-repo-dist-'));
-  const codexOut = join(
-    await mkdtemp(join(tmpdir(), 'agentfiles-repo-codex-')),
-    'AGENTS.md',
-  );
+  const codexOut = await mkdtemp(join(tmpdir(), 'agentfiles-repo-codex-'));
   try {
     const result = await runGenerate([
       '--cursor-out',
@@ -167,7 +164,7 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
     assert.match(personality, /\nalwaysApply: true\n---\n/);
     assert.match(personality, /Keep replies concise\./);
 
-    const agents = await readFile(codexOut, 'utf8');
+    const agents = await readFile(join(codexOut, 'AGENTS.md'), 'utf8');
     assert.doesNotMatch(agents, /^---\n/);
     assert.doesNotMatch(agents, /^description:/m);
     assert.doesNotMatch(agents, /^metadata:/m);
@@ -185,7 +182,7 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
     assert.ok(Buffer.byteLength(agents, 'utf8') < 32 * 1024);
 
     const hooks = JSON.parse(
-      await readFile(join(dirname(codexOut), 'hooks.json'), 'utf8'),
+      await readFile(join(codexOut, 'hooks.json'), 'utf8'),
     );
     assert.deepEqual(Object.keys(hooks.hooks), [
       'UserPromptSubmit',
@@ -197,13 +194,13 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
     assert.equal(hooks.hooks.SessionStart, undefined);
     assert.equal(
       hooks.hooks.Stop[0].hooks[0].command,
-      join(ROOT, 'hooks', 'agentmemory', 'after-agent-response.mjs'),
+      join(ROOT, 'hooks', 'agentmemory', 'codex', 'stop.mjs'),
     );
     assert.equal(hooks.hooks.PostToolUse[0].hooks[0].timeout, 3);
     assert.equal(hooks.hooks.PostToolUseFailure, undefined);
   } finally {
     await rm(cursorOut, { recursive: true, force: true });
-    await rm(dirname(codexOut), { recursive: true, force: true });
+    await rm(codexOut, { recursive: true, force: true });
   }
 });
 
@@ -211,7 +208,7 @@ test('generate-dist writes Codex AGENTS.md in filename order', async () => {
   const root = await mkdtemp(join(tmpdir(), 'agentfiles-codex-'));
   const rulesDir = join(root, 'rules');
   const cursorOut = join(root, 'dist', 'cursor', 'rules');
-  const codexOut = join(root, 'out', 'AGENTS.md');
+  const codexOut = join(root, 'out');
 
   try {
     await mkdir(rulesDir);
@@ -241,7 +238,7 @@ test('generate-dist writes Codex AGENTS.md in filename order', async () => {
     assert.equal(result.code, 0, result.stderr);
 
     assert.equal(
-      await readFile(codexOut, 'utf8'),
+      await readFile(join(codexOut, 'AGENTS.md'), 'utf8'),
       ['# Alpha', '', 'First body.', '', '# Zeta', '', 'Last body.', ''].join(
         '\n',
       ),
