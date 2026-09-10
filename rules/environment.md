@@ -2,7 +2,7 @@
 description: Complete coding environment, local projects, and repo aliases
 ---
 
-You must always have a set of global user skills, workflows, rules, and subagent definitions, placed at `~/.cursor` or `/.cursor` (Cursor) and, once installed, `~/.codex` / `~/.agents` (Codex).
+You must always have a set of global user skills, workflows, rules, and subagent definitions, placed at `~/.cursor` or `/.cursor` (Cursor) and, once installed, `~/.codex` / `~/.agents` (Codex). These come from my global agentfiles at https://github.com/martindzejky/agentfiles.
 If you don't, or your current environment is incomplete in any other way, warn the user explicitly and ask them for a proper setup.
 You should always have access to a proper complete coding environment.
 Do not proceed with implementation if your environment is incomplete or broken. Stop and ask the user to fix first.
