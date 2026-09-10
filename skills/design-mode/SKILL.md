@@ -1,6 +1,6 @@
 ---
 name: design-mode
-description: Activates expert design engagement mode for decks, landing pages, prototypes, and related artifacts. Use when the user explicitly invokes /design-mode or asks to enter design mode.
+description: Activates expert design engagement mode for decks, landing pages, prototypes, and related artifacts.
 user-invocable: true
 disable-model-invocation: true
 ---

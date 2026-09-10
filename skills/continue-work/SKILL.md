@@ -1,6 +1,6 @@
 ---
 name: continue-work
-description: Resumes agent work after the user reviewed and committed the previous batch. Use when the user explicitly invokes /continue-work or says they reviewed and committed your work so far.
+description: Resumes agent work after the user reviewed and committed the previous batch.
 user-invocable: true
 disable-model-invocation: true
 ---

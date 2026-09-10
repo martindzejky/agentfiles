@@ -1,6 +1,6 @@
 ---
 name: commit-changes
-description: Commits current changes after validation, respecting the staging area and git commit style. Use when the user explicitly invokes /commit-changes or asks to commit their work.
+description: Commits current changes after validation, respecting the staging area and git commit style.
 user-invocable: true
 disable-model-invocation: true
 ---

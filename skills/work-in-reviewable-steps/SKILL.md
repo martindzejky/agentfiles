@@ -1,6 +1,6 @@
 ---
 name: work-in-reviewable-steps
-description: Splits work into small reviewable batches and pauses for user review between them. Use when the user explicitly invokes /work-in-reviewable-steps or asks to work in incremental reviewable steps.
+description: Splits work into small reviewable batches and pauses for user review between them.
 user-invocable: true
 disable-model-invocation: true
 ---

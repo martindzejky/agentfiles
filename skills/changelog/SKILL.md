@@ -1,6 +1,6 @@
 ---
 name: changelog
-description: Updates the project CHANGELOG.md from commits on the current feature branch. Use when the user explicitly invokes /changelog or asks to update the changelog on a feature branch.
+description: Updates the project CHANGELOG.md from commits on the current feature branch.
 user-invocable: true
 disable-model-invocation: true
 ---
