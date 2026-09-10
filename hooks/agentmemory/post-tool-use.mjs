@@ -2,11 +2,9 @@
 
 // Adapted from AgentMemory plugin/scripts/post-tool-use.mjs at
 // d60652a7058773fa9428fa720eda38942f12f014.
-// Opt-in enrich is adapted from plugin/scripts/pre-tool-use.mjs: Cursor has no
-// preToolUse additional_context, so enrichment returns here after the tool.
+// Capture only: posts /observe and never injects additional_context.
 
 import {
-  fetchEnrichContext,
   newEventId,
   postJson,
   readConfig,
@@ -36,35 +34,25 @@ async function main() {
   const toolInput = resolveToolInput(payload);
   const cleanOutput = stripImageData(resolveToolOutput(payload));
 
-  const [, context] = await Promise.all([
-    postJson(
-      '/agentmemory/observe',
-      {
-        hookType: 'post_tool_use',
-        sessionId,
-        project,
-        cwd,
-        timestamp: new Date().toISOString(),
-        eventId: newEventId(),
-        data: {
-          tool_name: toolName,
-          tool_input: truncateValue(toolInput),
-          tool_output: truncateValue(cleanOutput),
-        },
-      },
-      { config },
-    ),
-    fetchEnrichContext({
-      config,
+  await postJson(
+    '/agentmemory/observe',
+    {
+      hookType: 'post_tool_use',
       sessionId,
       project,
       cwd,
-      toolName,
-      toolInput,
-    }),
-  ]);
+      timestamp: new Date().toISOString(),
+      eventId: newEventId(),
+      data: {
+        tool_name: toolName,
+        tool_input: truncateValue(toolInput),
+        tool_output: truncateValue(cleanOutput),
+      },
+    },
+    { config },
+  );
 
-  writeCursorOutput(context ? { additional_context: context } : {});
+  writeCursorOutput();
 }
 
 main().catch(() => writeCursorOutput());

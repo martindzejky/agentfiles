@@ -14,7 +14,6 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const PROJECT = basename(ROOT);
 const HOOK_DIRECTORY = join(ROOT, 'hooks', 'agentmemory');
 const HOOKS = {
-  sessionStart: 'session-start.mjs',
   beforeSubmitPrompt: 'before-submit-prompt.mjs',
   afterAgentResponse: 'after-agent-response.mjs',
   postToolUse: 'post-tool-use.mjs',
@@ -96,12 +95,7 @@ async function startMockServer(options = {}) {
       }
 
       const status = options.status ?? 200;
-      const body =
-        (request.url === '/agentmemory/session/start' ||
-          request.url === '/agentmemory/enrich') &&
-        options.context
-          ? { context: options.context }
-          : { success: status < 400 };
+      const body = { success: status < 400 };
       response.writeHead(status, { 'Content-Type': 'application/json' });
       response.end(JSON.stringify(body));
     });
@@ -150,6 +144,17 @@ test('manifest contains exactly the selected executable hooks', async () => {
   }
 });
 
+test('sessionStart and enrich helpers are not shipped', async () => {
+  await assert.rejects(() =>
+    access(join(HOOK_DIRECTORY, 'session-start.mjs'), constants.F_OK),
+  );
+  const shared = await import(join(HOOK_DIRECTORY, 'shared.mjs'));
+  assert.equal(shared.isContextInjectionEnabled, undefined);
+  assert.equal(shared.fetchEnrichContext, undefined);
+  assert.equal(shared.extractEnrichQuery, undefined);
+  assert.equal(shared.CONTEXT_TIMEOUT_MS, undefined);
+});
+
 test('session id and workspace root fallbacks match Cursor plus plugin payloads', async () => {
   const { resolveSessionId, resolveWorkingDirectory } = await import(
     join(HOOK_DIRECTORY, 'shared.mjs')
@@ -196,57 +201,16 @@ test('session id and workspace root fallbacks match Cursor plus plugin payloads'
 });
 
 test('HTTP timeouts fit inside Cursor hook budgets', async () => {
-  const { REQUEST_TIMEOUT_MS, CONTEXT_TIMEOUT_MS } = await import(
+  const { REQUEST_TIMEOUT_MS } = await import(
     join(HOOK_DIRECTORY, 'shared.mjs')
   );
   const manifest = JSON.parse(await readFile(join(ROOT, 'hooks.json'), 'utf8'));
 
   assert.equal(REQUEST_TIMEOUT_MS, 2_500);
-  assert.equal(CONTEXT_TIMEOUT_MS, 2_500);
   assert.ok(
     REQUEST_TIMEOUT_MS < manifest.hooks.beforeSubmitPrompt[0].timeout * 1000,
   );
-  assert.ok(CONTEXT_TIMEOUT_MS < manifest.hooks.sessionStart[0].timeout * 1000);
   assert.ok(REQUEST_TIMEOUT_MS < manifest.hooks.postToolUse[0].timeout * 1000);
-});
-
-test('sessionStart registers and emits only Cursor additional_context JSON', async () => {
-  const server = await startMockServer({ context: 'restored memory context' });
-  try {
-    const result = await runHook(
-      'sessionStart',
-      {
-        session_id: 'session-id',
-        conversation_id: 'conversation-id',
-        workspace_roots: [ROOT],
-      },
-      {
-        url: server.url,
-        env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
-      },
-    );
-
-    assert.equal(result.code, 0);
-    assert.deepEqual(JSON.parse(result.stdout), {
-      additional_context: 'restored memory context',
-    });
-    assert.notEqual(result.stdout.trim(), 'restored memory context');
-    assert.equal(result.stderr, '');
-    assert.deepEqual(server.requests, [
-      {
-        path: '/agentmemory/session/start',
-        authorization: 'Bearer test-secret',
-        body: {
-          sessionId: 'session-id',
-          project: PROJECT,
-          cwd: ROOT,
-          agentId: 'cursor',
-        },
-      },
-    ]);
-  } finally {
-    await server.close();
-  }
 });
 
 test('beforeSubmitPrompt accepts camelCase sessionId and skips blank workspace roots', async () => {
@@ -497,162 +461,63 @@ test('postToolUse records truncated tool observations', async () => {
   }
 });
 
-test('postToolUse enriches file tools when injection is enabled', async () => {
-  const server = await startMockServer({
-    context: 'past notes about shared.mjs',
-  });
-  try {
-    const result = await runHook(
-      'postToolUse',
-      {
-        conversation_id: 'enrich-session',
-        workspace_roots: [ROOT],
-        tool_name: 'Read',
-        tool_input: { path: 'hooks/agentmemory/shared.mjs' },
-        tool_output: 'ok',
-      },
-      {
-        url: server.url,
-        env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
-      },
-    );
-
-    assert.equal(result.code, 0);
-    assert.deepEqual(JSON.parse(result.stdout), {
-      additional_context: 'past notes about shared.mjs',
-    });
-    assert.equal(result.stderr, '');
-
-    assert.equal(server.requests.length, 2);
-    const paths = server.requests.map((request) => request.path).sort();
-    assert.deepEqual(paths, ['/agentmemory/enrich', '/agentmemory/observe']);
-
-    const enrich = server.requests.find(
-      (request) => request.path === '/agentmemory/enrich',
-    );
-    assert.equal(enrich.body.sessionId, 'enrich-session');
-    assert.equal(enrich.body.project, PROJECT);
-    assert.equal(enrich.body.cwd, ROOT);
-    assert.equal(enrich.body.toolName, 'Read');
-    assert.deepEqual(enrich.body.files, ['hooks/agentmemory/shared.mjs']);
-    assert.equal(enrich.body.terms, undefined);
-    assert.equal(enrich.body.agentId, 'cursor');
-  } finally {
-    await server.close();
-  }
-});
-
-test('postToolUse enriches StrReplace and filePath aliases', async () => {
-  const server = await startMockServer({ context: 'notes for the edit' });
-  try {
-    const strReplace = await runHook(
-      'postToolUse',
-      {
-        conversation_id: 'enrich-alias-session',
-        workspace_roots: [ROOT],
-        tool_name: 'StrReplace',
-        tool_input: { path: 'hooks/agentmemory/shared.mjs' },
-        tool_output: 'ok',
-      },
-      {
-        url: server.url,
-        env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
-      },
-    );
-    assert.equal(strReplace.code, 0);
-    assert.deepEqual(JSON.parse(strReplace.stdout), {
-      additional_context: 'notes for the edit',
-    });
-
-    const readAlias = await runHook(
-      'postToolUse',
-      {
-        conversation_id: 'enrich-alias-session',
-        workspace_roots: [ROOT],
-        tool_name: 'Read',
-        tool_input: { filePath: 'README.md' },
-        tool_output: 'ok',
-      },
-      {
-        url: server.url,
-        env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
-      },
-    );
-    assert.equal(readAlias.code, 0);
-    assert.deepEqual(JSON.parse(readAlias.stdout), {
-      additional_context: 'notes for the edit',
-    });
-
-    const enrichRequests = server.requests.filter(
-      (request) => request.path === '/agentmemory/enrich',
-    );
-    assert.equal(enrichRequests.length, 2);
-    assert.equal(enrichRequests[0].body.toolName, 'StrReplace');
-    assert.deepEqual(enrichRequests[0].body.files, [
-      'hooks/agentmemory/shared.mjs',
-    ]);
-    assert.deepEqual(enrichRequests[1].body.files, ['README.md']);
-  } finally {
-    await server.close();
-  }
-});
-
-test('postToolUse skips enrich for Shell, MCP, and when injection is off', async () => {
-  const server = await startMockServer({ context: 'should not appear' });
+test('postToolUse never enriches or injects context', async () => {
+  const server = await startMockServer();
   try {
     assertSuccessfulNoOp(
       await runHook(
         'postToolUse',
         {
-          conversation_id: 'enrich-skip-session',
+          conversation_id: 'capture-only-session',
           workspace_roots: [ROOT],
           tool_name: 'Read',
-          tool_input: { path: 'README.md' },
+          tool_input: { path: 'hooks/agentmemory/shared.mjs' },
           tool_output: 'ok',
         },
-        { url: server.url },
+        {
+          url: server.url,
+          env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
+        },
       ),
     );
-    assert.equal(server.requests.length, 1);
-    assert.equal(server.requests[0].path, '/agentmemory/observe');
-
     assertSuccessfulNoOp(
       await runHook(
         'postToolUse',
         {
-          conversation_id: 'enrich-skip-session',
+          conversation_id: 'capture-only-session',
+          workspace_roots: [ROOT],
+          tool_name: 'StrReplace',
+          tool_input: { filePath: 'README.md' },
+          tool_output: 'ok',
+        },
+        {
+          url: server.url,
+          env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
+        },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUse',
+        {
+          conversation_id: 'capture-only-session',
           workspace_roots: [ROOT],
           tool_name: 'Shell',
           tool_input: { command: 'ls' },
           tool_output: 'ok',
         },
-        {
-          url: server.url,
-          env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
-        },
+        { url: server.url },
       ),
     );
-    assert.equal(server.requests.length, 2);
-    assert.equal(server.requests[1].path, '/agentmemory/observe');
 
-    assertSuccessfulNoOp(
-      await runHook(
-        'postToolUse',
-        {
-          conversation_id: 'enrich-skip-session',
-          workspace_roots: [ROOT],
-          tool_name: 'MCP:memory_recall',
-          tool_input: { query: 'hooks' },
-          tool_output: 'ok',
-        },
-        {
-          url: server.url,
-          env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
-        },
-      ),
-    );
     assert.equal(server.requests.length, 3);
-    assert.equal(server.requests[2].path, '/agentmemory/observe');
+    for (const request of server.requests) {
+      assert.equal(request.path, '/agentmemory/observe');
+      assert.equal(request.body.hookType, 'post_tool_use');
+    }
+    assert.equal(server.requests[0].body.data.tool_name, 'Read');
+    assert.equal(server.requests[1].body.data.tool_name, 'StrReplace');
+    assert.equal(server.requests[2].body.data.tool_name, 'Shell');
   } finally {
     await server.close();
   }
@@ -890,9 +755,7 @@ test('subagentStop falls back to last_assistant_message for summary', async () =
 });
 
 test('every observe POST sends a unique non-empty top-level eventId', async () => {
-  const server = await startMockServer({
-    context: 'enrich should not receive eventId',
-  });
+  const server = await startMockServer();
   const sessionId = 'event-id-session';
   try {
     const payloads = {
@@ -938,21 +801,7 @@ test('every observe POST sends a unique non-empty top-level eventId', async () =
     };
 
     for (const [event, payload] of Object.entries(payloads)) {
-      const result = await runHook(event, payload, {
-        url: server.url,
-        env:
-          event === 'postToolUse'
-            ? { AGENTMEMORY_INJECT_CONTEXT: 'true' }
-            : undefined,
-      });
-      if (event === 'postToolUse') {
-        assert.equal(result.code, 0);
-        assert.deepEqual(JSON.parse(result.stdout), {
-          additional_context: 'enrich should not receive eventId',
-        });
-      } else {
-        assertSuccessfulNoOp(result);
-      }
+      assertSuccessfulNoOp(await runHook(event, payload, { url: server.url }));
     }
 
     // Second beforeSubmitPrompt proves two invocations get different ids.
@@ -972,6 +821,7 @@ test('every observe POST sends a unique non-empty top-level eventId', async () =
       (request) => request.path === '/agentmemory/observe',
     );
     assert.equal(observes.length, Object.keys(payloads).length + 1);
+    assert.equal(server.requests.length, observes.length);
 
     assert.deepEqual(
       observes.map((request) => request.body.hookType),
@@ -1008,12 +858,6 @@ test('every observe POST sends a unique non-empty top-level eventId', async () =
       assert.equal(request.body.data?.eventId, undefined);
     }
     assert.equal(new Set(eventIds).size, eventIds.length);
-
-    const enrich = server.requests.find(
-      (request) => request.path === '/agentmemory/enrich',
-    );
-    assert.ok(enrich);
-    assert.equal(enrich.body.eventId, undefined);
   } finally {
     await server.close();
   }
@@ -1023,10 +867,6 @@ test('every hook REST body hardcodes agentId cursor', async () => {
   const server = await startMockServer();
   try {
     const payloads = {
-      sessionStart: {
-        session_id: 'agent-id-session',
-        workspace_roots: [ROOT],
-      },
       beforeSubmitPrompt: {
         conversation_id: 'agent-id-session',
         workspace_roots: [ROOT],
@@ -1081,10 +921,8 @@ test('every hook REST body hardcodes agentId cursor', async () => {
   }
 });
 
-test('observe and enrich send sessionId project cwd agentId', async () => {
-  const server = await startMockServer({
-    context: 'enrich context for identity fields',
-  });
+test('observe sends sessionId project cwd agentId', async () => {
+  const server = await startMockServer();
   try {
     assertSuccessfulNoOp(
       await runHook(
@@ -1097,33 +935,23 @@ test('observe and enrich send sessionId project cwd agentId', async () => {
         { url: server.url },
       ),
     );
-    const enrichResult = await runHook(
-      'postToolUse',
-      {
-        conversation_id: 'identity-session',
-        workspace_roots: [ROOT],
-        tool_name: 'Read',
-        tool_input: { path: 'hooks/agentmemory/shared.mjs' },
-        tool_output: 'ok',
-      },
-      {
-        url: server.url,
-        env: { AGENTMEMORY_INJECT_CONTEXT: 'true' },
-      },
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUse',
+        {
+          conversation_id: 'identity-session',
+          workspace_roots: [ROOT],
+          tool_name: 'Read',
+          tool_input: { path: 'hooks/agentmemory/shared.mjs' },
+          tool_output: 'ok',
+        },
+        { url: server.url },
+      ),
     );
-    assert.equal(enrichResult.code, 0);
-    assert.deepEqual(JSON.parse(enrichResult.stdout), {
-      additional_context: 'enrich context for identity fields',
-    });
 
-    const byPath = Object.groupBy(server.requests, (request) => request.path);
-    assert.equal(byPath['/agentmemory/observe']?.length, 2);
-    assert.equal(byPath['/agentmemory/enrich']?.length, 1);
-
-    for (const request of [
-      ...byPath['/agentmemory/observe'],
-      ...byPath['/agentmemory/enrich'],
-    ]) {
+    assert.equal(server.requests.length, 2);
+    for (const request of server.requests) {
+      assert.equal(request.path, '/agentmemory/observe');
       assert.equal(request.body.sessionId, 'identity-session');
       assert.equal(request.body.project, PROJECT);
       assert.equal(request.body.cwd, ROOT);

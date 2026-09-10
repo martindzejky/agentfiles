@@ -29,8 +29,7 @@ async function main() {
 
   // No /session/start here. That endpoint overwrites the whole session record,
   // clearing firstPrompt and observationCount on every prompt. Sending project
-  // and cwd is enough: observe creates the session when the record is missing,
-  // which also covers Cursor Cloud, where sessionStart never runs.
+  // and cwd is enough: observe creates the session when the record is missing.
   if (prompt) {
     await postJson(
       '/agentmemory/observe',
