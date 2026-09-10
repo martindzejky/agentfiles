@@ -33,6 +33,7 @@ const LOCAL_ENV_KEYS = [
   'AGENTMEMORY_SECRET',
   'AGENTMEMORY_REQUIRE_HTTPS',
   'AGENTMEMORY_PROJECT_NAME',
+  'AGENTMEMORY_HOOK_LOG_DIR',
 ];
 
 function nonEmptyString(value) {
@@ -99,7 +100,7 @@ export function appendHookLog(hook, payload) {
     const line = JSON.stringify({
       ts: new Date().toISOString(),
       hook,
-      payload: payload ?? null,
+      payload: payload == null ? null : truncateValue(stripImageData(payload)),
     });
     appendFileSync(
       join(directory, `${resolveLogSessionId(payload)}.jsonl`),

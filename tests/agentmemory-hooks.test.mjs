@@ -28,17 +28,22 @@ function hookEnvironment(url, extra = {}) {
     if (key.startsWith('AGENTMEMORY_')) delete environment[key];
   }
   environment.AGENTMEMORY_DISABLE_ENV_FILE = '1';
-  environment.AGENTMEMORY_HOOK_LOG_DIR = join(
-    tmpdir(),
-    'agentmemory-hook-logs-test',
-  );
 
   if (url) {
     environment.AGENTMEMORY_URL = url;
     environment.AGENTMEMORY_SECRET = 'test-secret';
   }
 
-  return { ...environment, ...extra };
+  const merged = { ...environment, ...extra };
+  if (!Object.hasOwn(extra, 'AGENTMEMORY_HOOK_LOG_DIR')) {
+    merged.AGENTMEMORY_HOOK_LOG_DIR = join(
+      tmpdir(),
+      'agentmemory-hook-logs-test',
+    );
+  } else if (!extra.AGENTMEMORY_HOOK_LOG_DIR) {
+    delete merged.AGENTMEMORY_HOOK_LOG_DIR;
+  }
+  return merged;
 }
 
 function runHook(event, payload, options = {}) {
@@ -1130,6 +1135,95 @@ test('hook logging fails open when the log directory is unusable', async () => {
     );
   } finally {
     await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('hooks load AGENTMEMORY_HOOK_LOG_DIR from the local env file', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-hooks-'));
+  const logDir = join(directory, 'from-env-file');
+  const envFile = join(directory, '.env');
+
+  try {
+    await writeFile(envFile, `AGENTMEMORY_HOOK_LOG_DIR=${logDir}\n`, {
+      mode: 0o600,
+    });
+    assertSuccessfulNoOp(
+      await runHook(
+        'beforeSubmitPrompt',
+        { conversation_id: 'env-log-dir', prompt: 'from file' },
+        {
+          env: {
+            AGENTMEMORY_DISABLE_ENV_FILE: '0',
+            AGENTMEMORY_ENV_FILE: envFile,
+            AGENTMEMORY_HOOK_LOG_DIR: null,
+          },
+        },
+      ),
+    );
+    const [line] = (await readFile(join(logDir, 'env-log-dir.jsonl'), 'utf8'))
+      .trim()
+      .split('\n')
+      .map((entry) => JSON.parse(entry));
+    assert.equal(line.hook, 'beforeSubmitPrompt');
+    assert.equal(line.payload.prompt, 'from file');
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('hook logs strip images and cap oversized payloads', async () => {
+  const logDir = await mkdtemp(join(tmpdir(), 'agentmemory-hook-logs-'));
+  const png =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUse',
+        {
+          conversation_id: 'cap-session',
+          tool_name: 'Read',
+          tool_input: { path: 'shot.png' },
+          tool_output: { screenshot: png, note: 'ok' },
+        },
+        { env: { AGENTMEMORY_HOOK_LOG_DIR: logDir } },
+      ),
+    );
+    const [imageLine] = (
+      await readFile(join(logDir, 'cap-session.jsonl'), 'utf8')
+    )
+      .trim()
+      .split('\n')
+      .map((entry) => JSON.parse(entry));
+    assert.equal(
+      imageLine.payload.tool_output.screenshot,
+      '[image data omitted]',
+    );
+    assert.equal(imageLine.payload.tool_output.note, 'ok');
+
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUse',
+        {
+          conversation_id: 'huge-session',
+          tool_name: 'Read',
+          tool_input: { path: 'big.txt' },
+          tool_output: 'x'.repeat(20_000),
+        },
+        { env: { AGENTMEMORY_HOOK_LOG_DIR: logDir } },
+      ),
+    );
+    const [hugeLine] = (
+      await readFile(join(logDir, 'huge-session.jsonl'), 'utf8')
+    )
+      .trim()
+      .split('\n')
+      .map((entry) => JSON.parse(entry));
+    assert.equal(typeof hugeLine.payload, 'string');
+    assert.ok(hugeLine.payload.endsWith('...[truncated]'));
+    assert.ok(hugeLine.payload.length < 20_000);
+  } finally {
+    await rm(logDir, { recursive: true, force: true });
   }
 });
 
