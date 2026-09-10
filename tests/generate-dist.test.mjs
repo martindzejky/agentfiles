@@ -7,11 +7,11 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
-const SCRIPT = join(ROOT, 'scripts', 'generate-dist.py');
+const SCRIPT = join(ROOT, 'scripts', 'generate-dist.mjs');
 
 function runGenerate(args) {
   return new Promise((resolve, reject) => {
-    const child = spawn('python3', [SCRIPT, ...args], {
+    const child = spawn(process.execPath, [SCRIPT, ...args], {
       cwd: ROOT,
       stdio: ['ignore', 'pipe', 'pipe'],
     });

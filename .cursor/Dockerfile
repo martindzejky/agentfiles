@@ -15,6 +15,11 @@ RUN apt-get update && apt-get install -y \
     sudo \
     && rm -rf /var/lib/apt/lists/*
 
+# Node is required for scripts/generate-dist.mjs during ./install
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
 ########################################################
 # UBUNTU USER
 ########################################################

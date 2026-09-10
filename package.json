@@ -5,7 +5,7 @@
   "scripts": {
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "generate:dist": "python3 scripts/generate-dist.py",
+    "generate:dist": "node scripts/generate-dist.mjs",
     "test": "node --test tests/*.test.mjs"
   },
   "devDependencies": {

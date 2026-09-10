@@ -12,7 +12,7 @@
 # update git submodules and generate per-agent files
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
-    - [python3 scripts/generate-dist.py, Generating Cursor rule dist]
+    - [node scripts/generate-dist.mjs, Generating Cursor rule dist]
 
 # link configuration files
 - link:
