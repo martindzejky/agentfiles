@@ -83,6 +83,7 @@ paths (including Cloud) stamp Cursor without a prior `/session/start`.
 3. Cursor restarted (or hooks reloaded) after `hooks.json` edits
 4. Viewer at `:3113` shows new observations while you exercise the agent
 5. Action skills still work via MCP (`remember` / `recall`) even if hooks are off
+6. Local JSONL log: `~/.cursor/hooks-logs/<conversation_id>.jsonl` (not uploaded)
 
 ## Status in this repo
 

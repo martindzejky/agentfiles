@@ -28,6 +28,10 @@ function hookEnvironment(url, extra = {}) {
     if (key.startsWith('AGENTMEMORY_')) delete environment[key];
   }
   environment.AGENTMEMORY_DISABLE_ENV_FILE = '1';
+  environment.AGENTMEMORY_HOOK_LOG_DIR = join(
+    tmpdir(),
+    'agentmemory-hook-logs-test',
+  );
 
   if (url) {
     environment.AGENTMEMORY_URL = url;
@@ -1020,6 +1024,111 @@ test('hooks load local env files without overriding inherited values', async () 
     }
   } finally {
     await server.close();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('every hook appends the received payload to a per-session jsonl log', async () => {
+  const logDir = await mkdtemp(join(tmpdir(), 'agentmemory-hook-logs-'));
+  const sessionId = 'log-session';
+  const payloads = {
+    beforeSubmitPrompt: {
+      conversation_id: sessionId,
+      prompt: 'logged prompt',
+    },
+    afterAgentResponse: {
+      conversation_id: sessionId,
+      text: 'logged response',
+    },
+    postToolUse: {
+      conversation_id: sessionId,
+      tool_name: 'Read',
+      tool_input: { path: 'README.md' },
+      tool_output: 'ok',
+    },
+    postToolUseFailure: {
+      conversation_id: sessionId,
+      tool_name: 'Shell',
+      tool_input: { command: 'false' },
+      error_message: 'exit 1',
+    },
+    subagentStart: {
+      conversation_id: sessionId,
+      subagent_id: 'sub-1',
+      subagent_type: 'explore',
+      task: 'look around',
+    },
+    subagentStop: {
+      conversation_id: sessionId,
+      subagent_type: 'explore',
+      status: 'completed',
+      summary: 'done',
+    },
+  };
+
+  try {
+    for (const [event, payload] of Object.entries(payloads)) {
+      assertSuccessfulNoOp(
+        await runHook(event, payload, {
+          env: { AGENTMEMORY_HOOK_LOG_DIR: logDir },
+        }),
+      );
+    }
+
+    const lines = (await readFile(join(logDir, `${sessionId}.jsonl`), 'utf8'))
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+    assert.equal(lines.length, Object.keys(payloads).length);
+    assert.deepEqual(
+      lines.map((line) => line.hook),
+      Object.keys(payloads),
+    );
+    for (const [index, event] of Object.keys(payloads).entries()) {
+      assert.match(lines[index].ts, /^\d{4}-\d{2}-\d{2}T/);
+      assert.deepEqual(lines[index].payload, payloads[event]);
+    }
+
+    assertSuccessfulNoOp(
+      await runHook('beforeSubmitPrompt', null, {
+        rawInput: '{invalid json',
+        env: { AGENTMEMORY_HOOK_LOG_DIR: logDir },
+      }),
+    );
+    const unknown = (await readFile(join(logDir, 'unknown.jsonl'), 'utf8'))
+      .trim()
+      .split('\n')
+      .map((line) => JSON.parse(line));
+    assert.equal(unknown.length, 1);
+    assert.equal(unknown[0].hook, 'beforeSubmitPrompt');
+    assert.equal(unknown[0].payload, null);
+
+    assertSuccessfulNoOp(
+      await runHook(
+        'afterAgentResponse',
+        { conversation_id: 'other-session', text: 'hi' },
+        { env: { AGENTMEMORY_HOOK_LOG_DIR: logDir } },
+      ),
+    );
+    await access(join(logDir, 'other-session.jsonl'), constants.F_OK);
+  } finally {
+    await rm(logDir, { recursive: true, force: true });
+  }
+});
+
+test('hook logging fails open when the log directory is unusable', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'agentmemory-hook-logs-'));
+  const blocked = join(directory, 'not-a-dir');
+  await writeFile(blocked, 'file');
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'beforeSubmitPrompt',
+        { conversation_id: 'blocked-log', prompt: 'still works' },
+        { env: { AGENTMEMORY_HOOK_LOG_DIR: blocked } },
+      ),
+    );
+  } finally {
     await rm(directory, { recursive: true, force: true });
   }
 });

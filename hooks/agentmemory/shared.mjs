@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { readFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { appendFileSync, mkdirSync, readFileSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { basename, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseEnv } from 'node:util';
 
@@ -71,6 +72,49 @@ export async function readPayload() {
   } catch {
     return null;
   }
+}
+
+function hookLogDirectory() {
+  return (
+    nonEmptyString(process.env.AGENTMEMORY_HOOK_LOG_DIR) ??
+    join(homedir(), '.cursor', 'hooks-logs')
+  );
+}
+
+function resolveLogSessionId(payload) {
+  const sessionId =
+    nonEmptyString(payload?.session_id) ??
+    nonEmptyString(payload?.sessionId) ??
+    nonEmptyString(payload?.conversation_id) ??
+    nonEmptyString(payload?.parent_conversation_id) ??
+    'unknown';
+  return sessionId.replace(/[^A-Za-z0-9._-]+/g, '_').slice(0, 200) || 'unknown';
+}
+
+// Local debug log only. Never uploaded; never printed to stdout/stderr.
+export function appendHookLog(hook, payload) {
+  try {
+    const directory = hookLogDirectory();
+    mkdirSync(directory, { recursive: true, mode: 0o700 });
+    const line = JSON.stringify({
+      ts: new Date().toISOString(),
+      hook,
+      payload: payload ?? null,
+    });
+    appendFileSync(
+      join(directory, `${resolveLogSessionId(payload)}.jsonl`),
+      `${line}\n`,
+      { mode: 0o600 },
+    );
+  } catch {
+    // Logging must not break the hook.
+  }
+}
+
+export async function readHookPayload(hook) {
+  const payload = await readPayload();
+  appendHookLog(hook, payload);
+  return payload;
 }
 
 export function resolveSessionId(payload) {
