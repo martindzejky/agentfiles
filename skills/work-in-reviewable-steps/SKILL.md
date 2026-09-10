@@ -1,3 +1,10 @@
+---
+name: work-in-reviewable-steps
+description: Splits work into small reviewable batches and pauses for user review between them.
+user-invocable: true
+disable-model-invocation: true
+---
+
 # Work in reviewable steps
 
 Split your work into small easily reviewable pieces, if you haven't already done that.

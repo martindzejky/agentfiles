@@ -1,3 +1,10 @@
+---
+name: changelog
+description: Updates the project CHANGELOG.md from commits on the current feature branch.
+user-invocable: true
+disable-model-invocation: true
+---
+
 # Update changelog
 
 Update the CHANGELOG.md file in the project with the changes implemented on the current feature branch. If the user is on `master`, do not do anything and report that this only works on feature branches. Similarly, stop and report if the `CHANGELOG.md` file is missing.
