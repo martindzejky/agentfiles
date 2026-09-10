@@ -1,9 +1,4 @@
 #!/usr/bin/env node
-/**
- * Generate per-agent files from portable rule markdown.
- *
- * Cursor gets always-on .mdc files. Codex concatenation is a later PR.
- */
 
 import { mkdir, readdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
