@@ -1,3 +1,10 @@
+---
+name: sync-with-sveltekit-template
+description: Syncs agent, config, and doc files from the martindzejky/sveltekit-template repository. Use when the user explicitly invokes /sync-with-sveltekit-template or asks to sync with the SvelteKit template.
+user-invocable: true
+disable-model-invocation: true
+---
+
 # Sync with my sveltekit-template
 
 Update this repo's agent, config, and doc files based on my updated SvelteKit template repository.

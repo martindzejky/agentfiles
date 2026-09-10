@@ -18,6 +18,7 @@ skills/<name>/
 ## SKILL.md rules
 
 - Frontmatter: `name`, `description`, optional `argument-hint`, and `user-invocable`. Set `user-invocable: true` only for skills the user runs as a slash command. Reference and knowledge skills are `false`.
+- User-only skills also set `disable-model-invocation: true` in frontmatter (Cursor and other agents) and ship `agents/openai.yaml` with `policy.allow_implicit_invocation: false` (Codex).
 - Description is two sentences and the only thing the agent sees when deciding to load the skill. Sentence one states the capability. Sentence two starts "Use when" and lists concrete triggers. Keep it distinct from sibling skills, under 1024 chars, third person.
 - Body order: Quick start (one concrete example), Why (the rule that matters), Workflow (numbered steps with decision gates), Anti-patterns (a WRONG vs RIGHT callout for the top mistake), Checklist, See also.
 - Stay under 100 lines. Move dense facts to REFERENCE.md and examples to EXAMPLES.md.
