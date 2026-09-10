@@ -12,7 +12,7 @@
 # update git submodules and generate per-agent files
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
-    - [node scripts/generate-dist.mjs, Generating Cursor rule dist]
+    - [node scripts/generate-dist.mjs, Generating Cursor and Codex dist]
 
 # link configuration files
 - link:
@@ -21,3 +21,6 @@
     ~/.cursor/rules: dist/cursor/rules
     ~/.cursor/hooks.json: hooks.json
     ~/.cursor/hooks: hooks
+    # codex
+    ~/.agents/skills: skills
+    ~/.codex/AGENTS.md: dist/codex/AGENTS.md

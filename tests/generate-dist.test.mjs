@@ -68,6 +68,7 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
       cursorOut,
     ]);
     assert.equal(result.code, 0, result.stderr);
+    assert.match(result.stdout, /Wrote Codex AGENTS.md/);
 
     const personality = await readFile(
       join(cursorOut, 'personality.mdc'),
@@ -104,6 +105,25 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
     await assert.rejects(readFile(join(cursorOut, 'stale.mdc')), {
       code: 'ENOENT',
     });
+
+    const agents = await readFile(
+      join(root, 'dist', 'codex', 'AGENTS.md'),
+      'utf8',
+    );
+    assert.equal(
+      agents,
+      [
+        'Prefer collaboration over autonomy.',
+        '',
+        '# Personality',
+        '',
+        'Keep replies concise.',
+        '',
+      ].join('\n'),
+    );
+    assert.doesNotMatch(agents, /^---\n/);
+    assert.doesNotMatch(agents, /alwaysApply/);
+    assert.doesNotMatch(agents, /Not a rule/);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -111,8 +131,17 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
 
 test('repo rules generate Cursor mdc with env metadata copied', async () => {
   const cursorOut = await mkdtemp(join(tmpdir(), 'agentfiles-repo-dist-'));
+  const codexOut = join(
+    await mkdtemp(join(tmpdir(), 'agentfiles-repo-codex-')),
+    'AGENTS.md',
+  );
   try {
-    const result = await runGenerate(['--cursor-out', cursorOut]);
+    const result = await runGenerate([
+      '--cursor-out',
+      cursorOut,
+      '--codex-out',
+      codexOut,
+    ]);
     assert.equal(result.code, 0, result.stderr);
 
     const localEnv = await readFile(join(cursorOut, 'local-env.mdc'), 'utf8');
@@ -128,7 +157,69 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
     );
     assert.match(personality, /\nalwaysApply: true\n---\n/);
     assert.match(personality, /Keep replies concise\./);
+
+    const agents = await readFile(codexOut, 'utf8');
+    assert.doesNotMatch(agents, /^---\n/);
+    assert.doesNotMatch(agents, /^description:/m);
+    assert.doesNotMatch(agents, /^metadata:/m);
+    assert.match(agents, /Keep replies concise\./);
+    assert.match(agents, /Prefer collaboration over autonomy\./);
+    assert.match(
+      agents,
+      /Don't wait for the user\. Be proactive and autonomous\./,
+    );
+    assert.match(agents, /https:\/\/github.com\/martindzejky\/agentfiles/);
+    assert.doesNotMatch(
+      agents,
+      /Always apply when creating, editing, or reviewing/,
+    );
+    assert.ok(Buffer.byteLength(agents, 'utf8') < 32 * 1024);
   } finally {
     await rm(cursorOut, { recursive: true, force: true });
+    await rm(dirname(codexOut), { recursive: true, force: true });
+  }
+});
+
+test('generate-dist writes Codex AGENTS.md in filename order', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'agentfiles-codex-'));
+  const rulesDir = join(root, 'rules');
+  const cursorOut = join(root, 'dist', 'cursor', 'rules');
+  const codexOut = join(root, 'out', 'AGENTS.md');
+
+  try {
+    await mkdir(rulesDir);
+    await writeFile(join(rulesDir, 'zeta.md'), '# Zeta\n\nLast body.\n');
+    await writeFile(
+      join(rulesDir, 'alpha.md'),
+      [
+        '---',
+        'description: First',
+        '---',
+        '',
+        '# Alpha',
+        '',
+        'First body.',
+        '',
+      ].join('\n'),
+    );
+
+    const result = await runGenerate([
+      '--root',
+      root,
+      '--cursor-out',
+      cursorOut,
+      '--codex-out',
+      codexOut,
+    ]);
+    assert.equal(result.code, 0, result.stderr);
+
+    assert.equal(
+      await readFile(codexOut, 'utf8'),
+      ['# Alpha', '', 'First body.', '', '# Zeta', '', 'Last body.', ''].join(
+        '\n',
+      ),
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
   }
 });
