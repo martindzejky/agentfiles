@@ -19,8 +19,10 @@
     # cursor
     ~/.cursor/skills: skills
     ~/.cursor/rules: dist/cursor/rules
-    ~/.cursor/hooks.json: hooks.json
+    ~/.cursor/hooks.json: hooks/agentmemory/cursor/hooks.json
     ~/.cursor/hooks: hooks
     # codex
     ~/.agents/skills: skills
     ~/.codex/AGENTS.md: dist/codex/AGENTS.md
+    ~/.codex/hooks.json: hooks/agentmemory/codex/hooks.json
+    ~/.codex/hooks: hooks

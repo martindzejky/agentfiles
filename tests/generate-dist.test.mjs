@@ -124,6 +124,10 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
     assert.doesNotMatch(agents, /^---\n/);
     assert.doesNotMatch(agents, /alwaysApply/);
     assert.doesNotMatch(agents, /Not a rule/);
+
+    await assert.rejects(readFile(join(root, 'dist', 'codex', 'hooks.json')), {
+      code: 'ENOENT',
+    });
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -131,10 +135,8 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
 
 test('repo rules generate Cursor mdc with env metadata copied', async () => {
   const cursorOut = await mkdtemp(join(tmpdir(), 'agentfiles-repo-dist-'));
-  const codexOut = join(
-    await mkdtemp(join(tmpdir(), 'agentfiles-repo-codex-')),
-    'AGENTS.md',
-  );
+  const codexDir = await mkdtemp(join(tmpdir(), 'agentfiles-repo-codex-'));
+  const codexOut = join(codexDir, 'AGENTS.md');
   try {
     const result = await runGenerate([
       '--cursor-out',
@@ -174,9 +176,13 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
       /Always apply when creating, editing, or reviewing/,
     );
     assert.ok(Buffer.byteLength(agents, 'utf8') < 32 * 1024);
+
+    await assert.rejects(readFile(join(codexDir, 'hooks.json')), {
+      code: 'ENOENT',
+    });
   } finally {
     await rm(cursorOut, { recursive: true, force: true });
-    await rm(dirname(codexOut), { recursive: true, force: true });
+    await rm(codexDir, { recursive: true, force: true });
   }
 });
 

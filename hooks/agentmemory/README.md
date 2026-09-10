@@ -1,13 +1,20 @@
-# AgentMemory hooks for Cursor
+# AgentMemory hooks
 
-This directory is the Cursor-side AgentMemory adapter: local-first,
-dependency-free hook scripts that translate Cursor events into AgentMemory
-REST calls. Dotbot links `hooks.json` and this directory into `~/.cursor`.
-The scripts require Node.js 24 (see `package.json` engines, `.nvmrc`, and CI).
+Local-first, dependency-free hook scripts that POST AgentMemory `/observe`
+calls. Capture logic lives in `core/`. Vendor-specific entrypoints live in
+`cursor/` and `codex/`: each hardcodes its `agentId` and log directory, and
+normalizes that product's stdin JSON for the core.
+
+Dotbot links this tree into both `~/.cursor/hooks` and `~/.codex/hooks`, and
+links each adapter's committed `hooks.json` to `~/.cursor/hooks.json` and
+`~/.codex/hooks.json`. Commands use those install paths
+(`~/.cursor/hooks/agentmemory/cursor/...` and
+`~/.codex/hooks/agentmemory/codex/...`) so cwd does not matter. The scripts
+require Node.js 24 (see `package.json` engines, `.nvmrc`, and CI).
 
 Ownership:
 
-- This repo owns the thin Cursor adapter documented below.
+- This repo owns the adapter documented below.
 - Server-side architecture and first-class Cursor / event-stream work belong in
   [`martindzejky/agentmemory`](https://github.com/martindzejky/agentmemory).
   That fork's README is the canonical roadmap; do not duplicate it here.
@@ -30,7 +37,7 @@ on the server (`/session/end` is a deprecated noop there). What the hooks do:
 Hooks never inject context and never call `/enrich`, `/session/start`, or
 `/summarize`. Agents query memory with MCP (`recall`, `memory_smart_search`).
 `/observe` lazy-creates the session when it sends `sessionId` + `project` +
-`cwd`, and it honors `agentId: "cursor"`. There is no `sessionStart` or
+`cwd`, and it honors the adapter's hardcoded `agentId`. There is no `sessionStart` or
 `sessionEnd` hook. The server's idle / obs-count catch-up sweep processes
 sessions in the background. Server details for that sweep live in the fork
 README, not here.
@@ -59,6 +66,17 @@ README, not here.
 `sessionStart` is not installed. It only injected context, and Cursor Cloud
 never runs it.
 
+Codex mapping (`codex/` adapter, `codex/hooks.json`):
+
+- `UserPromptSubmit` → `user-prompt-submit.mjs`
+- `Stop` → `stop.mjs` (`last_assistant_message`)
+- `PostToolUse` → `post-tool-use.mjs` (includes non-zero Bash)
+- `SubagentStart` / `SubagentStop` → matching Codex scripts
+
+Codex has no `postToolUseFailure` event. Commands use `~/.codex/hooks/...`.
+Timeout is 3 seconds. After install, trust the hooks in Codex with `/hooks`.
+Do not put these hooks inline in `config.toml`.
+
 Every hook fails open and returns Cursor JSON (`{}`). REST calls use a 2.5s
 timeout so remote HTTPS (for example Railway) has room for TLS without
 exceeding Cursor's usual 3s hook budget. Authorization secrets and hook
@@ -66,7 +84,8 @@ stdout/stderr never include captured content. Prompt and response captures
 sent to AgentMemory are capped at 10,000 characters.
 
 Each hook also appends the inbound Cursor payload to a local JSONL debug log
-at `~/.cursor/hooks-logs/<conversation_id>.jsonl` (override the directory with
+at `~/.cursor/hooks-logs/<conversation_id>.jsonl` or, for Codex,
+`~/.codex/hooks-logs/<session_id>.jsonl` (override the directory with
 `AGENTMEMORY_HOOK_LOG_DIR`). One file per session, not uploaded anywhere. The
 log uses the same image strip and 10,000-character cap as observe. Use this
 when checking which hooks fired and what data they received.
@@ -80,10 +99,10 @@ replaces base64 images with a placeholder. Nothing is ever sent as
 `image_data`.
 
 Every write that can create a session sends `sessionId`, `project`, `cwd`, and
-`agentId` where the server needs them for lazy session create. `agentId` is
-always `"cursor"` via `postJson` / `withAgentId` (not hardcoded a second time
-in each hook). The server must honor `agentId` on lazy create; older servers
-that ignore unknown keys stay compatible with the extra fields.
+`agentId` where the server needs them for lazy session create. The Cursor
+adapter hardcodes `cursor`; the Codex adapter hardcodes `codex`. The server
+must honor `agentId` on lazy create; older servers that ignore unknown keys
+stay compatible with the extra fields.
 
 Every `/agentmemory/observe` POST sends a unique top-level `eventId` (a fresh
 UUID per hook invocation). The
@@ -139,8 +158,8 @@ Optional settings:
 - `AGENTMEMORY_REQUIRE_HTTPS=1` rejects all non-HTTPS URLs. Without it, plain
   HTTP is accepted only for loopback development hosts.
 - `AGENTMEMORY_PROJECT_NAME` overrides Git-based project discovery.
-- `AGENTMEMORY_HOOK_LOG_DIR` overrides the debug log directory (default
-  `~/.cursor/hooks-logs`).
+- `AGENTMEMORY_HOOK_LOG_DIR` overrides the debug log directory. Defaults are
+  `~/.cursor/hooks-logs` and `~/.codex/hooks-logs`.
 
 Server-side (AgentMemory host, not this `.env`): raise `MAX_OBS_PER_SESSION`
 when tool/subagent capture makes busy Cursor sessions hit the default cap
@@ -163,7 +182,7 @@ secret:
 ```sh
 printf '%s\n' \
   '{"conversation_id":"cursor-hook-smoke","workspace_roots":["'"$PWD"'"],"prompt":"AgentMemory hook smoke test"}' |
-  "$HOME/.cursor/hooks/agentmemory/before-submit-prompt.mjs"
+  "$HOME/.cursor/hooks/agentmemory/cursor/before-submit-prompt.mjs"
 ```
 
 Successful no-op output is `{}`. Confirm the `cursor-hook-smoke` session and
@@ -183,7 +202,7 @@ including:
 
 Cursor Cloud does not provide `sessionStart`. This adapter does not install it
 locally either. Observe-first paths rely on `/observe` to create the session.
-Those writes must still tag `agentId: "cursor"` so the server can stamp Cursor
+Those writes must still tag `agentId` so the server can stamp the client
 on lazy create. Sessions stay open-ended; observations are retained. The
 server owns summarization through its idle / obs-count catch-up sweep.
 

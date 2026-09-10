@@ -35,7 +35,7 @@ Confirm the agent lists agentmemory's tools (the full set, not a tiny stub). A t
 ## See also
 
 - agentmemory-mcp-tools, agentmemory-rest-api, agentmemory-config.
-- agentmemory-hooks for automatic capture via hooks (Cursor adapter in this repo today).
+- agentmemory-hooks for automatic capture via Cursor and Codex hooks.
 
 ## Reference
 

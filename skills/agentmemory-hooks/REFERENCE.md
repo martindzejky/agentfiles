@@ -1,6 +1,6 @@
-# agentmemory Cursor hooks reference
+# agentmemory hooks reference
 
-This reference covers the Cursor-side AgentMemory adapter in this repo.
+This reference covers the Cursor and Codex AgentMemory adapters in this repo.
 Server-side architecture and first-class Cursor / event-stream work live in
 [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory);
 that fork's README is the canonical roadmap.
@@ -15,6 +15,19 @@ that fork's README is the canonical roadmap.
 | `postToolUseFailure` | Store failed tool calls (skips interrupts)                |
 | `subagentStart`      | Store Task-tool subagent start (`subagent_start`)         |
 | `subagentStop`       | Store Task-tool subagent summary (`subagent_stop`)        |
+
+Codex sidecar `~/.codex/hooks.json` (committed `codex/hooks.json`; do not
+edit `config.toml`):
+
+| Codex event        | Script                   | Notes                                     |
+| ------------------ | ------------------------ | ----------------------------------------- |
+| `UserPromptSubmit` | `user-prompt-submit.mjs` | Same `prompt` field                       |
+| `Stop`             | `stop.mjs`               | Reads `last_assistant_message`            |
+| `PostToolUse`      | `post-tool-use.mjs`      | Also fires after non-zero Bash            |
+| `SubagentStart`    | `subagent-start.mjs`     | `agent_id` / `agent_type`                 |
+| `SubagentStop`     | `subagent-stop.mjs`      | Summary falls back to last assistant text |
+
+Codex has no `postToolUseFailure` event. `SessionStart` is not installed.
 
 Hooks capture only. They never inject `additional_context`, never call
 `/enrich` or `/session/start`, and do not install `sessionStart`. Agents query
@@ -43,10 +56,11 @@ Observe shapes on the martindzejky fork:
 
 ## Install targets
 
-| Scope         | Config                      | Scripts run from |
-| ------------- | --------------------------- | ---------------- |
-| User (global) | `~/.cursor/hooks.json`      | `~/.cursor/`     |
-| Project       | `<repo>/.cursor/hooks.json` | project root     |
+| Scope         | Config                      | Scripts run from                  |
+| ------------- | --------------------------- | --------------------------------- |
+| User (global) | `~/.cursor/hooks.json`      | `~/.cursor/hooks/...` (`cursor/`) |
+| Codex (user)  | `~/.codex/hooks.json`       | `~/.codex/hooks/...` (`codex/`)   |
+| Project       | `<repo>/.cursor/hooks.json` | project root                      |
 
 Cloud agents only see project hooks. User hooks stay local. Cursor Cloud
 supports the usual agent hooks (`beforeSubmitPrompt`, `afterAgentResponse`,
@@ -64,7 +78,7 @@ Use REST from hook scripts:
 - Local config: gitignored `hooks/agentmemory/.env`, copied from `.env.example`
 - Base URL: required `AGENTMEMORY_URL`
 - Auth: required `Authorization: Bearer $AGENTMEMORY_SECRET`
-- Agent tag: hardcoded `agentId: "cursor"` on every POST body
+- Agent tag: hardcoded per adapter (`cursor/` → `cursor`, `codex/` → `codex`)
 - Observe idempotency: unique top-level `eventId` on every `/observe` POST
   (server dedups on that id only)
 - HTTP timeout: 2.5s per REST call (under Cursor's usual 3s hook budget)
@@ -73,8 +87,8 @@ Use REST from hook scripts:
 The hooks load only recognized AgentMemory keys from the local file. Existing
 process variables take precedence. MCP-scoped environment variables may not be
 inherited by hook processes. Every write that can lazy-create a session sends
-`agentId: "cursor"` with `sessionId`, `project`, and `cwd` so observe-first
-paths (including Cloud) stamp Cursor without a prior `/session/start`.
+`agentId` with `sessionId`, `project`, and `cwd` so observe-first paths
+(including Cloud) stamp the client without a prior `/session/start`.
 
 ## Debug checklist
 
@@ -83,14 +97,17 @@ paths (including Cloud) stamp Cursor without a prior `/session/start`.
 3. Cursor restarted (or hooks reloaded) after `hooks.json` edits
 4. Viewer at `:3113` shows new observations while you exercise the agent
 5. Action skills still work via MCP (`remember` / `recall`) even if hooks are off
-6. Local JSONL log: `~/.cursor/hooks-logs/<conversation_id>.jsonl` (not uploaded)
+6. Local JSONL log: `~/.cursor/hooks-logs/<id>.jsonl` or `~/.codex/hooks-logs/<id>.jsonl` (not uploaded)
+7. Codex: after `./install`, run `/hooks` and trust the new definitions
 
 ## Status in this repo
 
-The user-level hooks are installed from `hooks.json` and
-`hooks/agentmemory/`. Implementation details, Cloud limitations, smoke-test
-instructions, the pinned upstream audit trail, and the observe wire contract
-are in `hooks/agentmemory/README.md`.
+Cursor user-level hooks are installed from `hooks/agentmemory/cursor/hooks.json`
+and `hooks/agentmemory/cursor/`. Codex user-level hooks are installed from
+`hooks/agentmemory/codex/hooks.json`, with scripts linked at `~/.codex/hooks`.
+Implementation details, Cloud limitations, smoke-test instructions, the pinned
+upstream audit trail, and the observe wire contract are in
+`hooks/agentmemory/README.md`.
 
 This adapter sends `assistant_response` / `subagent_*` hookTypes and an
 `eventId` on every `/observe`. Real tools still use tool-shaped observe

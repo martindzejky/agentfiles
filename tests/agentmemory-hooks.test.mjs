@@ -12,7 +12,9 @@ const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 // Hooks resolve the project from the checkout directory, so the expectation
 // has to follow the clone name rather than assume this repository's own.
 const PROJECT = basename(ROOT);
-const HOOK_DIRECTORY = join(ROOT, 'hooks', 'agentmemory');
+const HOOK_DIRECTORY = join(ROOT, 'hooks', 'agentmemory', 'cursor');
+const CORE_DIRECTORY = join(ROOT, 'hooks', 'agentmemory', 'core');
+const CODEX_HOOK_DIRECTORY = join(ROOT, 'hooks', 'agentmemory', 'codex');
 const HOOKS = {
   beforeSubmitPrompt: 'before-submit-prompt.mjs',
   afterAgentResponse: 'after-agent-response.mjs',
@@ -20,6 +22,13 @@ const HOOKS = {
   postToolUseFailure: 'post-tool-failure.mjs',
   subagentStart: 'subagent-start.mjs',
   subagentStop: 'subagent-stop.mjs',
+};
+const CODEX_HOOKS = {
+  UserPromptSubmit: 'user-prompt-submit.mjs',
+  Stop: 'stop.mjs',
+  PostToolUse: 'post-tool-use.mjs',
+  SubagentStart: 'subagent-start.mjs',
+  SubagentStop: 'subagent-stop.mjs',
 };
 
 function hookEnvironment(url, extra = {}) {
@@ -51,6 +60,41 @@ function runHook(event, payload, options = {}) {
     const child = spawn(
       process.execPath,
       [join(HOOK_DIRECTORY, HOOKS[event])],
+      {
+        cwd: ROOT,
+        env: hookEnvironment(options.url, options.env),
+        stdio: ['pipe', 'pipe', 'pipe'],
+      },
+    );
+    let stdout = '';
+    let stderr = '';
+
+    child.stdout.setEncoding('utf8');
+    child.stderr.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
+    child.once('error', reject);
+    child.once('close', (code, signal) => {
+      resolve({ code, signal, stdout, stderr });
+    });
+
+    child.stdin.end(
+      options.rawInput === undefined
+        ? JSON.stringify(payload)
+        : options.rawInput,
+    );
+  });
+}
+
+function runCodexHook(event, payload, options = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      [join(CODEX_HOOK_DIRECTORY, CODEX_HOOKS[event])],
       {
         cwd: ROOT,
         env: hookEnvironment(options.url, options.env),
@@ -133,31 +177,56 @@ function assertSuccessfulNoOp(result) {
 }
 
 test('manifest contains exactly the selected executable hooks', async () => {
-  const manifest = JSON.parse(await readFile(join(ROOT, 'hooks.json'), 'utf8'));
+  const cursorManifest = JSON.parse(
+    await readFile(join(HOOK_DIRECTORY, 'hooks.json'), 'utf8'),
+  );
+  const codexManifest = JSON.parse(
+    await readFile(join(CODEX_HOOK_DIRECTORY, 'hooks.json'), 'utf8'),
+  );
 
-  assert.equal(manifest.version, 1);
+  assert.equal(cursorManifest.version, 1);
   assert.deepEqual(
-    Object.keys(manifest.hooks).sort(),
+    Object.keys(cursorManifest.hooks).sort(),
     Object.keys(HOOKS).sort(),
   );
 
   for (const [event, script] of Object.entries(HOOKS)) {
-    assert.equal(manifest.hooks[event].length, 1);
+    assert.equal(cursorManifest.hooks[event].length, 1);
     assert.equal(
-      manifest.hooks[event][0].command,
-      `./hooks/agentmemory/${script}`,
+      cursorManifest.hooks[event][0].command,
+      `~/.cursor/hooks/agentmemory/cursor/${script}`,
     );
-    assert.equal(manifest.hooks[event][0].failClosed, false);
-    assert.equal(manifest.hooks[event][0].type, undefined);
+    assert.equal(cursorManifest.hooks[event][0].failClosed, false);
+    assert.equal(cursorManifest.hooks[event][0].type, undefined);
     await access(join(HOOK_DIRECTORY, script), constants.X_OK);
+  }
+
+  assert.deepEqual(Object.keys(codexManifest.hooks), Object.keys(CODEX_HOOKS));
+  assert.equal(codexManifest.hooks.SessionStart, undefined);
+  assert.equal(codexManifest.hooks.PostToolUseFailure, undefined);
+
+  for (const [event, script] of Object.entries(CODEX_HOOKS)) {
+    assert.equal(codexManifest.hooks[event][0].hooks[0].type, 'command');
+    assert.equal(
+      codexManifest.hooks[event][0].hooks[0].command,
+      `~/.codex/hooks/agentmemory/codex/${script}`,
+    );
+    assert.equal(codexManifest.hooks[event][0].hooks[0].timeout, 3);
+    await access(join(CODEX_HOOK_DIRECTORY, script), constants.X_OK);
   }
 });
 
 test('sessionStart and enrich helpers are not shipped', async () => {
   await assert.rejects(() =>
+    access(join(CORE_DIRECTORY, 'session-start.mjs'), constants.F_OK),
+  );
+  await assert.rejects(() =>
     access(join(HOOK_DIRECTORY, 'session-start.mjs'), constants.F_OK),
   );
-  const shared = await import(join(HOOK_DIRECTORY, 'shared.mjs'));
+  await assert.rejects(() =>
+    access(join(CODEX_HOOK_DIRECTORY, 'session-start.mjs'), constants.F_OK),
+  );
+  const shared = await import(join(CORE_DIRECTORY, 'shared.mjs'));
   assert.equal(shared.isContextInjectionEnabled, undefined);
   assert.equal(shared.fetchEnrichContext, undefined);
   assert.equal(shared.extractEnrichQuery, undefined);
@@ -165,8 +234,17 @@ test('sessionStart and enrich helpers are not shipped', async () => {
 });
 
 test('session id and workspace root fallbacks match Cursor plus plugin payloads', async () => {
-  const { resolveSessionId, resolveWorkingDirectory } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
+  const { hookLogDirectory, resolveSessionId, resolveWorkingDirectory } =
+    await import(join(HOOK_DIRECTORY, 'runtime.mjs'));
+  const codex = await import(join(CODEX_HOOK_DIRECTORY, 'runtime.mjs'));
+
+  assert.equal(
+    hookLogDirectory().endsWith(join('.cursor', 'hooks-logs')),
+    true,
+  );
+  assert.equal(
+    codex.hookLogDirectory().endsWith(join('.codex', 'hooks-logs')),
+    true,
   );
 
   assert.equal(
@@ -211,9 +289,11 @@ test('session id and workspace root fallbacks match Cursor plus plugin payloads'
 
 test('HTTP timeouts fit inside Cursor hook budgets', async () => {
   const { REQUEST_TIMEOUT_MS } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
+    join(CORE_DIRECTORY, 'shared.mjs')
   );
-  const manifest = JSON.parse(await readFile(join(ROOT, 'hooks.json'), 'utf8'));
+  const manifest = JSON.parse(
+    await readFile(join(HOOK_DIRECTORY, 'hooks.json'), 'utf8'),
+  );
 
   assert.equal(REQUEST_TIMEOUT_MS, 2_500);
   assert.ok(
@@ -930,6 +1010,120 @@ test('every hook REST body hardcodes agentId cursor', async () => {
   }
 });
 
+test('Cursor adapter keeps agentId cursor on Codex-shaped event names', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'beforeSubmitPrompt',
+        {
+          conversation_id: 'cursor-session',
+          workspace_roots: [ROOT],
+          hook_event_name: 'UserPromptSubmit',
+          prompt: 'still cursor',
+        },
+        { url: server.url },
+      ),
+    );
+    assert.equal(server.requests.length, 1);
+    assert.equal(server.requests[0].body.agentId, 'cursor');
+  } finally {
+    await server.close();
+  }
+});
+
+test('Codex adapter tags agentId codex', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runCodexHook(
+        'UserPromptSubmit',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'UserPromptSubmit',
+          prompt: 'codex prompt',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runCodexHook(
+        'Stop',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'Stop',
+          last_assistant_message: 'codex reply',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runCodexHook(
+        'PostToolUse',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'PostToolUse',
+          tool_name: 'Bash',
+          tool_input: { command: 'ls' },
+          tool_response: 'ok',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runCodexHook(
+        'SubagentStart',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'SubagentStart',
+          agent_id: 'agent-1',
+          agent_type: 'explore',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runCodexHook(
+        'SubagentStop',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'SubagentStop',
+          agent_id: 'agent-1',
+          agent_type: 'explore',
+          last_assistant_message: 'subagent done',
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.equal(server.requests.length, 5);
+    for (const request of server.requests) {
+      assert.equal(request.body.agentId, 'codex');
+      assert.equal(request.body.sessionId, 'thr_codex');
+    }
+    assert.equal(server.requests[0].body.data.prompt, 'codex prompt');
+    assert.equal(server.requests[1].body.data.assistantResponse, 'codex reply');
+    assert.equal(server.requests[2].body.data.tool_name, 'Bash');
+    assert.equal(server.requests[2].body.data.tool_output, 'ok');
+    assert.deepEqual(server.requests[3].body.data, {
+      subagent_id: 'agent-1',
+      subagent_type: 'explore',
+    });
+    assert.deepEqual(server.requests[4].body.data, {
+      subagent_id: 'agent-1',
+      subagent_type: 'explore',
+      summary: 'subagent done',
+    });
+  } finally {
+    await server.close();
+  }
+});
+
 test('observe sends sessionId project cwd agentId', async () => {
   const server = await startMockServer();
   try {
@@ -1320,7 +1514,7 @@ test('hooks reject redirects without forwarding captured content', async () => {
 test('configuration requires a secret and restricts plain HTTP', async () => {
   const original = { ...process.env };
   process.env.AGENTMEMORY_DISABLE_ENV_FILE = '1';
-  const { readConfig } = await import(join(HOOK_DIRECTORY, 'shared.mjs'));
+  const { readConfig } = await import(join(CORE_DIRECTORY, 'shared.mjs'));
 
   try {
     process.env.AGENTMEMORY_URL = 'http://127.0.0.1:3111';
