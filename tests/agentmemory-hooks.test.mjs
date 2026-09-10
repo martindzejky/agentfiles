@@ -165,8 +165,32 @@ test('sessionStart and enrich helpers are not shipped', async () => {
 });
 
 test('session id and workspace root fallbacks match Cursor plus plugin payloads', async () => {
-  const { resolveSessionId, resolveWorkingDirectory } = await import(
-    join(HOOK_DIRECTORY, 'shared.mjs')
+  const {
+    defaultHookLogDirectory,
+    resolveAgentId,
+    resolveSessionId,
+    resolveWorkingDirectory,
+  } = await import(join(HOOK_DIRECTORY, 'shared.mjs'));
+
+  assert.equal(resolveAgentId({ conversation_id: 'cursor-session' }), 'cursor');
+  assert.equal(
+    resolveAgentId({
+      session_id: 'thr_1',
+      hook_event_name: 'UserPromptSubmit',
+    }),
+    'codex',
+  );
+  assert.equal(
+    defaultHookLogDirectory({ hook_event_name: 'Stop' }).endsWith(
+      join('.codex', 'hooks-logs'),
+    ),
+    true,
+  );
+  assert.equal(
+    defaultHookLogDirectory({ conversation_id: 'c' }).endsWith(
+      join('.cursor', 'hooks-logs'),
+    ),
+    true,
   );
 
   assert.equal(
@@ -925,6 +949,98 @@ test('every hook REST body hardcodes agentId cursor', async () => {
     for (const request of server.requests) {
       assert.equal(request.body.agentId, 'cursor');
     }
+  } finally {
+    await server.close();
+  }
+});
+
+test('Codex lifecycle payloads tag agentId codex', async () => {
+  const server = await startMockServer();
+  try {
+    assertSuccessfulNoOp(
+      await runHook(
+        'beforeSubmitPrompt',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'UserPromptSubmit',
+          prompt: 'codex prompt',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runHook(
+        'afterAgentResponse',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'Stop',
+          last_assistant_message: 'codex reply',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runHook(
+        'postToolUse',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'PostToolUse',
+          tool_name: 'Bash',
+          tool_input: { command: 'ls' },
+          tool_response: 'ok',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runHook(
+        'subagentStart',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'SubagentStart',
+          agent_id: 'agent-1',
+          agent_type: 'explore',
+        },
+        { url: server.url },
+      ),
+    );
+    assertSuccessfulNoOp(
+      await runHook(
+        'subagentStop',
+        {
+          session_id: 'thr_codex',
+          cwd: ROOT,
+          hook_event_name: 'SubagentStop',
+          agent_id: 'agent-1',
+          agent_type: 'explore',
+          last_assistant_message: 'subagent done',
+        },
+        { url: server.url },
+      ),
+    );
+
+    assert.equal(server.requests.length, 5);
+    for (const request of server.requests) {
+      assert.equal(request.body.agentId, 'codex');
+      assert.equal(request.body.sessionId, 'thr_codex');
+    }
+    assert.equal(server.requests[0].body.data.prompt, 'codex prompt');
+    assert.equal(server.requests[1].body.data.assistantResponse, 'codex reply');
+    assert.equal(server.requests[2].body.data.tool_name, 'Bash');
+    assert.equal(server.requests[2].body.data.tool_output, 'ok');
+    assert.deepEqual(server.requests[3].body.data, {
+      subagent_id: 'agent-1',
+      subagent_type: 'explore',
+    });
+    assert.deepEqual(server.requests[4].body.data, {
+      subagent_id: 'agent-1',
+      subagent_type: 'explore',
+      summary: 'subagent done',
+    });
   } finally {
     await server.close();
   }

@@ -24,3 +24,4 @@
     # codex
     ~/.agents/skills: skills
     ~/.codex/AGENTS.md: dist/codex/AGENTS.md
+    ~/.codex/hooks.json: dist/codex/hooks.json

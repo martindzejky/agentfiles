@@ -124,6 +124,15 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
     assert.doesNotMatch(agents, /^---\n/);
     assert.doesNotMatch(agents, /alwaysApply/);
     assert.doesNotMatch(agents, /Not a rule/);
+
+    const hooks = JSON.parse(
+      await readFile(join(root, 'dist', 'codex', 'hooks.json'), 'utf8'),
+    );
+    assert.equal(hooks.hooks.UserPromptSubmit[0].hooks[0].type, 'command');
+    assert.equal(
+      hooks.hooks.UserPromptSubmit[0].hooks[0].command,
+      join(root, 'hooks', 'agentmemory', 'before-submit-prompt.mjs'),
+    );
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -174,6 +183,24 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
       /Always apply when creating, editing, or reviewing/,
     );
     assert.ok(Buffer.byteLength(agents, 'utf8') < 32 * 1024);
+
+    const hooks = JSON.parse(
+      await readFile(join(dirname(codexOut), 'hooks.json'), 'utf8'),
+    );
+    assert.deepEqual(Object.keys(hooks.hooks), [
+      'UserPromptSubmit',
+      'Stop',
+      'PostToolUse',
+      'SubagentStart',
+      'SubagentStop',
+    ]);
+    assert.equal(hooks.hooks.SessionStart, undefined);
+    assert.equal(
+      hooks.hooks.Stop[0].hooks[0].command,
+      join(ROOT, 'hooks', 'agentmemory', 'after-agent-response.mjs'),
+    );
+    assert.equal(hooks.hooks.PostToolUse[0].hooks[0].timeout, 3);
+    assert.equal(hooks.hooks.PostToolUseFailure, undefined);
   } finally {
     await rm(cursorOut, { recursive: true, force: true });
     await rm(dirname(codexOut), { recursive: true, force: true });

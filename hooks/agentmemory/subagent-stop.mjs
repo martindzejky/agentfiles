@@ -53,7 +53,7 @@ async function main() {
       eventId: newEventId(),
       data,
     },
-    { config },
+    { config, payload },
   );
 
   writeCursorOutput();

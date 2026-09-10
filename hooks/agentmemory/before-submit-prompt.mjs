@@ -42,7 +42,7 @@ async function main() {
         eventId: newEventId(),
         data: { prompt },
       },
-      { config },
+      { config, payload },
     );
   }
 

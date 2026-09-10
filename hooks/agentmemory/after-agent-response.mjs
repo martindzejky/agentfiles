@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
-// Cursor-specific companion to AgentMemory's prompt-submit.mjs, based on the
-// same upstream revision: d60652a7058773fa9428fa720eda38942f12f014.
+// Companion to AgentMemory's prompt-submit.mjs, based on the same upstream
+// revision: d60652a7058773fa9428fa720eda38942f12f014.
 //
 // Posts hookType assistant_response with data.assistantResponse.
+// Cursor sends `text`; Codex Stop sends `last_assistant_message`.
 
 import {
   newEventId,
@@ -22,7 +23,9 @@ async function main() {
   const config = readConfig();
   if (!payload || !config) return writeCursorOutput();
 
-  const response = truncateText(payload.text);
+  const response = truncateText(
+    payload.text ?? payload.last_assistant_message ?? '',
+  );
   if (response) {
     const sessionId = resolveSessionId(payload);
     const cwd = resolveWorkingDirectory(payload);
@@ -39,7 +42,7 @@ async function main() {
           assistantResponse: response,
         },
       },
-      { config },
+      { config, payload },
     );
   }
 

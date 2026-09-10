@@ -1,17 +1,18 @@
 ---
 name: agentmemory-hooks
-description: Hooks that capture agentmemory observations during agent turns. Use when installing or debugging automatic memory capture; today this repo ships a Cursor adapter (Codex hooks planned). Use when observations are missing or when deciding which hook events to wire.
+description: Hooks that capture agentmemory observations during agent turns. Use when installing or debugging automatic memory capture for Cursor or Codex. Use when observations are missing or when deciding which hook events to wire.
 user-invocable: false
 ---
 
 Agent hooks are command scripts in `hooks.json` (Cursor) or Codex hook config. They get JSON on stdin and POST `/agentmemory/observe` so the turn is recorded without a manual `memory_save`. They never inject context. Agents query memory with MCP (`recall`, `memory_smart_search`).
 
-This skill documents the **Cursor-side** AgentMemory adapter in this repo
-(`hooks/agentmemory/`). A Codex adapter is planned. Server architecture belongs
-in [martindzejky/agentmemory](https://github.com/martindzejky/agentmemory);
-that fork's README is the canonical roadmap. Prefer user-level hooks in
-`~/.cursor/hooks.json` for global capture; use project `.cursor/hooks.json`
-when a repo needs its own wiring (also what cloud agents load).
+This skill documents the AgentMemory adapter in this repo (`hooks/agentmemory/`).
+Cursor uses `hooks.json`. Codex uses generated `~/.codex/hooks.json`. Server
+architecture belongs in
+[martindzejky/agentmemory](https://github.com/martindzejky/agentmemory);
+that fork's README is the canonical roadmap. Prefer user-level hooks for global
+capture; use project `.cursor/hooks.json` when a repo needs its own wiring
+(also what Cursor cloud agents load).
 
 ## Quick start
 
@@ -37,7 +38,7 @@ This repo installs the following local user hooks:
 }
 ```
 
-User-level paths run from `~/.cursor/`, so `./hooks/...` is correct there. Project-level paths should be `.cursor/hooks/...` instead.
+User-level Cursor paths run from `~/.cursor/`, so `./hooks/...` is correct there. Codex commands use absolute paths because Codex runs hooks from the session cwd. After install, trust new Codex hooks with `/hooks`.
 
 Watch captures at `http://localhost:3113` once the server is up.
 
@@ -74,9 +75,9 @@ open: missing configuration or a down server must not block the agent.
 - Copy `.env.example` to `.env`, fill in the secret, and set its permissions to
   `600`. The real file is gitignored.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
-- Per-session debug log (local only, not uploaded): `~/.cursor/hooks-logs/<conversation_id>.jsonl`. Use this when asked for the hooks log for the current session.
+- Per-session debug log (local only, not uploaded): `~/.cursor/hooks-logs/<id>.jsonl` or `~/.codex/hooks-logs/<id>.jsonl`.
 - Every `/agentmemory/observe` POST sends a unique top-level `eventId`.
-- REST bodies hardcode `agentId: "cursor"`. This integration is Cursor-only.
+- REST bodies set `agentId` to `"cursor"` or `"codex"` from the hook event.
 - MCP server environment variables may not be inherited by hook processes.
 - Use `remember` for explicit saves and `recall` when you need past context.
 - This adapter requires the
@@ -93,4 +94,4 @@ open: missing configuration or a down server must not block the agent.
 
 ## Reference
 
-Cursor event mapping and install notes live in REFERENCE.md.
+Event mapping and install notes live in REFERENCE.md.

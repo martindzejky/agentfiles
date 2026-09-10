@@ -59,7 +59,7 @@ async function main() {
         ...(failureType ? { failure_type: failureType } : {}),
       },
     },
-    { config },
+    { config, payload },
   );
 
   writeCursorOutput();

@@ -49,7 +49,7 @@ async function main() {
         tool_output: truncateValue(cleanOutput),
       },
     },
-    { config },
+    { config, payload },
   );
 
   writeCursorOutput();

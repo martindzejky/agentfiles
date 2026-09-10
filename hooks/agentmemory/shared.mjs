@@ -14,12 +14,35 @@ export const CAPTURE_LIMIT = 10_000;
 // 3s hook budget.
 export const REQUEST_TIMEOUT_MS = 2_500;
 
-// Hardcoded for this Cursor-only integration. Multi-agent setups that share
-// one AgentMemory server use agentId to tag which client wrote the memory.
+// Default when the payload is not a Codex lifecycle event.
+// Multi-agent setups that share one AgentMemory server use agentId to tag
+// which client wrote the memory.
 export const AGENT_ID = 'cursor';
 
-export function withAgentId(body) {
-  return { ...body, agentId: AGENT_ID };
+export const CODEX_HOOK_EVENTS = new Set([
+  'UserPromptSubmit',
+  'Stop',
+  'PostToolUse',
+  'SubagentStart',
+  'SubagentStop',
+  'SessionStart',
+  'SessionEnd',
+  'PreToolUse',
+  'PermissionRequest',
+  'PreCompact',
+  'PostCompact',
+]);
+
+export function resolveAgentId(payload) {
+  const override = nonEmptyString(process.env.AGENTMEMORY_AGENT_ID);
+  if (override) return override;
+  const event = nonEmptyString(payload?.hook_event_name);
+  if (event && CODEX_HOOK_EVENTS.has(event)) return 'codex';
+  return AGENT_ID;
+}
+
+export function withAgentId(body, payload) {
+  return { ...body, agentId: resolveAgentId(payload) };
 }
 
 // Idempotency key for /agentmemory/observe. Fresh UUID per hook invocation;
@@ -75,10 +98,18 @@ export async function readPayload() {
   }
 }
 
-function hookLogDirectory() {
+export function defaultHookLogDirectory(payload) {
+  return join(
+    homedir(),
+    resolveAgentId(payload) === 'codex' ? '.codex' : '.cursor',
+    'hooks-logs',
+  );
+}
+
+function hookLogDirectory(payload) {
   return (
     nonEmptyString(process.env.AGENTMEMORY_HOOK_LOG_DIR) ??
-    join(homedir(), '.cursor', 'hooks-logs')
+    defaultHookLogDirectory(payload)
   );
 }
 
@@ -95,7 +126,7 @@ function resolveLogSessionId(payload) {
 // Local debug log only. Never uploaded; never printed to stdout/stderr.
 export function appendHookLog(hook, payload) {
   try {
-    const directory = hookLogDirectory();
+    const directory = hookLogDirectory(payload);
     mkdirSync(directory, { recursive: true, mode: 0o700 });
     const line = JSON.stringify({
       ts: new Date().toISOString(),
@@ -127,7 +158,7 @@ export function resolveSessionId(payload) {
     // Cursor subagentStart documents parent_conversation_id when the common
     // conversation_id field is absent.
     nonEmptyString(payload?.parent_conversation_id) ??
-    `cursor_${randomUUID()}`
+    `${resolveAgentId(payload)}_${randomUUID()}`
   );
 }
 
@@ -229,7 +260,7 @@ export async function postJson(path, body, options = {}) {
         Authorization: `Bearer ${config.secret}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(withAgentId(body)),
+      body: JSON.stringify(withAgentId(body, options.payload)),
       redirect: 'error',
       signal: AbortSignal.timeout(options.timeoutMs ?? REQUEST_TIMEOUT_MS),
     });
