@@ -61,9 +61,15 @@ never runs it.
 
 Every hook fails open and returns Cursor JSON (`{}`). REST calls use a 2.5s
 timeout so remote HTTPS (for example Railway) has room for TLS without
-exceeding Cursor's usual 3s hook budget. Prompt, response, authorization, and
-full Cursor payloads are never logged. Prompt and response captures are capped
-at 10,000 characters.
+exceeding Cursor's usual 3s hook budget. Authorization secrets and hook
+stdout/stderr never include captured content. Prompt and response captures
+sent to AgentMemory are capped at 10,000 characters.
+
+Each hook also appends the inbound Cursor payload to a local JSONL debug log
+at `~/.cursor/hooks-logs/<conversation_id>.jsonl` (override the directory with
+`AGENTMEMORY_HOOK_LOG_DIR`). One file per session, not uploaded anywhere. The
+log uses the same image strip and 10,000-character cap as observe. Use this
+when checking which hooks fired and what data they received.
 
 Images are not captured. AgentMemory's vision path does not work end to end,
 and Cursor's hook payloads carry no image data anyway: `beforeSubmitPrompt`
@@ -126,12 +132,15 @@ loaded:
 - `AGENTMEMORY_SECRET`
 - `AGENTMEMORY_REQUIRE_HTTPS`
 - `AGENTMEMORY_PROJECT_NAME`
+- `AGENTMEMORY_HOOK_LOG_DIR`
 
 Optional settings:
 
 - `AGENTMEMORY_REQUIRE_HTTPS=1` rejects all non-HTTPS URLs. Without it, plain
   HTTP is accepted only for loopback development hosts.
 - `AGENTMEMORY_PROJECT_NAME` overrides Git-based project discovery.
+- `AGENTMEMORY_HOOK_LOG_DIR` overrides the debug log directory (default
+  `~/.cursor/hooks-logs`).
 
 Server-side (AgentMemory host, not this `.env`): raise `MAX_OBS_PER_SESSION`
 when tool/subagent capture makes busy Cursor sessions hit the default cap

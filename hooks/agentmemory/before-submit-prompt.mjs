@@ -7,7 +7,7 @@ import {
   newEventId,
   postJson,
   readConfig,
-  readPayload,
+  readHookPayload,
   resolveProject,
   resolveSessionId,
   resolveWorkingDirectory,
@@ -16,7 +16,7 @@ import {
 } from './shared.mjs';
 
 async function main() {
-  const payload = await readPayload();
+  const payload = await readHookPayload('beforeSubmitPrompt');
   if (!payload) return writeCursorOutput();
 
   const sessionId = resolveSessionId(payload);

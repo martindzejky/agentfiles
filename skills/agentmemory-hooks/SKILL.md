@@ -74,6 +74,7 @@ open: missing configuration or a down server must not block the agent.
 - Copy `.env.example` to `.env`, fill in the secret, and set its permissions to
   `600`. The real file is gitignored.
 - If observations are missing, confirm the MCP/REST server is up, the hook scripts are executable, and Cursor loaded `hooks.json` (restart after edits).
+- Per-session debug log (local only, not uploaded): `~/.cursor/hooks-logs/<conversation_id>.jsonl`. Use this when asked for the hooks log for the current session.
 - Every `/agentmemory/observe` POST sends a unique top-level `eventId`.
 - REST bodies hardcode `agentId: "cursor"`. This integration is Cursor-only.
 - MCP server environment variables may not be inherited by hook processes.

@@ -10,7 +10,7 @@ import {
   newEventId,
   postJson,
   readConfig,
-  readPayload,
+  readHookPayload,
   resolveProject,
   resolveSessionId,
   resolveSubagentId,
@@ -21,7 +21,7 @@ import {
 } from './shared.mjs';
 
 async function main() {
-  const payload = await readPayload();
+  const payload = await readHookPayload('subagentStart');
   const config = readConfig();
   if (!payload || !config) return writeCursorOutput();
 
