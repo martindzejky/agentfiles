@@ -126,12 +126,13 @@ async function main() {
   const cursorOut = resolve(
     args.cursorOut ?? join(root, 'dist', 'cursor', 'rules'),
   );
-  const codexOut = resolve(args.codexOut ?? join(root, 'dist', 'codex'));
+  const codexOut = resolve(
+    args.codexOut ?? join(root, 'dist', 'codex', 'AGENTS.md'),
+  );
   const written = await generateCursorRules(rulesDir, cursorOut);
-  await mkdir(codexOut, { recursive: true });
-  await generateCodexAgents(rulesDir, join(codexOut, 'AGENTS.md'));
+  await generateCodexAgents(rulesDir, codexOut);
   console.log(`Wrote ${written.length} Cursor rule(s) to ${cursorOut}`);
-  console.log(`Wrote Codex dist to ${codexOut}`);
+  console.log(`Wrote Codex AGENTS.md to ${codexOut}`);
 }
 
 const invokedDirectly =

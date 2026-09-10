@@ -68,7 +68,7 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
       cursorOut,
     ]);
     assert.equal(result.code, 0, result.stderr);
-    assert.match(result.stdout, /Wrote Codex dist/);
+    assert.match(result.stdout, /Wrote Codex AGENTS.md/);
 
     const personality = await readFile(
       join(cursorOut, 'personality.mdc'),
@@ -135,7 +135,8 @@ test('generate-dist writes always-on Cursor mdc from markdown rules', async () =
 
 test('repo rules generate Cursor mdc with env metadata copied', async () => {
   const cursorOut = await mkdtemp(join(tmpdir(), 'agentfiles-repo-dist-'));
-  const codexOut = await mkdtemp(join(tmpdir(), 'agentfiles-repo-codex-'));
+  const codexDir = await mkdtemp(join(tmpdir(), 'agentfiles-repo-codex-'));
+  const codexOut = join(codexDir, 'AGENTS.md');
   try {
     const result = await runGenerate([
       '--cursor-out',
@@ -159,7 +160,7 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
     assert.match(personality, /\nalwaysApply: true\n---\n/);
     assert.match(personality, /Keep replies concise\./);
 
-    const agents = await readFile(join(codexOut, 'AGENTS.md'), 'utf8');
+    const agents = await readFile(codexOut, 'utf8');
     assert.doesNotMatch(agents, /^---\n/);
     assert.doesNotMatch(agents, /^description:/m);
     assert.doesNotMatch(agents, /^metadata:/m);
@@ -176,12 +177,12 @@ test('repo rules generate Cursor mdc with env metadata copied', async () => {
     );
     assert.ok(Buffer.byteLength(agents, 'utf8') < 32 * 1024);
 
-    await assert.rejects(readFile(join(codexOut, 'hooks.json')), {
+    await assert.rejects(readFile(join(codexDir, 'hooks.json')), {
       code: 'ENOENT',
     });
   } finally {
     await rm(cursorOut, { recursive: true, force: true });
-    await rm(codexOut, { recursive: true, force: true });
+    await rm(codexDir, { recursive: true, force: true });
   }
 });
 
@@ -189,7 +190,7 @@ test('generate-dist writes Codex AGENTS.md in filename order', async () => {
   const root = await mkdtemp(join(tmpdir(), 'agentfiles-codex-'));
   const rulesDir = join(root, 'rules');
   const cursorOut = join(root, 'dist', 'cursor', 'rules');
-  const codexOut = join(root, 'out');
+  const codexOut = join(root, 'out', 'AGENTS.md');
 
   try {
     await mkdir(rulesDir);
@@ -219,7 +220,7 @@ test('generate-dist writes Codex AGENTS.md in filename order', async () => {
     assert.equal(result.code, 0, result.stderr);
 
     assert.equal(
-      await readFile(join(codexOut, 'AGENTS.md'), 'utf8'),
+      await readFile(codexOut, 'utf8'),
       ['# Alpha', '', 'First body.', '', '# Zeta', '', 'Last body.', ''].join(
         '\n',
       ),
