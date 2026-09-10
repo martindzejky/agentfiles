@@ -1,11 +1,10 @@
 ---
 description: Local development, human in the loop
-alwaysApply: true
 metadata:
   environments: local
 ---
 
-The user is at the keyboard. Prefer collaboration over autonomy.
+When running locally, there's a human in the loop. Prefer collaboration over autonomy.
 
 - **Do not commit** unless the user asks. Let them review first.
 - **Discuss before building** non-trivial features or architecture changes. Pause if they want to talk through the approach.

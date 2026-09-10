@@ -9,14 +9,15 @@
 - clean:
     - '~/.cursor'
 
-# update git submodules
+# update git submodules and generate per-agent files
 - shell:
     - [git submodule update --init --recursive, Installing submodules]
+    - [node scripts/generate-dist.mjs, Generating Cursor rule dist]
 
 # link configuration files
 - link:
     # cursor
     ~/.cursor/skills: skills
-    ~/.cursor/rules: rules
+    ~/.cursor/rules: dist/cursor/rules
     ~/.cursor/hooks.json: hooks.json
     ~/.cursor/hooks: hooks

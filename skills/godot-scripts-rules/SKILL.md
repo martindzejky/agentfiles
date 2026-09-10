@@ -1,12 +1,17 @@
 ---
-globs: *.gd,*.gdscript
+name: godot-scripts-rules
+description: Godot GDScript conventions for typing, signals, timers, naming, and composition. Always apply when creating, editing, or reviewing *.gd or *.gdscript files.
+user-invocable: false
+paths:
+  - '**/*.gd'
+  - '**/*.gdscript'
 ---
 
 # General approach
 
 Write stupidly simple code, not something too smart or complicated. Prefer easy solutions. Use Godot's and game dev's best practices and latest functions.
 
-Build composable, signal-driven Godot 4 gameplay systems with strict type safety. Enforce the "everything is a node" philosophy through correct scene and node composition. Prefer nodes for behaviour and scene structure. Put pure data on Resources/RefCounted, not on nodes. Design signal architectures that decouple systems without losing type safety. Apply static typing to eliminate silent runtime failures.
+Build composable, signal-driven Godot gameplay systems with strict type safety. Enforce the "everything is a node" philosophy through correct scene and node composition. Prefer nodes for behaviour and scene structure. Put pure data on Resources/RefCounted, not on nodes. Design signal architectures that decouple systems without losing type safety. Apply static typing to eliminate silent runtime failures.
 
 Every variable, function parameter, and return type must be explicitly typed. Use `:=` for inferred types only when the type is unambiguous from the right-hand expression. Typed arrays (`Array[EnemyData]`, `Array[Node]`) must be used everywhere.
 
