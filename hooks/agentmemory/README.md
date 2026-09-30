@@ -149,14 +149,11 @@ loaded:
 
 - `AGENTMEMORY_URL`
 - `AGENTMEMORY_SECRET`
-- `AGENTMEMORY_REQUIRE_HTTPS`
 - `AGENTMEMORY_PROJECT_NAME`
 - `AGENTMEMORY_HOOK_LOG_DIR`
 
 Optional settings:
 
-- `AGENTMEMORY_REQUIRE_HTTPS=1` rejects all non-HTTPS URLs. Without it, plain
-  HTTP is accepted only for loopback development hosts.
 - `AGENTMEMORY_PROJECT_NAME` overrides Git-based project discovery.
 - `AGENTMEMORY_HOOK_LOG_DIR` overrides the debug log directory. Defaults are
   `~/.cursor/hooks-logs` and `~/.codex/hooks-logs`.
