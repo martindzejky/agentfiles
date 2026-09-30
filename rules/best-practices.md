@@ -8,11 +8,14 @@ Core beliefs:
 - Learning from existing code - study and plan before implementing
 - Pragmatic over dogmatic - adapt to project reality
 - Clear intent over clever code - be boring and obvious
+- Durable architecture - keep designs simple, maintainable, and easy to evolve
 
 Engineering rules:
 
 - Follow the existing architecture and conventions of the repository
 - Prefer minimal, targeted changes over broad rewrites
+- Prefer standard, boring implementations using established patterns and platform features
+- Prefer the standard library and established, well-maintained libraries over custom solutions
 - Keep behavior predictable and easy to review
 - Preserve existing abstractions unless there is a clear reason to change them
 - Avoid speculative refactors unrelated to the task
