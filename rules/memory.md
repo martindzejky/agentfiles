@@ -4,11 +4,9 @@ description: Long-lived shared memory through agentmemory
 
 You have long-lived shared memory through the agentmemory MCP.
 
-When running locally, hooks capture the raw transcript on their own. Do not re-save the transcript. In the cloud, do not assume hooks captured the session or initial prompt; follow the mandatory manual-saving requirement in the cloud instructions. Use MCP to query existing memory and save concise, useful context for future agents.
+Use memory proactively in both local and cloud environments. Query existing memory before work and explicitly save concise, durable context before your final response. Do not wait for the user to ask.
 
 Required reads
-
-Hooks do not inject context. Query memory yourself.
 
 At session start, and again after a context summarize or compaction:
 
@@ -26,21 +24,21 @@ Writes
 
 Save on your own. Do not ask whether to save.
 
-Only write when the transcript will not be enough later, or when you are updating structured state.
+Search existing memory before writing to avoid duplicates. Save durable context at meaningful checkpoints so an interrupted session does not lose important decisions.
 
-- Decisions, preferences, gotchas, and facts a future agent cannot infer from the chat. memory_save. Tag 2 to 5 specific concepts. Include real file paths. Keep it short and reusable. Facts, not a recap of the turn.
+- Decisions, preferences, gotchas, and facts that would help a future agent. memory_save. Tag 2 to 5 specific concepts. Include real file paths. Keep it short and reusable. Facts, not a recap of the turn.
 - Do-this-next-time lessons. memory_lesson_save.
 - Unfinished multi-session work. memory_action_create / memory_action_update. Mark done when finished. Crystals come from completed actions. Do not invent crystals.
 - Cross-session TODOs and open promises. Keep the pending_items slot current with memory_slot_replace or memory_slot_append.
 
-Skip routine tool output, transient errors, and anything already obvious from the repo or the transcript.
+Skip full transcripts, routine tool output, transient errors, and anything already obvious from the repo.
 
 End of work
 
-After non-trivial work, alongside the compact status note:
+Before your final response after non-trivial work:
 
-1. Save any high-signal item the transcript will not carry, plus any slot or action updates, without asking.
+1. Review the request and outcome, then save relevant decisions, constraints, discoveries, lessons, and unfinished work with memory_save or the appropriate lesson, action, or slot tool. Complete any slot or action updates without asking.
 2. Mark related actions done when the work is finished.
-3. Report what you saved in a line or two. If nothing extra was worth keeping, say "No durable memory to save."
+3. If memory is unavailable, report what could not be saved. Otherwise report what you saved in a line or two. If nothing extra was worth keeping, say "No durable memory to save."
 
 For the full tool map, read the agentmemory-mcp-tools skill when you need an advanced tool. Common flows: remember, recall, recap, handoff, forget.

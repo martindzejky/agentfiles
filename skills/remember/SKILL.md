@@ -35,7 +35,7 @@ Without `project`, the memory lands in global search only. Per-project recall an
 1. Pull the core insight, decision, or fact out of `$ARGUMENTS`.
 2. Extract 2-5 lowercased concept phrases. Prefer specific over generic (`jwt-refresh-rotation` beats `auth`).
 3. Extract referenced file paths (absolute or repo-relative). Empty if none.
-4. Set `project` to the repo folder name for the workspace you are in (e.g. `agentmemory-cursor-importer`, `honeymoon-trip`). Use the same slug hooks send on `/observe`, not a full filesystem path.
+4. Set `project` to the repo folder name for the workspace you are in (e.g. `agentmemory-cursor-importer`, `honeymoon-trip`). Use the established project slug, not a full filesystem path.
 5. Call `memory_save` with `content`, `concepts`, `files`, and `project`.
 6. Confirm the save. Echo the concepts and project so the user knows the retrieval terms.
 

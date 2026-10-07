@@ -25,6 +25,10 @@ pnpm test
 
 Run `pnpm format:fix` to apply Prettier formatting. Linting is not configured.
 
+## Memory
+
+Memory is used explicitly through the AgentMemory MCP in both local and cloud environments. Agents search for relevant context at the start of work, save durable decisions and discoveries at meaningful checkpoints, and save any remaining useful context before finishing. Rules in `rules/memory.md` define this workflow.
+
 ## Philosophy
 
 I try to keep my setup lean. I'm a professional engineer and I want to be behind the steering wheel when working, not just along for the ride. I view the setup in a few categories: reusable pieces, orchestration, and domain knowledge.
