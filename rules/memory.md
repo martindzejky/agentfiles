@@ -4,7 +4,7 @@ description: Long-lived shared memory through agentmemory
 
 You have long-lived shared memory through the agentmemory MCP.
 
-Hooks capture the raw transcript on their own. Prompts, replies, tool calls, and subagent turns are already stored. Do not re-save the transcript. Use MCP to query that store, and to write things a later agent cannot reconstruct from the chat.
+When running locally, hooks capture the raw transcript on their own. Do not re-save the transcript. In the cloud, do not assume hooks captured the session or initial prompt; follow the mandatory manual-saving requirement in the cloud instructions. Use MCP to query existing memory and save concise, useful context for future agents.
 
 Required reads
 

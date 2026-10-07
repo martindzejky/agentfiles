@@ -13,6 +13,15 @@ Follow the project's `README.md` file.
 - In Cursor Cloud, secrets usually come from the Cursor dashboard. In other hosted environments, use that platform's secret injection.
 - If env vars fail, notify the user and stop.
 
+## Memory before finishing
+
+**You MUST manually save relevant, high-signal session information through the agentmemory MCP before your final response. Do not rely on hooks to have captured it.** Codex Cloud hooks may not run at all; Cursor Cloud hooks may miss the initial prompt. Treat cloud hook capture as incomplete even when hooks are configured.
+
+- Review the initial request and the session for decisions, constraints, discoveries, lessons, and unfinished work that would help a future agent. Save concise, reusable context with `memory_save` or the appropriate lesson, action, or slot tool.
+- In the cloud, this requirement overrides the general memory rule to skip information already present in the transcript: the transcript may never have reached memory. Check existing memory and avoid duplicating information already stored.
+- Do not save the full transcript, routine tool output, or unnecessary details. If there is no relevant, high-signal information to preserve, skip the write.
+- Complete useful memory writes near the end of work, before the final response. If memory is unavailable, report that the information could not be saved.
+
 ## Git and PRs
 
 - Work on feature branches. Never push to `master`/`main`.
