@@ -1,56 +1,20 @@
 ---
 name: forget
-description: Delete specific observations from agentmemory after showing them and getting explicit confirmation. Use when the user says "forget this", "delete memory", "remove that note", or wants to scrub specific data for privacy.
-argument-hint: '[what to forget - session ID, file path, or search term]'
+description: Find and delete specific saved memories after the user approves the exact matches. Use when the user asks to forget or remove stored information.
+argument-hint: '[what to forget]'
 user-invocable: true
 ---
 
-The user wants to remove data from agentmemory: $ARGUMENTS
-
-## Quick start
-
-```json
-memory_smart_search { "query": "old api key in config", "limit": 20 }
-```
-
-Show the matches, get a yes, then:
+1. Search with `memory_smart_search` or `memory_recall`. Expand relevant results and verify the IDs accepted by the deletion tool; do not assume an observation ID is a saved-memory ID.
+2. Show the exact memories to delete, without repeating secrets. Ask for confirmation of this concrete set before deleting.
+3. After confirmation, call `memory_governance_delete` with `memoryIds` as a comma-separated string and a short `reason`.
+4. Report the actual deletion count and any failures from the response.
 
 ```json
-memory_governance_delete { "memoryIds": ["abc12345", "def67890"], "reason": "user privacy request" }
+memory_governance_delete {
+  "memoryIds": "abc12345,def67890",
+  "reason": "user request"
+}
 ```
 
-Expected output:
-
-```text
-Found 2 matching memories. Confirmed. Deleted 2 memories.
-```
-
-## Why
-
-This is destructive and irreversible. Show exactly what will be deleted and get an explicit yes before calling delete. Delete by memory ID, never a bare session.
-
-## Workflow
-
-1. Search with `memory_smart_search`, the user's text as `query`, `limit: 20`.
-2. Show what matched: session ids, memory ids, titles. Ask for explicit confirmation. Do not proceed on silence or a vague "sure, whatever".
-3. On confirmation, call `memory_governance_delete` with `memoryIds` (array or comma-separated string) and optional `reason` (default `user request`).
-4. To drop a whole session, collect every memory id in that session from the search results and pass them all. The MCP does not accept a bare `sessionId`.
-5. Report the deletion count back.
-
-## Anti-patterns
-
-WRONG: search returns matches, you immediately call `memory_governance_delete` without showing them or waiting for a yes.
-
-RIGHT: list the matches, ask "Delete these 2? (yes/no)", and only delete after an explicit yes.
-
-## Checklist
-
-- Matches were shown to the user before any delete.
-- An explicit yes was received, not assumed.
-- `memoryIds` holds real ids from the search, never a bare `sessionId`.
-- Final message states the actual count deleted.
-
-## See also
-
-- `remember` is the write side; forget undoes it.
-- `recall` finds the exact memory id before deleting.
+Never pass a bare session ID. Search results may be incomplete; do not claim to delete an entire session from a limited search. If exact deletion targets cannot be verified, stop and explain the limitation.

@@ -1,54 +1,14 @@
 ---
 name: recap
-description: Summarize the last N agent sessions for the current project, grouped by date, with highlight observations per session. Use when the user asks "recap", "what have we been doing", "today", "this week", or wants a rollup of recent work.
+description: Summarize saved project activity over a requested period. Use when the user asks for a recap of today, this week, or recent sessions.
 argument-hint: '[last N | today | this week]'
 user-invocable: true
 ---
 
-The user wants a recap. Time window args: $ARGUMENTS
+1. Resolve the project and time window using the user's timezone. Default to the latest 10 recorded sessions when no window is given.
+2. Call `memory_sessions` and filter the returned sessions to the project and window. Use only parameters supported by the exposed tool schema; filter locally when necessary.
+3. Retrieve highlights with `memory_recall` using project and topic terms. Check each result's session ID and date before attributing it to a session.
+4. Group the evidence by date and summarize useful outcomes, decisions, and unfinished work. Use returned summaries or first prompts when a session has no title.
+5. Report missing coverage plainly. Session records are historical and curated saves may not belong to a session; use dated saved memories when relevant.
 
-## Quick start
-
-```json
-memory_sessions { "limit": 30 }
-```
-
-Then per surviving session: `memory_recall { "query": "<top concepts>", "limit": 3 }`.
-
-Expected output:
-
-```text
-2026-06-07
-  7f3a9c2 · "Auth refresh rework" · 14 obs · completed
-    - [8] Rotate refresh tokens on every use
-3 sessions across 2 days, 41 observations.
-```
-
-## Why
-
-Only summarize sessions and observations the tools returned. An empty window is a real answer. Do not invent activity.
-
-## Workflow
-
-1. Parse `$ARGUMENTS`: `today` = current local date; `this week` = last 7 days; `last <n>` or bare numeric = most recent N; empty = `last 10`.
-2. Call `memory_sessions`, filter to the current project (match `cwd` against the working directory), apply the window, sort by `startedAt` descending.
-3. Group survivors by local calendar date (YYYY-MM-DD).
-4. Per session list id (first 8), title or first prompt, observation count, status. Indent 2-3 highlights (importance >= 7) from `memory_recall`.
-5. End with "N sessions across M days, K observations."
-
-## Anti-patterns
-
-WRONG: window is empty, so you summarize "a productive week of auth work" from memory of the conversation.
-
-RIGHT: "No sessions in the last 7 days for this project."
-
-## Checklist
-
-- Window parsed correctly from the argument.
-- Sessions filtered to the current project's cwd.
-- Highlights come from `memory_recall`, not paraphrase.
-- Totals line matches the counts shown.
-
-## See also
-
-- `handoff`, `session-history`, `recall` for other views of the same session data.
+Do not treat an empty window as proof that no work happened or present this as a complete activity log. Use `session-history` for a timeline and `handoff` for next steps.

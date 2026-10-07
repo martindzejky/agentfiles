@@ -1,55 +1,17 @@
 ---
 name: commit-history
-description: List recent git commits linked to agent sessions, optionally filtered by branch or repo. Use when the user asks "show agent commits", "what has the agent shipped", "list linked commits", or wants commits with their session context.
+description: List commits with recorded memory session links. Use when the user asks for agent-linked commits or their saved session context.
 argument-hint: '[branch=... repo=... limit=...]'
 user-invocable: true
 ---
 
-The user wants a list of agent-linked commits. Filter args: $ARGUMENTS
-
-## Quick start
+1. Parse requested `branch`, remote `repo`, and `limit` filters. A bare number is a limit; default to 20 and cap at the tool's supported maximum of 500.
+2. Call `memory_commits` with the supported filters. Scope to the current repository's verified remote when no other repository is requested.
+3. Present returned commits newest first, using their SHA, authored date, message, and linked session IDs. Do not invent observation counts or session details absent from the response.
+4. If no commits match, say no recorded links match. This does not imply no commits were made; use git history if the user needs the actual repository history.
 
 ```json
-memory_commits { "branch": "main", "limit": 20 }
+memory_commits { "branch": "master", "limit": 20 }
 ```
 
-Expected output:
-
-```text
-9a1b2c3 main 2026-06-07 "rotate refresh tokens" · session 7f3a9c2 (14 obs)
-b21d004 main 2026-06-05 "rate limiter audit"    · session b21d004 (9 obs)
-```
-
-## Why
-
-Render only the commits the tool returned, newest first. An empty result means the filter matched nothing, not that work is missing.
-
-## Workflow
-
-1. Parse `$ARGUMENTS` for `branch=<name>`, `repo=<url-or-fragment>`, `limit=<n>`. A bare numeric token is the limit. Defaults: no branch, no repo, limit 100, max 500.
-2. Call `memory_commits` with the parsed filters.
-3. Render reverse-chronologically: short sha, branch, authored timestamp, first line of the message, linked session id(s) (first 8) with observation counts, and file count when `files` is present.
-4. Empty result: tell the user the filter matched nothing and suggest dropping the branch or repo filter.
-
-## Anti-patterns
-
-WRONG: invent commits from local `git log` when the tool returns an empty list.
-
-RIGHT: "No agent-linked commits on that branch. Drop the branch filter, or try another branch."
-
-WRONG (REST fallback): concatenate `?branch=` + raw branch name, so a name with `?`, `&`, or `#` corrupts the query string.
-
-RIGHT: URL-encode every value with `URLSearchParams`/`encodeURIComponent` before appending to `GET /agentmemory/commits`.
-
-## Checklist
-
-- Filters parsed; bare number treated as limit; limit capped at 500.
-- Output is reverse-chronological.
-- Session ids and observation counts come straight from the response.
-- Empty results stay empty. No filler from git alone.
-- REST fallback URL-encodes branch, repo, and limit.
-
-## See also
-
-- `commit-context` drills into one commit's session.
-- `recall` searches the observations behind a linked session.
+Use `commit-context` to investigate one commit. Recorded links are historical evidence, not a complete activity log.

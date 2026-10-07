@@ -41,4 +41,4 @@ Before your final response after non-trivial work:
 2. Mark related actions done when the work is finished.
 3. If memory is unavailable, report what could not be saved. Otherwise report what you saved in a line or two. If nothing extra was worth keeping, say "No durable memory to save."
 
-For the full tool map, read the agentmemory-mcp-tools skill when you need an advanced tool. Common flows: remember, recall, recap, handoff, forget.
+Use the available MCP tool schemas for exact parameters. Practical memory skills: remember, recall, forget, handoff, recap, session-history, commit-context, and commit-history.

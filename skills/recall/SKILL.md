@@ -1,52 +1,17 @@
 ---
 name: recall
-description: Search agentmemory for past observations, sessions, and learnings about a topic using hybrid BM25 plus vector plus graph search. Use when the user says "recall", "what did we do about", "did we ever", "have we seen", or needs context from past sessions.
+description: Find saved decisions, facts, and unfinished work relevant to a topic. Use when the user asks about past context or current work needs prior decisions.
 argument-hint: '[search query]'
 user-invocable: true
 ---
 
-The user wants to recall past context about: $ARGUMENTS
-
-## Quick start
+1. Search with `memory_smart_search` using a focused `query` and a small `limit`, such as 10. Include the project name and relevant files in the query when scope matters.
+2. Compact results contain titles and observation IDs. Expand relevant IDs with `memory_smart_search` and `expandIds` as a comma-separated string, or use `memory_recall` for full observations.
+3. Summarize only the returned evidence. Check project, dates, and session IDs before attributing a decision. Verify facts that may have changed against the current repository.
+4. If nothing relevant matches, say so and try narrower terms when useful. Do not invent past context.
 
 ```json
-memory_smart_search { "query": "jwt refresh token rotation", "limit": 10 }
+memory_smart_search { "query": "my-app refresh token rotation decision", "limit": 10 }
 ```
 
-Expected output:
-
-```text
-2 results across 2 sessions.
-[importance 8] decision · "Rotate refresh tokens on every use" (session 7f3a9c21)
-[importance 5] code · "limit.ts counts per-IP" (session b21d004e)
-```
-
-## Why
-
-Only show what the tool returned. Never invent an observation, session id, or importance score. If nothing comes back, say so.
-
-## Workflow
-
-1. Call `memory_smart_search` with the user's text as `query` and `limit: 10`. Pass `project` when the user scopes to a specific repo.
-2. Group results by session.
-3. For each observation show its type, title, and narrative.
-4. Lead with high-signal observations (importance >= 7).
-5. If zero results, suggest 2-3 other search terms and stop. Do not guess.
-
-## Anti-patterns
-
-WRONG: results are empty, so you write "We probably discussed token expiry last week" from assumption.
-
-RIGHT: "No memories matched that query. Try `refresh token`, `session expiry`, or `auth rotation`."
-
-## Checklist
-
-- Every observation shown came from the tool response.
-- Results grouped by session, high-importance first.
-- Empty results get other search terms, not invention.
-- No session id or score was paraphrased or rounded.
-
-## See also
-
-- `remember` writes what this skill retrieves.
-- `recap`, `handoff`, `session-history` for session-scoped views.
+Saved context is selective; a missing result does not prove something never happened. Use `remember` to save knowledge and `handoff` to resume unfinished work.

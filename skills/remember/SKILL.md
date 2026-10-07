@@ -1,63 +1,25 @@
 ---
 name: remember
-description: Save an insight, decision, or learning to agentmemory's long-term storage with searchable concept tags. Use when the user says "remember this", "save this", "note that", "don't forget", or wants to preserve knowledge for future sessions.
+description: Save durable decisions, preferences, and discoveries to shared memory. Use when the user asks to remember something or when useful context should survive the current session.
 argument-hint: '[what to remember]'
 user-invocable: true
 ---
 
-The user wants to save this to long-term memory: $ARGUMENTS
+Save the useful fact or decision, including its reason and any limits that matter later. Preserve the user's intent; skip full transcripts and routine output.
 
-## Quick start
+1. Search existing memory with `memory_smart_search` or `memory_recall` to avoid duplicates or surface an older decision that this replaces.
+2. Call `memory_save` with concise `content`, 2-5 specific concepts as a comma-separated string, and real file paths in `files` when relevant.
+3. For project-specific knowledge, use the established project identifier in `project`. Prefer the existing project slug; never use an absolute directory as the identifier. Omit project for global preferences.
+4. Confirm success from the response and briefly report what was saved. If the tool fails, say so.
+
+Example:
 
 ```json
 memory_save {
-  "content": "We rotate JWT refresh tokens on every use; the old token is revoked server-side in auth/refresh.ts.",
-  "concepts": "jwt-refresh-rotation, token-revocation, auth-flow",
-  "files": "src/auth/refresh.ts",
+  "content": "Staging deploys must run migrations before app rollout because the new routes require the updated schema.",
+  "concepts": "staging-deploy, migration-ordering",
   "project": "my-app"
 }
 ```
 
-Expected output:
-
-```text
-Saved memory abc12345 with 3 concepts: jwt-refresh-rotation, token-revocation, auth-flow (project: my-app).
-```
-
-## Why
-
-A memory is only as useful as the terms that find it later. Tag with specific concepts so a future `recall` hits, and keep the user's own phrasing.
-
-Without `project`, the memory lands in global search only. Per-project recall and filtering skip it.
-
-## Workflow
-
-1. Pull the core insight, decision, or fact out of `$ARGUMENTS`.
-2. Extract 2-5 lowercased concept phrases. Prefer specific over generic (`jwt-refresh-rotation` beats `auth`).
-3. Extract referenced file paths (absolute or repo-relative). Empty if none.
-4. Set `project` to the repo folder name for the workspace you are in (e.g. `agentmemory-cursor-importer`, `honeymoon-trip`). Use the established project slug, not a full filesystem path.
-5. Call `memory_save` with `content`, `concepts`, `files`, and `project`.
-6. Confirm the save. Echo the concepts and project so the user knows the retrieval terms.
-
-## Anti-patterns
-
-WRONG: `concepts: "stuff, code, notes"` (generic tags nothing can find later).
-
-WRONG: `project: "/Users/me/Projects/my-app"` (paths change across machines).
-
-WRONG: omitting `project` (memory becomes global-only).
-
-RIGHT: `concepts: "jwt-refresh-rotation, token-revocation"` and `project: "my-app"`.
-
-## Checklist
-
-- Content keeps the user's phrasing, not a paraphrase.
-- Concepts are specific, lowercased, 2-5 items.
-- File paths are real references, not guesses.
-- `project` is the repo folder name, always included.
-- Confirmation echoes the exact concepts and project tagged.
-
-## See also
-
-- `recall` retrieves what you save here.
-- `forget` removes a memory you saved by mistake.
+Use `recall` to retrieve saved context and `forget` to remove it.
