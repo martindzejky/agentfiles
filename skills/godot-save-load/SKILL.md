@@ -7,7 +7,7 @@ description: Persist Godot data with ConfigFile and JSON on user://. Never load 
 
 ## Instructions
 
-- Prefer `ConfigFile` for settings (audio, locale, bindings). Prefer JSON for game saves.
+- Use `ConfigFile` only for trusted settings. Prefer JSON with validated primitive values for untrusted settings and game saves.
 - Never use `.tres` / `.res` for player-controlled saves — loading them can execute embedded GDScript.
 - Always write under `user://`, never `res://` (read-only when exported).
 - Include a `version` int in every save; migrate old schemas forward incrementally.
@@ -16,13 +16,15 @@ description: Persist Godot data with ConfigFile and JSON on user://. Never load 
 
 ## Strategy
 
-| Format           | Use                      | Avoid                                        |
-| ---------------- | ------------------------ | -------------------------------------------- |
-| ConfigFile       | settings, keybinds       | deep nested game state                       |
-| JSON             | save slots, world state  | pretending Resources are safe user files     |
-| `.tres` / `.res` | editor/project data only | anything from `user://` or untrusted sources |
+| Format           | Use                        | Avoid                                        |
+| ---------------- | -------------------------- | -------------------------------------------- |
+| ConfigFile       | trusted settings, keybinds | untrusted files or deep nested game state    |
+| JSON             | save slots, world state    | pretending Resources are safe user files     |
+| `.tres` / `.res` | editor/project data only   | anything from `user://` or untrusted sources |
 
 ## ConfigFile (settings)
+
+`ConfigFile` can deserialize objects and execute scripts while parsing. Checking values after loading does not make an untrusted file safe.
 
 ```gdscript
 func save_settings(master_linear: float, locale: String) -> void:
@@ -42,6 +44,8 @@ func load_settings() -> void:
 ```
 
 ## JSON (game save)
+
+These examples omit validation: validate loaded fields and allow only simple slot identifiers before save, load, or delete. Reject path separators and `..` so a slot cannot escape `SAVE_DIR`.
 
 ```gdscript
 const SAVE_DIR := 'user://saves/'

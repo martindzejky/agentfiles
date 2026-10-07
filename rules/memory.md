@@ -24,6 +24,8 @@ Writes
 
 Save on your own. Do not ask whether to save.
 
+Never persist credentials, tokens, private keys, session cookies, or sensitive personal/customer data in memories, lessons, actions, or slots. Save a redacted description or the relevant variable name instead.
+
 Search existing memory before writing to avoid duplicates. Save durable context at meaningful checkpoints so an interrupted session does not lose important decisions.
 
 - Decisions, preferences, gotchas, and facts that would help a future agent. memory_save. Tag 2 to 5 specific concepts. Include real file paths. Keep it short and reusable. Facts, not a recap of the turn.

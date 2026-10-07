@@ -15,3 +15,5 @@ When implementing or fixing anything in a web application (UI, layout, styling, 
 - If verification finds a problem, fix it and re-verify. Do not finish with unverified UI work.
 
 If no browser tools are available, verify through the closest available substitute (tests, curl against the dev server, rendering scripts) and say what you could not verify.
+
+Before sharing or committing screenshots, recordings, traces, or logs, inspect them for credentials and private data. Redact sensitive content or use synthetic data; keep raw authentication state and traces private.
