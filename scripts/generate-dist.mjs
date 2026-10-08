@@ -99,7 +99,7 @@ async function generateCursorRules(sourceDir, destDir) {
   return written;
 }
 
-async function generateCodexAgents(sourceDir, destFile) {
+export async function renderCodexAgents(sourceDir) {
   const entries = await listRuleFiles(sourceDir);
   const bodies = [];
   for (const entry of entries) {
@@ -110,11 +110,13 @@ async function generateCodexAgents(sourceDir, destFile) {
     }
   }
 
+  return bodies.length > 0 ? `${bodies.join('\n\n')}\n` : '';
+}
+
+async function generateCodexAgents(sourceDir, destFile) {
+  const body = await renderCodexAgents(sourceDir);
   await mkdir(dirname(destFile), { recursive: true });
-  await writeFile(
-    destFile,
-    bodies.length > 0 ? `${bodies.join('\n\n')}\n` : '',
-  );
+  await writeFile(destFile, body);
   return destFile;
 }
 

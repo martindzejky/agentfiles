@@ -10,6 +10,7 @@ Follow the project's `README.md` file.
 
 ## Environment
 
+- For global agentfiles setup, follow [agentfiles/AGENTS.md](https://github.com/martindzejky/agentfiles/blob/master/AGENTS.md). It covers Cursor's root link, Codex's task-root rules and skill catalog, and fresh-session verification. Do not add hooks or replace platform-managed configuration.
 - In Cursor Cloud, secrets usually come from the Cursor dashboard. In other hosted environments, use that platform's secret injection.
 - If env vars fail, notify the user and stop.
 

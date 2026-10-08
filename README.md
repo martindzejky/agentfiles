@@ -2,7 +2,7 @@
 
 My personal AI agent configuration files (skills, rules) for Cursor, Codex, and similar coding agents. So my AI assistants always feel at home...
 
-## Installation
+## Local installation
 
 Almost everything is automated thanks to a bunch of scripts and [dotbot](https://github.com/anishathalye/dotbot).
 Just clone this repository and run the install script:
@@ -13,12 +13,17 @@ cd ~/.agentfiles
 ./install
 ```
 
+## Cloud installation
+
+Give the setup agent this repository's URL and ask it to follow [AGENTS.md](AGENTS.md). It covers Cursor's root symlink, Codex's task-root instructions and skill catalog, and verification in a fresh hosted session.
+
 ## Development
 
 Use Node.js 24 and pnpm:
 
 ```sh
 pnpm install
+pnpm generate:dist
 pnpm format
 pnpm test
 ```
