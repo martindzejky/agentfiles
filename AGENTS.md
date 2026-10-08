@@ -44,7 +44,7 @@ A fresh hosted session previously received both rules and the catalog from `/wor
 
 ## Refresh at session start
 
-Configure the cloud environment's install or startup script to refresh agentfiles on every session, including sessions using a cached environment. Run this before the agent loads its instructions. Keep the workspace's dependency installation in the same startup flow.
+Configure the cloud environment's install or startup script to refresh agentfiles on every session, including sessions using a cached environment. Keep the workspace's dependency installation in the same startup flow.
 
 Use a dedicated agentfiles installation checkout on `master` tracking `origin/master`, separate from the active task checkout. Each run must:
 
