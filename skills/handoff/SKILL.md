@@ -1,13 +1,13 @@
 ---
 name: handoff
-description: Resume unfinished work from saved project context. Use when the user says where were we, resume, handoff, or pick up where I left off.
-argument-hint: '[optional project path]'
+description: Resume unfinished work from Notion memory when the user asks where we were, to pick up a task, or to continue from a saved handoff.
+argument-hint: '[project or task]'
 user-invocable: true
 ---
 
-1. Identify the requested project, defaulting to the current workspace. Read relevant `pending_items` and `guidance` slots with `memory_slot_get` when available.
-2. Use `recall` to find saved decisions, blockers, and next steps for that project. Historical sessions from `memory_sessions` can supplement this context when available.
-3. Match project paths by directory boundary, never raw prefix. Do not fall back to an unrelated project's session when no match exists.
-4. Lead with any recorded unanswered question or blocker, then describe the current state and concrete next step. Verify branch, files, and status against the repository before continuing.
+Use the project resolution and startup reads in [the global memory rule](../../rules/memory.md).
 
-Memory is selective. If no handoff was saved, report the gap and inspect the current workspace; do not invent previous work or infer an open question merely from a sentence ending in a question mark.
+1. Read the project's working slots and applicable Global slots. Search Memories for relevant decisions and constraints. Use Slots for blockers and next steps.
+2. Verify saved state against the current branch, files, and issue or PR status before continuing. Preserve uncommitted changes. A saved plan alone does not authorize destructive actions or resuming work the user paused.
+3. Lead with the current state, any recorded blocker, and the concrete next step. If no handoff exists, say so and inspect the workspace rather than borrowing another project's history.
+4. As work proceeds, update the slot's affected items and save durable findings as observations. Preserve unrelated pending work.

@@ -1,17 +1,15 @@
 ---
 name: recall
-description: Find saved decisions, facts, and unfinished work relevant to a topic. Use when the user asks about past context or current work needs prior decisions.
-argument-hint: '[search query]'
+description: Investigate saved decisions, facts, or prior reasoning in Notion memory when a question needs more than routine startup recall.
+argument-hint: '[topic, file, or decision]'
 user-invocable: true
 ---
 
-1. Search with `memory_smart_search` using a focused `query` and a small `limit`, such as 10. Include the project name and relevant files in the query when scope matters.
-2. Compact results contain titles and observation IDs. Expand relevant IDs with `memory_smart_search` and `expandIds` as a comma-separated string, or use `memory_recall` for full observations.
-3. Summarize only the returned evidence. Check project, dates, and session IDs before attributing a decision. Verify facts that may have changed against the current repository.
-4. If nothing relevant matches, say so and try narrower terms when useful. Do not invent past context.
+Use the data sources and scope rules in [the global memory rule](../../rules/memory.md).
 
-```json
-memory_smart_search { "query": "my-app refresh token rotation decision", "limit": 10 }
-```
+1. Search Memories with specific project names, concepts, file paths, or commit SHAs. Fetch useful matches and inspect their status, applicability, and conflict links.
+2. Use Memories for rationale and context. Follow `Source observations` only when the user asks for original accounts or supporting evidence. A missing memory is not a reason to browse Observations.
+3. For historical questions, include Superseded and Archived memories deliberately. Explain what applied then and what applies now. For code questions, use Git to verify the commit or file before attributing saved reasoning to it.
+4. Answer with links to supporting pages. Separate recorded facts, current verification, and inference. Report conflicting evidence or missing coverage.
 
-Saved context is selective; a missing result does not prove something never happened. Use `remember` to save knowledge and `handoff` to resume unfinished work.
+A missing search result does not prove something never happened. Try relevant alternate terms before concluding that no saved context was found.
