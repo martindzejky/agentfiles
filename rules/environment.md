@@ -8,11 +8,9 @@ You should always have access to a proper complete coding environment.
 Do not proceed with implementation if your environment is incomplete or broken. Stop and ask the user to fix first.
 
 When running locally (not in cloud), I store all of my cloned repositories under `~/Projects`.
-This is useful if you need to look into a linked repository while investigating or for reference.
-For example, I could mention that "look into my other project <name>", or the current repository uses some other as a dependency and you need it for extra context, for example while investigating a bug.
 When you need to look into another repository, look for it in `~/Projects/<name>`.
 
-I almost always clone repositories with the same name locally (repo name and local folder name matches).
+I almost always clone repositories with the same name locally.
 Here are a few local aliases (remote name → local folder):
 
 - choozer-vue → new-choozer

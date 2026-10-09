@@ -10,7 +10,7 @@ Follow the project's `README.md` file.
 
 ## Environment
 
-- For global agentfiles setup, follow [agentfiles/AGENTS.md](https://github.com/martindzejky/agentfiles/blob/master/AGENTS.md). It covers Cursor's root link, Codex's task-root rules and skill catalog, and fresh-session verification. Do not add hooks or replace platform-managed configuration.
+- For global agentfiles setup, follow [agentfiles/AGENTS.md](https://github.com/martindzejky/agentfiles/blob/master/AGENTS.md). Do not add hooks or replace platform-managed configuration.
 - In Cursor Cloud, secrets usually come from the Cursor dashboard. In other hosted environments, use that platform's secret injection.
 - If env vars fail, notify the user and stop.
 
@@ -21,9 +21,9 @@ Follow the project's `README.md` file.
 - Before a write-capable subagent runs, be on a feature branch.
 - PR titles start with a capital letter. Keep the description cumulative and current with all commits.
 - For create/update/review flow, follow the `github-pull-requests` skill. In Cursor Cloud, PR writes use `ManagePullRequest` when available; otherwise use `gh` when writes are allowed.
-- **Before every `git commit`:** read the `git-commit-style` skill and follow it exactly. Always use the `git-commit-style` skill for writing the commit messages. If instructions conflict on commit messages, `git-commit-style` wins over generic "descriptive commit" wording.
+- **Before every `git commit`:** read the `git-commit-style` skill and follow it exactly. If instructions conflict on commit messages, `git-commit-style` wins over generic "descriptive commit" wording.
 - **Issue-driven PRs:** When work comes from a GitHub issue, the PR description must include a **References** section with `Closes #<number>` (linked to the issue) so the issue auto-closes on merge. Use proper capitalization.
-- **Tagged on an issue/PR (Cursor Cloud):** Your final output may be posted as a bot comment on the issue. The user usually does not see WIP messages, so end with a short summary, link to the open PR, any blockers, and anything else relevant. Keep it concise.
+- **Tagged on an issue/PR (Cursor Cloud):** Your final output may be posted as a bot comment on the issue. End with a short summary, link to the open PR, and any blockers. The user usually does not see WIP messages.
 
 ## Verification gate
 

@@ -12,7 +12,7 @@ Core beliefs:
 
 Engineering rules:
 
-- Follow the existing architecture and conventions of the repository
+- Follow the existing architecture, conventions, and typing and validation patterns of the repository
 - Prefer minimal, targeted changes over broad rewrites
 - Prefer standard, boring implementations using established patterns and platform features
 - Prefer the standard library and established, well-maintained libraries over custom solutions
@@ -31,17 +31,10 @@ Simplicity means:
 - If you need to explain it, it's too complex
 - Explicit, readable code over clever code
 
-All the changes you make must:
-
-- Build successfully (if relevant)
-- Follow project formatting/linting
-- Follow existing conventions
-- Respect typing and validation patterns already used in the codebase
-
 Before finishing:
 
-- Run formatters/linters
-- Run type checking and/or build if relevant for the project
+- Run formatters/linters and fix any failures
+- Run type checking and/or build if relevant for the project, and fix any failures
 - Self-review changes
 
 Learning the codebase:
@@ -53,15 +46,11 @@ Learning the codebase:
 
 Tooling:
 
-- Use project's existing build system
-- Use project's test framework
-- Use project's formatter/linter settings
+- Use project's existing build system, test framework, and formatter/linter settings
 - Don't introduce new tools without strong justification and always confirm with user
 
 When making changes to existing codebase:
 
-- Try to make minimal necessary changes
-- Follow existing approaches and style
 - Only refactor or do other unrelated improvements if asked to
 - Update plan and check lists as you go
 
