@@ -17,5 +17,7 @@ Here are a few local aliases (remote name → local folder):
 
 - choozer-vue → new-choozer
 - chooze → old-choozer
+- dotfiles/.dotfiles -> ~/.dotfiles
+- agentfiles/.agentfiles -> ~/.agentfiles
 
 Fallback: I don't clone everything. If I give a GitHub URL and the project isn't local, use that repo directly for reference.
