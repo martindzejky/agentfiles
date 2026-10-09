@@ -48,12 +48,12 @@ Configure the cloud environment's install or startup script to refresh agentfile
 
 Use a dedicated agentfiles installation checkout on `master` tracking `origin/master`, separate from the active task checkout. Each run must:
 
-1. Pull the latest agentfiles with `git pull --ff-only` from that checkout.
+1. Check that the installation checkout is clean, then run `git checkout master` and `git pull --ff-only origin master` there. Codex Cloud may initially check out a `work` branch, so explicitly switch to `master` on every refresh.
 2. Rerun `./install`, or `./install --only shell` for the managed-directory case described above, to regenerate the rules and refresh permitted links.
 3. In Codex Cloud, rerun `pnpm setup:codex-cloud <task-root>` with the configured byte allowance. In Cursor Cloud, verify that `/.cursor` still points to the runtime user's `~/.cursor`.
 4. Return to the task checkout and run its usual dependency installation.
 
-Check that the installation checkout is clean and on the expected branch before pulling. If the update or generation fails, stop and report it. Do not reset local changes or silently continue with stale instructions. Configure network access for the update during this startup phase. Editing agentfiles should then reach every configured environment at its next session without another setup visit.
+If the installation checkout has local changes, or switching branches, pulling, or generation fails, stop and report it. Do not reset local changes or silently continue with stale instructions. Configure network access for the update during this startup phase. Editing agentfiles should then reach every configured environment at its next session without another setup visit.
 
 ## Verify a new environment
 
