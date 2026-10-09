@@ -1,15 +1,15 @@
 ---
 name: recall
-description: Investigate saved decisions, facts, or prior reasoning in Notion memory when a question needs more than routine startup recall.
+description: Find saved decisions, facts, or reasoning in Notion memory beyond routine recall.
 argument-hint: '[topic, file, or decision]'
 user-invocable: true
 ---
 
 Use the data sources and scope rules in [the global memory rule](../../rules/memory.md).
 
-1. Search Memories with specific project names, concepts, file paths, or commit SHAs. Fetch useful matches and inspect their status, applicability, and conflict links.
-2. Use Memories for rationale and context. Follow `Source observations` only when the user asks for original accounts or supporting evidence. A missing memory is not a reason to browse Observations.
-3. For historical questions, include Superseded and Archived memories deliberately. Explain what applied then and what applies now. For code questions, use Git to verify the commit or file before attributing saved reasoning to it.
-4. Answer with links to supporting pages. Separate recorded facts, current verification, and inference. Report conflicting evidence or missing coverage.
+1. Search Memories by project, concepts, paths, or commit SHAs. Fetch matches and check status, applicability, and conflicts.
+2. Follow `Source observations` only for explicit requests for original accounts or evidence. Missing memory does not justify browsing Observations.
+3. Include Superseded and Archived memories for historical questions. Explain past and current applicability. Verify commits or files with Git before attributing saved reasoning.
+4. Link supporting pages. Separate recorded facts, current verification, and inference. Report conflicts or gaps.
 
-A missing search result does not prove something never happened. Try relevant alternate terms before concluding that no saved context was found.
+Try alternate terms before reporting no saved context. Missing results do not prove nothing happened.
