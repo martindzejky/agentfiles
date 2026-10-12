@@ -5,9 +5,9 @@ argument-hint: '[topic, file, or decision]'
 user-invocable: true
 ---
 
-Use the data sources and scope rules in [the global memory rule](../../rules/memory.md).
+Use the data sources, scope rules, and freshness meanings in [the global memory rule](../../rules/memory.md).
 
-1. Search Memories with specific project names, concepts, file paths, or commit SHAs. Fetch useful matches and inspect their status, applicability, and conflict links.
+1. Search Memories for knowledge relevant to the current task and project, including applicable Global knowledge, with specific project names, concepts, file paths, or commit SHAs. Fetch important matches and inspect their content, properties, applicability, and relationships.
 2. Follow `Source observations` only for explicit requests for original accounts or evidence. Missing memory does not justify browsing Observations.
 3. For historical questions, include Superseded and Archived memories deliberately. Explain what applied then and what applies now. For code questions, verify the commit or file with Git before attributing saved reasoning to it.
 4. Link supporting pages. Separate recorded facts, current verification, and inference. Report conflicts or gaps.

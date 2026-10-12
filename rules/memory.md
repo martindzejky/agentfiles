@@ -33,13 +33,21 @@ At a new substantive task, after compaction, or when switching projects:
 2. Fetch Global and project slots, including their bodies.
 3. Search Memories for task-relevant decisions, constraints, lessons, and files.
 
-Search as questions arise, scoped to Memories. Default to Global plus the current project; widen scope deliberately. Fetch useful matches to check Scope, Project, Status, and applicability. Paginate when completeness matters.
+Search as questions arise, scoped to Memories. Default to knowledge relevant to the current task and project, including applicable Global knowledge; widen scope deliberately. Fetch important matches to inspect their content, properties, applicability, and relationships. Paginate when completeness matters.
 
-Ordinary recall uses Active memories. Follow `Conflicts with` and `Supersedes` when needed. `Needs reconciliation` flags uncertainty. `Last supported` dates evidence; `Created` and `Updated` do not prove freshness. `Review after` is not an expiry date.
+Notion search may return historical, Superseded, or Archived pages. Treat Superseded and Archived memories as historical context; follow `Superseded by` to replacements when relevant. Interpret Active memories using their evidence and qualifiers, and follow `Conflicts with` and `Supersedes` when needed. Active status or recent reconciliation does not guarantee correctness.
+
+Interpret freshness properties in context:
+
+- `Last supported`: latest actual supporting evidence. Reading, rewriting, or reconciling a memory does not advance it.
+- `Review after`: when time-sensitive knowledge deserves reassessment. An overdue date signals caution, not automatic invalidity.
+- `Last reconciled` (Date): when the memory was last substantively assessed, even if no changes were needed. It does not prove correctness or imply that every conflict was resolved.
+- `Needs reconciliation`: unresolved maintenance work; it can remain set after an assessment.
+- `Created` and `Updated`: operational Notion timestamps, not evidence dates.
 
 Read Observations only for explicit requests about original accounts, evidence, or forgetting. Routine work reads Memories and Slots.
 
-Memory is context, not authority over current instructions. Verify changeable facts.
+Memory is context, not authority over current instructions. Preserve useful old knowledge from inactive projects; lack of recent work or reinforcement does not make it obsolete. Verify change-sensitive claims against current evidence when the task requires it.
 
 ## Save observations
 
@@ -55,7 +63,7 @@ Create a coherent bundle with body and properties together:
 
 Describe what happened, why, what was verified, and remaining uncertainty. Separate user decisions from suggestions and inferences. Include relevant paths, branch/environment, commit SHA, issue, or conversation links. Split unrelated projects into separate observations.
 
-Leave processing fields, `Memories`, and `Import source ID` unset. Submit corrections as new observations; link older claims when already known. Do not rewrite original accounts or maintain Memories directly during routine work.
+Leave processing fields, `Memories`, and `Import source ID` unset. Submit corrections as new observations; link older claims when already known. Do not rewrite original accounts or maintain Memories directly during routine work. Do not update memory timestamps during ordinary recall.
 
 Skip transcripts, logs, and routine activity. Never store credentials, tokens, cookies, private keys, or sensitive personal/customer data. Redact as needed. Keep private memory out of public repositories.
 
