@@ -31,12 +31,11 @@ At a new substantive task, after compaction, or when switching projects:
 
 1. Resolve the project and fetch its brief.
 2. Fetch Global and project slots, including their bodies.
-3. Fetch Global and project memories with `Status = Active` and `Pinned = true`.
-4. Search Memories for task-relevant decisions, constraints, lessons, and files.
+3. Search Memories for task-relevant decisions, constraints, lessons, and files.
 
 Search as questions arise, scoped to Memories. Default to Global plus the current project; widen scope deliberately. Fetch useful matches to check Scope, Project, Status, and applicability. Paginate when completeness matters.
 
-Ordinary recall uses Active memories. Follow `Conflicts with` and `Supersedes` when needed. `Needs reconciliation` flags uncertainty. `Last supported` dates evidence; `Created` and `Updated` do not prove freshness. Pinned is not infallible; `Review after` is not an expiry date.
+Ordinary recall uses Active memories. Follow `Conflicts with` and `Supersedes` when needed. `Needs reconciliation` flags uncertainty. `Last supported` dates evidence; `Created` and `Updated` do not prove freshness. `Review after` is not an expiry date.
 
 Read Observations only for explicit requests about original accounts, evidence, or forgetting. Routine work reads Memories and Slots.
 
