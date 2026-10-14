@@ -2,57 +2,37 @@
 description: Engineering defaults for incremental, conventional work
 ---
 
-Core beliefs:
-
-- Incremental progress over big bangs - small changes that compile and pass tests
-- Learning from existing code - study and plan before implementing
-- Pragmatic over dogmatic - adapt to project reality
-- Clear intent over clever code - be boring and obvious
-- Durable architecture - keep designs simple, maintainable, and easy to evolve
-
 Engineering rules:
 
-- Follow the existing architecture, conventions, and typing and validation patterns of the repository
-- Prefer minimal, targeted changes over broad rewrites
-- Prefer standard, boring implementations using established patterns and platform features
+- Make small, targeted changes that compile and pass tests; adapt to project reality
+- Follow the repository's architecture, conventions, typing, and validation patterns
+- Keep designs simple, maintainable, and easy to evolve; behavior predictable and easy to review
+- Prefer explicit, readable code, established patterns, and platform features over clever solutions
 - Prefer the standard library and established, well-maintained libraries over custom solutions
-- Keep behavior predictable and easy to review
 - Preserve existing abstractions unless there is a clear reason to change them
-- Avoid speculative refactors unrelated to the task
+- Only refactor or make unrelated improvements if asked to
 - Do not introduce new dependencies unless necessary
 - Do not invent APIs, config values, or behaviors without evidence in code or task input
 - When fixing a bug, reproduce the symptom and trace to root cause before changing code
-
-Simplicity means:
-
 - Single responsibility per function/class
 - Avoid premature abstractions
-- No clever tricks - choose the boring solution
 - If you need to explain it, it's too complex
-- Explicit, readable code over clever code
 
 Before finishing:
 
-- Run formatters/linters and fix any failures
-- Run type checking and/or build if relevant for the project, and fix any failures
+- Run the project's configured validation gates, including formatters/linters and relevant type checks or builds; fix all failures
 - Self-review changes
 
 Learning the codebase:
 
-- Find 3 similar features/components
-- Identify common patterns and conventions
-- Use same libraries/utilities when possible
-- Follow existing project and test patterns
+- Study and plan before implementing; find 3 similar features/components
+- Follow their patterns and conventions, including tests; reuse libraries/utilities when possible
+- Update plans and checklists as you go
 
 Tooling:
 
 - Use project's existing build system, test framework, and formatter/linter settings
 - Don't introduce new tools without strong justification and always confirm with user
-
-When making changes to existing codebase:
-
-- Only refactor or do other unrelated improvements if asked to
-- Update plan and check lists as you go
 
 You must never:
 
@@ -63,9 +43,8 @@ You must never:
 
 Commits:
 
-- When running locally with human in the loop, never commit code on your own, instead let the user review and commit your work
-- When running autonomously in the cloud, you must use the "git-commit-style" skill
-- You can also commit if the user explicitly asks you to, always use the "git-commit-style" skill
+- Locally, leave review and commits to the user unless they explicitly ask you to commit
+- Always use the "git-commit-style" skill when committing, including autonomous cloud work
 - Commit working code incrementally
 
 Branches:

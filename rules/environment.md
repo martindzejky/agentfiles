@@ -3,15 +3,11 @@ description: Complete coding environment, local projects, and repo aliases
 ---
 
 You must always have a set of global user skills, workflows, rules, and subagent definitions, placed at `~/.cursor` or `/.cursor` (Cursor) and, once installed, `~/.codex` / `~/.agents` (Codex). These come from my global agentfiles at https://github.com/martindzejky/agentfiles.
-If you don't, or your current environment is incomplete in any other way, warn the user explicitly and ask them for a proper setup.
-You should always have access to a proper complete coding environment.
-Do not proceed with implementation if your environment is incomplete or broken. Stop and ask the user to fix first.
+If this setup is missing or the coding environment is incomplete or broken, stop implementation, warn the user, and ask them to fix it first.
 
-When running locally (not in cloud), I store all of my cloned repositories under `~/Projects`.
-When you need to look into another repository, look for it in `~/Projects/<name>`.
+Locally, look for other cloned repositories in `~/Projects/<name>`.
 
-I almost always clone repositories with the same name locally.
-Here are a few local aliases (remote name → local folder):
+Local folders usually match remote names, with these aliases:
 
 - choozer-vue → new-choozer
 - chooze → old-choozer
