@@ -17,7 +17,7 @@ Use these data-source IDs for creation and `collection://<id>` for fetching, sea
 - Memories: `2ad16530-546d-44bb-895c-83d6dc2b4b7c`
 - Slots: `0e7ecd8b-fad4-4f7a-a5b4-ff83f0a10825`
 
-Fetch schemas once per context and follow tool parameter formats. Query properties, search content, and fetch page bodies separately.
+Fetch schemas once per context and reuse them; refetch when a change or error requires it. The live schema is the source of truth for property names, types, and options. Follow the current tool parameter formats. Query properties, search content, and fetch page bodies separately.
 
 Resolve Projects by `Key`, `Repository`, or `Aliases`. Normalize SSH/HTTPS remotes and worktrees. Stable non-repository contexts can be projects.
 
@@ -25,7 +25,7 @@ Resolve Projects by `Key`, `Repository`, or `Aliases`. Normalize SSH/HTTPS remot
 - `Scope = Global` applies across projects and has no Project relation.
 - Missing project information never means Global. Resolve ambiguity before saving; ask if context cannot settle it.
 
-Reuse existing projects and keys. For a clearly identified new project, check for duplicates, then create `Name`, stable `Key`, `Status = Active`, and a short factual brief. Include verified `Repository` and `Aliases` when available. Never create a project per branch, worktree, or session.
+Reuse existing projects and keys. For a clearly identified new project, check for duplicates, then create `Name`, stable `Key`, `Status = Active`, and a short factual brief. Include verified `Repository` and `Aliases` when available; additional repositories belong in the body. Projects support `Active` and `Archived` statuses. Never create a project per branch, worktree, or session.
 
 ## Recall
 
@@ -44,8 +44,9 @@ Interpret freshness properties in context:
 - `Last supported`: latest actual supporting evidence. Reading, rewriting, or reconciling a memory does not advance it.
 - `Review after`: when time-sensitive knowledge deserves reassessment. An overdue date signals caution, not automatic invalidity.
 - `Last reconciled` (Date): when the memory was last substantively assessed, even if no changes were needed. It does not prove correctness or imply that every conflict was resolved.
-- `Needs reconciliation`: unresolved maintenance work; it can remain set after an assessment.
+- `Needs reconciliation`: a checkbox for further agent work, never a request for manual approval; it can remain set after an assessment.
 - `Created` and `Updated`: operational Notion timestamps, not evidence dates.
+- `Processing started`, `Processing completed` (Observations), and `Last consolidated` (Projects): maintenance bookkeeping, not evidence dates or confirmation that facts remain current.
 
 Read Observations only for explicit requests about original accounts, evidence, or forgetting. Routine work reads Memories and Slots.
 
@@ -65,15 +66,15 @@ Create a coherent bundle with body and properties together:
 
 Describe what happened, why, what was verified, and remaining uncertainty. Separate user decisions from suggestions and inferences. Include relevant paths, branch/environment, commit SHA, issue, or conversation links. Split unrelated projects into separate observations.
 
-Leave processing fields, `Memories`, and `Import source ID` unset. Submit corrections as new observations; link older claims when already known. Do not rewrite original accounts or maintain Memories directly during routine work. Do not update memory timestamps during ordinary recall.
+Leave `Processing started`, `Processing completed`, `Memories`, and `Import source ID` unset. Observation `Status` is a status property with `New`, `Needs reconciliation`, `Processing`, `Processed`, and `Failed` options; submit as `New` and leave later transitions to maintenance. Submit corrections as new observations; link older claims when already known. Do not rewrite original accounts or maintain Memories directly during routine work. Do not update memory timestamps during ordinary recall.
 
 Skip transcripts, logs, and routine activity. Never store credentials, tokens, cookies, private keys, or sensitive personal/customer data. Redact as needed. Keep private memory out of public repositories.
 
 ## Maintain slots
 
-Slots are short working notes. Keep one page per `Scope`, `Project`, and `Key`. Reuse existing keys such as `pending_items`; otherwise use `pending_work` for TODOs or `current_work` for a handoff.
+Slots are short working notes maintained by working agents. Identify a slot by `Scope`, `Project`, and its `Name` title; Slots has no `Key` property. Reuse the matching page and its existing name. For a new slot, use `Pending work` for TODOs or `Current work` for a handoff.
 
-Read the latest body before editing; preserve unrelated items. Create slots with `Key`, `Scope`, applicable `Project`, and body together. Keep state, blockers, next steps, and references current. Remove completed items. Submit lasting findings as observations too.
+Read the latest body before editing; preserve unrelated items. Create slots with `Name`, `Scope`, applicable `Project`, and body together. Keep state, blockers, next steps, and references current. Remove completed items. Submit lasting findings as observations too.
 
 ## Finish and recover
 
