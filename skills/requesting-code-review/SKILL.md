@@ -28,21 +28,21 @@ Do not treat review as a batch ritual after every small step.
 
 ## How to request review
 
-Use built-in review tools when your environment provides them; otherwise review the diff manually (section 2 below).
-
-- **Cursor:** Task with `subagent_type="bugbot"` for a general code review; `subagent_type="security-review"` when the diff touches auth, secrets, input handling, or trust boundaries; or `/review` when available
-- **Codex:** `/review` in the CLI or IDE extension when available
-- **Fallback:** manual diff review using the template below
+Use the review tools or read-only reviewer agents actually available in the environment. When delegating, give the reviewer the scope, requirements, and actual diff or file paths. If no independent reviewer is available, review the diff yourself using the template below and say that it was a self-review.
 
 ### 1. Get the git range
 
+Choose the comparison that matches the work: uncommitted changes, the relevant commits, or a branch against its actual target. Inspect the repository before choosing a base; do not assume `main`, `master`, a particular remote, or `HEAD~1`.
+
+For a committed branch review, set `TARGET_REF` to the verified target ref and use its merge base:
+
 ```bash
-BASE_SHA=$(git merge-base HEAD origin/master)  # or origin/main, or HEAD~1
+BASE_SHA=$(git merge-base HEAD "$TARGET_REF")
 HEAD_SHA=$(git rev-parse HEAD)
 git diff --stat "$BASE_SHA..$HEAD_SHA"
 ```
 
-For uncommitted work, say so explicitly instead of inventing SHAs.
+For uncommitted work, inspect both `git diff` and `git diff --cached`, plus relevant untracked files. Say "uncommitted changes" rather than inventing SHAs.
 
 ### 2. Fill the prompt
 
@@ -62,7 +62,7 @@ Give the reviewer enough context to judge the diff on its own.
 - **Minor** — note for later or fix if cheap
 - Push back when the reviewer lacks context or the suggestion is wrong for this codebase
 
-For PR feedback loops after merge prep, use the `autopilot` skill (`/autopilot`).
+Keep the review scoped to correctness and the stated requirements. Do not turn it into unrelated cleanup or speculative features. Distinguish verified failures from concerns that still need checking.
 
 ## Red flags
 

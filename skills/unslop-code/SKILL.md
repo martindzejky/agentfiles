@@ -5,7 +5,7 @@ description: Remove AI-generated code slop and clean up code style in diffs
 
 # Unslop code
 
-Check the diff against main and remove AI-generated slop introduced in the branch.
+Review the changes in scope and remove AI-generated slop introduced there. Use the actual target branch for branch work; for uncommitted work, inspect staged and unstaged diffs and relevant new files. Do not assume the base is `main`.
 
 ## Focus areas
 
@@ -18,5 +18,6 @@ Check the diff against main and remove AI-generated slop introduced in the branc
 ## Guardrails
 
 - Keep behavior unchanged unless fixing a clear bug
+- Preserve necessary validation, error handling, explanatory comments, and existing user edits; judge them in context rather than deleting by pattern
 - Prefer minimal, focused edits over broad rewrites
 - Keep the final summary concise (1-3 sentences)

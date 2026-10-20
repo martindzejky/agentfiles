@@ -7,4 +7,4 @@ disable-model-invocation: true
 
 # Continue work
 
-I have reviewed your changes and commited your work so far. Continue.
+I have reviewed your changes and committed your work so far. Continue.

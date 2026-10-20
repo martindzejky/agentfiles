@@ -16,17 +16,21 @@ You are reviewing code changes for production readiness.
 
 ## Requirements/Plan
 
-{PLAN_REFERENCE}
+{PLAN_OR_REQUIREMENTS}
 
 ## Git Range to Review
 
 **Base:** {BASE_SHA}
 **Head:** {HEAD_SHA}
 
+For a committed range:
+
 ```bash
 git diff --stat {BASE_SHA}..{HEAD_SHA}
 git diff {BASE_SHA}..{HEAD_SHA}
 ```
+
+For uncommitted changes, inspect staged and unstaged diffs and relevant untracked files instead. Do not run the range commands with placeholder SHAs.
 
 ## Review Checklist
 
@@ -47,10 +51,10 @@ git diff {BASE_SHA}..{HEAD_SHA}
 
 **Testing:**
 
-- Tests actually test logic (not mocks)?
+- Tests exercise meaningful behavior rather than only asserting mock setup?
 - Edge cases covered?
 - Integration tests where needed?
-- All tests passing?
+- What checks were actually run, and what do their results establish?
 
 **Requirements:**
 
@@ -122,6 +126,8 @@ git diff {BASE_SHA}..{HEAD_SHA}
 - Be vague ("improve error handling")
 - Avoid giving a clear verdict
 - Assume missing context from prior chat history
+- Invent findings or suggest unrelated cleanup just to fill a section
+- Claim tests passed or behavior was verified without evidence
 
 ## Example Output
 
