@@ -9,6 +9,7 @@ description: Work with Godot from the terminal. Use when refreshing editor-manag
 
 - Run commands from the project root.
 - Prefer `godot` from `PATH`.
+- Check `godot --version` against the project before using newer CLI flags or APIs.
 - Use Godot's editor CLI instead of workarounds when the editor needs to refresh project-managed state.
 
 ## Refresh editor-managed state
@@ -43,13 +44,13 @@ Use this second, after `godot --headless --import`, when the change depends on e
 
 ## Smoke-check a scene
 
-Use this to run a scene briefly and quit while still printing startup errors:
+Use this for a first-iteration startup check:
 
 ```bash
 godot path/to/scene.tscn --quit
 ```
 
-This is useful after editing a scene when you want a quick verification that it starts without obvious runtime errors.
+For a brief runtime check, use `godot path/to/scene.tscn --quit-after 60` (iterations, not seconds). Add `--headless` when no window is needed. Neither command proves interactive gameplay works; inspect errors as well as the exit status.
 
 Be careful with object scenes run in isolation. Some scenes are only valid when spawned by the real game flow and may depend on:
 
@@ -96,3 +97,5 @@ Notes:
 
 - Do not switch to path-based `extends` just because a new `class_name` has not been registered yet.
 - If a script check does not depend on refreshed editor-managed state, you can run `--script ... --check-only` directly.
+
+Docs: [Command line tutorial](https://docs.godotengine.org/en/stable/tutorials/editor/command_line_tutorial.html).

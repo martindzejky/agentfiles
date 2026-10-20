@@ -5,7 +5,7 @@ description: Use one Autoload event bus for distant/cross-scene Godot events. Us
 
 # Godot Event Bus
 
-Must match `godot-scripts`: **one** bus for distant / cross-scene game events. Prefer scene-local signal wiring or parent mediation inside a single scene.
+Must match `godot-scripts-rules`: **one** bus for distant / cross-scene game events. Prefer scene-local signal wiring or parent mediation inside a single scene.
 
 Related: `godot-scene-organization`, `godot-dependency-injection`.
 
@@ -37,7 +37,7 @@ signal item_collected(item_id: StringName)
 EventBus.score_changed.emit(score)
 
 # consumer
-func _ready() -> void:
+func _enter_tree() -> void:
   EventBus.player_died.connect(_on_player_died)
 
 func _exit_tree() -> void:
@@ -45,7 +45,7 @@ func _exit_tree() -> void:
     EventBus.player_died.disconnect(_on_player_died)
 ```
 
-**Disconnect in `_exit_tree` when the emitter (bus) outlives the receiver.** Fire-and-forget: `CONNECT_ONE_SHOT`.
+**Disconnect in `_exit_tree` when listening should stop on tree exit.** Godot removes ordinary method connections when the receiver is freed, but a removed or pooled node may remain alive. If it can re-enter, pair exit cleanup with reconnection in `_enter_tree()`; `_ready()` normally runs only once. `CONNECT_ONE_SHOT` means one emission, not cancellation on tree exit.
 
 Register/remove autoloads via project settings, then refresh with `godot-cli` (`godot --headless --import`). Justify a new bus-like autoload the same way as any autoload — usually you already have one.
 

@@ -5,7 +5,7 @@ description: Wire Godot dependencies via @export, parent injection, or justified
 
 # Godot Dependency Injection
 
-Skip Service Locator. Prefer explicit wiring that matches `godot-scripts` / `godot-scenes`.
+Skip Service Locator. Prefer explicit wiring that matches `godot-scripts-rules` / `godot-scenes-rules`.
 
 Related: `godot-components`, `godot-event-bus`, `godot-resources`.
 

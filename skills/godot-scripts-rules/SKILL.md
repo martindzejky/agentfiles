@@ -11,9 +11,11 @@ paths:
 
 Write stupidly simple code, not something too smart or complicated. Prefer easy solutions. Use Godot's and game dev's best practices and latest functions.
 
+Use APIs supported by the project's installed Godot. Check its matching documentation when an API differs from the current stable docs; do not upgrade the project just to use a newer helper.
+
 Build composable, signal-driven Godot gameplay systems with strict type safety. Enforce the "everything is a node" philosophy through correct scene and node composition. Prefer nodes for behaviour and scene structure. Put pure data on Resources/RefCounted, not on nodes. Design signal architectures that decouple systems without losing type safety. Apply static typing to eliminate silent runtime failures.
 
-Every variable, function parameter, and return type must be explicitly typed. Use `:=` for inferred types only when the type is unambiguous from the right-hand expression. Typed arrays (`Array[EnemyData]`, `Array[Node]`) must be used everywhere.
+Every variable, function parameter, and return type must be explicitly typed. Use `:=` for inferred types only when the type is unambiguous from the right-hand expression. Use typed arrays (`Array[EnemyData]`, `Array[Node]`) and typed dictionaries (`Dictionary[StringName, ItemData]`) when their contents have known types.
 
 Usually one root script is enough for simpler objects. Split functionality out into components once there's reusable functionality.
 
@@ -37,7 +39,7 @@ print('hello')
 
 # Naming and functions
 
-Use single quotes! Use underscore_case for file names, variables, functions, and signals. Use PascalCase for `class_name` / type names. Use CONSTANT_CASE for constants and enum members. Node names follow `godot-scenes` (lowercase underscore). These functions should always start with a leading underscore:
+Use single quotes! Use underscore_case for file names, variables, functions, and signals. Use PascalCase for `class_name` / type names. Use CONSTANT_CASE for constants and enum members. Node names follow `godot-scenes-rules` (lowercase underscore). These functions should always start with a leading underscore:
 
 - built-in callbacks such as `_ready` or `_process`
 - script's private functions that should not be exposed to other scripts
@@ -102,7 +104,7 @@ Do **not** use `_process` / `_physics_process` to "keep things in sync." Prefer 
 
 # Input and physics
 
-Prefer `_unhandled_input` (or `_input` when you must run before UI) for discrete actions such as jump, interact, or pause. Prefer `Input` polling in `_physics_process` for held / analog movement, and call `move_and_slide()` there — not in `_process`. Do not rely on `is_action_just_pressed` only inside `_process` / `_physics_process` when a one-shot must not be missed; handle it from an input callback (or buffer a flag there).
+Prefer `_unhandled_input` (or `_input` when you must run before UI) for discrete actions such as jump, interact, or pause. Prefer `Input` polling in `_physics_process` for held / analog movement, and call `move_and_slide()` there — not in `_process`. `Input.is_action_just_pressed()` works for the current frame or physics tick, but global polling ignores UI event consumption. Use callbacks for event routing and buffer actions when gameplay needs a longer input window.
 
 # Runtime node setup
 
@@ -116,13 +118,13 @@ Always prefer `distance_squared_to()` over `distance_to()` unless you really nee
 
 - Prefer `move_toward(current, target, delta * speed)` over `lerp(current, target, speed * delta)` when you need to actually reach the target. `lerp` with a delta factor never fully arrives.
 - Use `lerp_angle()` / `rotate_toward()` for angles so you don't take the long way around.
-- Guard `normalized()` on near-zero vectors (length checks / `is_zero_approx`) before using the result.
+- `Vector2.ZERO.normalized()` returns zero, but near-zero lengths can lose precision. Use `is_zero_approx()` when a meaningful direction is required.
 
 # Await and callables
 
-- After `await`, the node may be gone. Guard with `is_instance_valid(self)` (or the awaited target) before touching the tree again.
+- After `await`, check other referenced nodes with `is_instance_valid()` if they could have been freed, and confirm the operation is still relevant. A guard on `self` cannot rescue a coroutine whose owning script instance was freed; keep the operation on an appropriate owner and cancel stale work.
 - Do not `await` in `_ready()` when child order / sibling readiness matters — prefer signals, `call_deferred`, or explicit setup from the parent.
-- Lambdas in loops capture by reference. Bind the loop value: `callable.bind(i)` (or pass it as an argument) instead of closing over `i`.
+- Lambdas capture local variables by value when created. Captured arrays, dictionaries, and objects still share their referenced contents. Use `Callable.bind()` when explicit callback arguments are clearer.
 - Static variables on a script persist across scene changes; they are not reset like an autoload free/recreate. Don't use them as a substitute for scene or autoload state.
 
 # Exported properties
@@ -137,7 +139,7 @@ When moving a node that is already in a tree from one parent to another, this ca
 node.reparent(new_parent)
 ```
 
-This keeps the global transform the same after reparenting. If that is not necessary, pass `false` as the second parameter.
+By default this preserves the global transform for `Node2D` / `Node3D`, but only the position for `Control`. Pass `false` as the second parameter when preservation is not needed.
 
 # Ternary operators
 
@@ -180,7 +182,7 @@ Never hard-code file paths! Instead use `@export var` and assign in scenes.
 
 Node composition is for behaviour and scene structure, not for pure data. Prefer `class_name X extends Resource` for defs, stats, tables, and tunables. Keep logic on nodes, keep data on resources.
 
-Exported resources are shared by path. If an instance needs its own mutable copy, `duplicate()` (or deep-duplicate) before mutating — never write runtime state into a shared `.tres` used by many scenes.
+Loaded resources are cached by path. If an instance needs private mutable state, choose the duplication depth deliberately — see `godot-resources`. Do not write per-instance runtime state into shared definitions.
 
 # Global classes
 
@@ -192,7 +194,7 @@ If you add, rename, or start using a new `class_name`, use the `godot-cli` skill
 
 Follow the "everything is a node" philosophy. Prefer composition over inheritance. Design scenes to be as independently instantiable as possible: no hard assumptions about parent node type or sibling existence. When a scene needs external setup, expose `@export`s / signals for the parent to inject.
 
-Use `_ready()` for initialization that requires the node to be in the scene tree. Disconnect signals in `_exit_tree()` when the emitter can outlive the receiver (for example autoload / event-bus listeners), or use `connect(..., CONNECT_ONE_SHOT)` for fire-and-forget connections. Use `queue_free()` for safe deferred node removal.
+Use `_ready()` for initialization that requires the node to be in the scene tree. Disconnect in `_exit_tree()` when a listener should stop receiving events after leaving the tree; Godot disconnects ordinary method connections when the receiver is freed. `CONNECT_ONE_SHOT` limits a connection to one emission. Use `queue_free()` for safe deferred node removal.
 
 Objects in the game are usually isolated from each other and only interact with each other by calling the other object's public methods (i.e. a unit calls `open()` on a door).
 

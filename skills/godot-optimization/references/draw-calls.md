@@ -1,6 +1,6 @@
 # Draw calls (2D thin)
 
-`CanvasGroup` renders all child `CanvasItem`s as one draw (backbuffer composite). Use for correct translucency stacking and fewer draw passes. Clip children / occluders between groups break batching. Automatic 2D batching (same texture, blend mode, shader) applies separately without `CanvasGroup`.
+`CanvasGroup` composites child `CanvasItem`s through a backbuffer so overlapping translucent items can be faded as a group. The children still need rendering; this is not a general way to reduce draw calls and can add cost. Automatic 2D batching applies separately to compatible items in draw order.
 
 ```gdscript
 # bad — unique material per sprite
@@ -12,13 +12,13 @@ func _ready() -> void:
   mat.shader = tint_shader
   sprite.material = mat
 
-# better — share material; duplicate only when uniforms must diverge
-@export var shared_material: ShaderMaterial
+# better — scene assigns a shared material whose shader declares:
+# instance uniform vec4 tint : source_color = vec4(1.0);
 
 func _ready() -> void:
-  var mat: ShaderMaterial = shared_material.duplicate()
-  mat.set_shader_parameter('tint', Color(randf(), randf(), randf()))
-  sprite.material = mat
+  sprite.set_instance_shader_parameter('tint', Color(randf(), randf(), randf()))
 ```
 
-Atlas pack sprites/UI icons. Prefer one TileSet atlas per `TileMapLayer`.
+Duplicate a material only when the required parameters cannot be instance uniforms, such as different textures. Atlas pack sprites/UI icons where useful; a `TileMapLayer` can use multiple atlas sources from its TileSet.
+
+Docs: [CanvasGroup](https://docs.godotengine.org/en/stable/classes/class_canvasgroup.html) · [CanvasItem instance uniforms](https://docs.godotengine.org/en/stable/classes/class_canvasitem.html#class-canvasitem-method-set-instance-shader-parameter).

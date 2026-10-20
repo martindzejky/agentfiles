@@ -18,13 +18,13 @@ func _dump_all_connected(node: Object) -> void:
 
 ## Common issues
 
-| Issue                       | Check                                                                                    |
-| --------------------------- | ---------------------------------------------------------------------------------------- |
-| Never fires                 | Signal name typo; connected to wrong node; emit before connect; scene connection missing |
-| Fires twice                 | Connected in scene **and** in code, or `connect` in `_ready` without guard               |
-| Arg mismatch                | Handler signature must match signal params                                               |
-| Emitter outlives receiver   | Disconnect in `_exit_tree` (autoload / event bus) or `CONNECT_ONE_SHOT`                  |
-| Emit before listeners ready | `call_deferred` emit from early autoload `_ready`                                        |
+| Issue                                 | Check                                                                                     |
+| ------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Never fires                           | Signal name typo; connected to wrong node; emit before connect; scene connection missing  |
+| Fires twice                           | Connected in scene **and** in code, or `connect` in `_ready` without guard                |
+| Arg mismatch                          | Handler signature must match signal params                                                |
+| Listener left tree but still receives | Disconnect in `_exit_tree`; ordinary method connections are removed automatically on free |
+| Emit before listeners ready           | `call_deferred` emit from early autoload `_ready`                                         |
 
 ```gdscript
 # typed connect preferred over string names
@@ -35,10 +35,12 @@ func _exit_tree() -> void:
     EventBus.player_died.disconnect(_on_player_died)
 ```
 
-After `await`, guard before touching nodes:
+After `await`, check other targets that may have been freed and whether the operation is still relevant:
 
 ```gdscript
 await some_signal
-if not is_instance_valid(self):
+if not is_instance_valid(target):
   return
 ```
+
+Checking `self` here cannot rescue a freed coroutine owner. `CONNECT_ONE_SHOT` limits emissions; it does not replace lifetime management for listeners that leave the tree while still alive.

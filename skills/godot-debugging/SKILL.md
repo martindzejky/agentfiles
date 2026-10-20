@@ -34,19 +34,20 @@ push_error('required export missing: interaction_area')
 
 ## Common errors
 
-| Symptom                   | Likely cause                         | Fix                                          |
-| ------------------------- | ------------------------------------ | -------------------------------------------- |
-| Node not found            | Bad path / too early                 | After `_ready`; prefer `@export`             |
-| Null instance             | Freed node or unset export           | `is_instance_valid`; assign exports in scene |
-| Flushing queries          | Mutate collision in physics callback | `set_deferred(...)`                          |
-| Already connected         | Double `connect`                     | `is_connected` or scene-wire once            |
-| Await after free          | Node freed during await              | Guard with `is_instance_valid`               |
-| Invalid call / wrong type | Bad cast or missing script           | Typed refs / `as` + assert                   |
+| Symptom                    | Likely cause                         | Fix                                              |
+| -------------------------- | ------------------------------------ | ------------------------------------------------ |
+| Node not found             | Bad path / too early                 | After `_ready`; prefer `@export`                 |
+| Null instance              | Freed node or unset export           | `is_instance_valid`; assign exports in scene     |
+| Flushing queries           | Mutate collision in physics callback | `set_deferred(...)`                              |
+| Already connected          | Double `connect`                     | `is_connected` or scene-wire once                |
+| Awaited work never resumes | Owning script instance was freed     | Keep work on an appropriate surviving owner      |
+| Freed target after await   | Another referenced node was freed    | Check target validity and stale state before use |
+| Invalid call / wrong type  | Bad cast or missing script           | Typed refs / `as` + assert                       |
 
 ## Footguns
 
 - `$` / `get_node` / `load` in `_process` — cache or use `@export`
-- Syncing UI/state every frame — prefer signals/setters (`godot-scripts`)
+- Syncing UI/state every frame — prefer signals/setters (`godot-scripts-rules`)
 - Shared Resource mutation — `duplicate()` first
 - Signal never fires — wrong name, wrong node, connected after emit, or not scene-wired
 - Lambdas on long-lived emitters capturing freed `self`

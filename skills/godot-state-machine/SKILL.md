@@ -5,7 +5,7 @@ description: Implement Godot finite state machines for complex objects — enum,
 
 # Godot State Machine
 
-Align with `godot-scripts` complex objects: **root = public API / type / shared state; states drive behaviour.** Root may hold tiny mutators that update state, emit, then call into the current state. Prefer this over giant `if`/`match` chains on the root.
+Align with `godot-scripts-rules` complex objects: **root = public API / type / shared state; states drive behaviour.** Root may hold tiny mutators that update state, emit, then call into the current state. Prefer this over giant `if`/`match` chains on the root.
 
 Related: `godot-components`, `godot-scene-organization`.
 
@@ -54,7 +54,7 @@ func take_damage(amount: int) -> void:
 
 Animations: start in `enter`, clean up in `exit`. States own their animation lifecycle.
 
-Internal timers for state duration/cooldowns: create in code per `godot-scripts` Timers rule — do not `@export` a Timer for encapsulated timing.
+Internal timers for state duration/cooldowns: create in code per `godot-scripts-rules` Timers rule — do not `@export` a Timer for encapsulated timing.
 
 ## Hierarchical / parallel
 

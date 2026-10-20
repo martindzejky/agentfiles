@@ -13,7 +13,7 @@ Native shared library loaded by a **stock** engine — no custom engine build. I
 - Wrapping a C/C++ library you must call directly
 - Building a language binding
 
-C++ **modules** are the other native option, but they compile into the engine and force shipping a custom engine binary. GDExtension ships only the library. A custom `TextServer` is the one thing that still needs a module.
+C++ **modules** are the other native option, but they compile into the engine and force shipping a custom engine binary. GDExtension ships only the library. Custom text servers can use `TextServerExtension`; they do not inherently require an engine module.
 
 Three pieces make it work: `gdextension_interface.h` (C ABI), `extension_api.json` (exposed engine API), and the `*.gdextension` load config.
 
@@ -22,8 +22,8 @@ Three pieces make it work: `gdextension_interface.h` (C ABI), `extension_api.jso
 ```bash
 mkdir gdextension_example && cd gdextension_example
 git init
-# use the godot-cpp branch matching the engine version you target
-git submodule add -b <engine-version> https://github.com/godotengine/godot-cpp
+# choose a godot-cpp ref that supports the target engine API
+git submodule add -b <bindings-ref> https://github.com/godotengine/godot-cpp
 cd godot-cpp && git submodule update --init && cd ..
 ```
 
@@ -38,7 +38,7 @@ gdextension_example/
     └── gdexample.{h,cpp}
 ```
 
-- Build with `scons platform=<platform>` (omit for the current one, `platform=list` to enumerate). Default target is **debug**; add `target=template_release` for optimized builds. Output lands in `project/bin/`.
+- Build with `scons platform=<platform>` (omit for the current one, `platform=list` to enumerate). Default target is `template_debug`; add `target=template_release` for release builds. With the example's `SConstruct`, output lands in `project/bin/`.
 - Take the `SConstruct` from the C++ tutorial or [godot-cpp-template](https://github.com/godotengine/godot-cpp-template) instead of hand-rolling one — the template also ships a GitHub Actions matrix for cross-platform builds.
 - Develop and test against the **earliest** engine version you intend to support.
 - Newer godot-cpp is versioned independently of the engine: on those branches pick the target with `scons api_version=<engine-version>`, or with `custom_api_file=extension_api.json` dumped by your engine (`godot --dump-extension-api`), instead of relying on a matching branch.

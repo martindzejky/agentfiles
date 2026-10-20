@@ -5,7 +5,7 @@ description: Use Godot Resources for data — sharing vs duplicate, Make Unique,
 
 # Godot Resources
 
-Expand on `godot-scripts` Resources section. Nodes = behaviour/structure; Resources = pure data (`class_name X extends Resource`).
+Expand on `godot-scripts-rules` Resources section. Nodes = behaviour/structure; Resources = pure data (`class_name X extends Resource`).
 
 Related: `godot-components`, `godot-dependency-injection`. After new `class_name` Resources, refresh with `godot-cli`.
 
@@ -38,20 +38,22 @@ Wire with `@export var item: ItemData` for scene-assigned data.
 
 Exported/loaded Resources are **shared by path**. Mutating one instance mutates everyone holding that path.
 
-| Data                                                 | Action                                             |
-| ---------------------------------------------------- | -------------------------------------------------- |
-| Read-only defs (item blueprint, balance sheet)       | Share                                              |
-| Per-instance mutable runtime state                   | `duplicate()` or `duplicate(true)` before mutating |
-| One scene needs different nested sub-resource values | Editor **Make Unique** on the sub-resource slot    |
+| Data                                                 | Action                                                  |
+| ---------------------------------------------------- | ------------------------------------------------------- |
+| Read-only defs (item blueprint, balance sheet)       | Share                                                   |
+| Per-instance mutable runtime state                   | Duplicate with the depth required by the resource graph |
+| One scene needs different nested sub-resource values | Editor **Make Unique** on the sub-resource slot         |
 
 ```gdscript
 @export var stats: EnemyStats
 
 func _ready() -> void:
-  stats = stats.duplicate()  # shallow; duplicate(true) if nested must diverge
+  stats = stats.duplicate()  # private top-level fields; nested data stays shared
 ```
 
 See [sharing-vs-unique.md](references/sharing-vs-unique.md).
+
+`duplicate(true)` also copies nested containers and internal subresources, but external Resources can remain shared. Use `duplicate_deep(Resource.DEEP_DUPLICATE_ALL)` only when those external Resources must be private too. `resource_local_to_scene` provides a local resource copy when a packed scene is instantiated. Custom Resources with required `_init()` arguments cannot be duplicated by these methods.
 
 ## No logic in Resources
 

@@ -10,7 +10,7 @@ description: Godot i18n — tr(), Control auto-translate, semantic keys, CSV vs 
 - Wrap user-facing strings in `tr()` (or set Control `text` to a translation key). Prefer semantic keys: `MENU_START`, `HUD_HEALTH`.
 - Register CSV/PO under Project Settings → Localization → Translations.
 - Format **after** translate: `tr('PLAYER_HEALTH') % health`, never `tr('KEY' % value)`.
-- Prefer CSV for simple projects; prefer PO for translator workflows and complex plurals (`tr_n`).
+- Prefer CSV for spreadsheet workflows; prefer PO for gettext tooling and translator collaboration. Both support contexts and plural forms (`tr_n`).
 - For code-built strings, rebuild in `_notification(NOTIFICATION_TRANSLATION_CHANGED)`. Static Control keys with auto-translate refresh automatically — no signal to connect or disconnect.
 - Persist locale with ConfigFile (`user://`); apply on boot before UI builds when possible.
 
@@ -41,13 +41,15 @@ MENU_START,Start Game,Spiel starten
 PLAYER_HEALTH,Health: %d,Gesundheit: %d
 ```
 
-**PO** — industry tools, plural forms, contexts. Use when languages need more than one/other plurals.
+**PO** — industry tools, per-locale files, plural forms, contexts.
 
 ```gdscript
-var msg := tr_n('ONE_ENEMY', 'MANY_ENEMIES', count)
+var msg := tr_n('ONE_ENEMY', 'MANY_ENEMIES', count) % count
 ```
 
-CSV can carry `?context` / `?plural` columns; languages with 3+ plural forms still need PO.
+CSV supports a `?context` column and a `?plural` column containing the plural message key. Continuation rows with empty key/context/plural cells carry the extra translated forms required by each locale. `tr_n()` selects a form; it does not insert the count, so format afterward and include the placeholder in the translations.
+
+CSV entries using contexts or plurals need explicit `tr()` / `tr_n()` calls; automatic Control translation does not handle those entries.
 
 ## Switch locale
 
@@ -88,6 +90,8 @@ Prefer `Control.LAYOUT_DIRECTION_APPLICATION_LOCALE` on root UI when the whole t
 | key shows as text                    | register translation in Project Settings                                                                      |
 | UI not updating                      | use keys / `tr()`, not raw literals                                                                           |
 | `%s` literal in UI                   | format after `tr()`                                                                                           |
-| plural wrong with CSV                | use PO (or CSV `?plural` columns for simple cases)                                                            |
+| plural wrong with CSV                | check `?plural`, continuation rows, locale, and form order                                                    |
 | RTL still LTR                        | set `layout_direction` / fonts                                                                                |
 | dynamic UI stale after locale switch | rebuild in `_notification(NOTIFICATION_TRANSLATION_CHANGED)`, or set Control text to keys with auto-translate |
+
+Docs: [CSV localization](https://docs.godotengine.org/en/stable/tutorials/i18n/localization_using_spreadsheets.html) · [gettext localization](https://docs.godotengine.org/en/stable/tutorials/i18n/localization_using_gettext.html).

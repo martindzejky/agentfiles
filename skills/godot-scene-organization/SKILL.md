@@ -5,7 +5,7 @@ description: Structure Godot scene trees — when to split scenes, composition v
 
 # Godot Scene Organization
 
-Align with `godot-scenes`: world → objects → components + glue. Lowercase underscore node/file names. Prefer `@export` wiring over deep paths or scene-unique names. Signals connected in the scene when possible.
+Align with `godot-scenes-rules`: world → objects → components + glue. Lowercase underscore node/file names. Prefer `@export` wiring over deep paths or scene-unique names. Signals connected in the scene when possible.
 
 Related: `godot-components`, `godot-event-bus`, `godot-brainstorming`.
 

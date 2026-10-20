@@ -10,7 +10,7 @@ description: Handle Godot input — discrete `_unhandled_input` vs poll in `_phy
 - Define gameplay actions in Project Settings → Input Map. Prefer semantic names (`move_left`, `jump`, `interact`) over key names.
 - Prefer `_unhandled_input` for discrete one-shots (jump, interact, pause). Prefer `Input` polling in `_physics_process` for held / analog movement; call `move_and_slide()` there.
 - Prefer `_input` only when you must run before UI (e.g. captured mouse look).
-- Do not rely on `is_action_just_pressed` alone inside `_process` / `_physics_process` for one-shots — it can miss frames. Catch in `_unhandled_input` and buffer a flag if physics must consume it.
+- `Input.is_action_just_pressed()` reports presses in the current frame or physics tick, including rapid press/release. Global polling ignores UI event consumption; prefer `_unhandled_input` when UI should get first refusal. Buffer a flag when physics must consume a routed event or gameplay needs a longer input window.
 - After consuming an event that must not propagate, call `get_viewport().set_input_as_handled()`.
 - Wire pause-menu nodes with `process_mode = PROCESS_MODE_ALWAYS` so they still receive input while the tree is paused.
 - Prefer scene-wired signals for `joy_connection_changed` when the listener is a scene node; connect in code only for autoloads / dynamic nodes.
@@ -85,13 +85,13 @@ Keyboard/mouse events use `InputEvent.DEVICE_ID_KEYBOARD` (16) and `InputEvent.D
 
 ## Pitfalls
 
-| Symptom                     | Fix                                                 |
-| --------------------------- | --------------------------------------------------- |
-| one-shot missed             | handle in `_unhandled_input`, not only physics poll |
-| action fires through UI     | use `_unhandled_input`, not `_input`                |
-| stick drift                 | raise Input Map deadzone                            |
-| double fire                 | one callback path per action                        |
-| rebind captures Shift alone | filter modifier-only keycodes                       |
+| Symptom                                   | Fix                                                          |
+| ----------------------------------------- | ------------------------------------------------------------ |
+| action expires before gameplay can use it | buffer the action until consumed or its input window expires |
+| action fires through UI                   | use `_unhandled_input`, not `_input`                         |
+| stick drift                               | raise Input Map deadzone                                     |
+| double fire                               | one callback path per action                                 |
+| rebind captures Shift alone               | filter modifier-only keycodes                                |
 
 ## Optional refs
 

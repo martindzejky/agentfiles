@@ -25,6 +25,8 @@ func _unhandled_input(event: InputEvent) -> void:
     return
   if not (event is InputEventKey or event is InputEventMouseButton or event is InputEventJoypadButton):
     return
+  if not event.is_pressed() or event.is_echo():
+    return
   if event is InputEventKey and event.keycode in [KEY_SHIFT, KEY_CTRL, KEY_ALT, KEY_META]:
     return
 

@@ -11,9 +11,9 @@ Thin reference. Profile first (**godot-optimization**) — only thread genuinely
 
 - Scene tree is **not** thread-safe. Mutate nodes only on the main thread.
 - From workers: hand results back with `call_deferred` / `set_deferred`.
-- `Array`/`Dictionary`: reading existing elements across threads is OK; **resize/add/remove needs a `Mutex`**.
+- `Array`/`Dictionary`: concurrent reads are OK when the data is not being modified. Protect shared writes and **resize/add/remove with a `Mutex`**; distinct preallocated result slots can be written independently.
 - No GPU/texture work off the main thread (RenderingServer sync stalls).
-- AStar is not thread-safe across threads.
+- Do not query or modify the same `AStar2D` / `AStar3D` instance concurrently. Separate instances can serve separate workers.
 
 ```gdscript
 # unsafe from worker:

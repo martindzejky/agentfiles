@@ -47,7 +47,7 @@ In the Animation panel: Add Track → Call Method → pick target → key method
 
 ```gdscript
 func enable_hitbox() -> void:
-  $hitbox/shape.disabled = false
+  hitbox_shape.set_deferred('disabled', false)
 
 
 func spawn_projectile() -> void:
@@ -55,6 +55,8 @@ func spawn_projectile() -> void:
   get_parent().add_child(bullet)
   bullet.global_position = $muzzle.global_position
 ```
+
+Assign `hitbox_shape` as an exported `CollisionShape2D`. Deferred collision changes are safe when animation callbacks run during physics query flushing.
 
 ## AnimatedSprite2D vs Sprite2D + Player
 

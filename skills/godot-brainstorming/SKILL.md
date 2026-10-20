@@ -7,7 +7,7 @@ description: Godot-specific design additions when brainstorming features or syst
 
 Also load and follow the `brainstorming` skill for the generic process (explore context, approaches, approval before coding). This skill adds **Godot-only** design work — not a second generic Q&A process.
 
-Defer naming, signals, Resources, autoloads, and composition details to `godot-scripts` / `godot-scenes`. Related: `godot-scene-organization`, `godot-components`, `godot-event-bus`, `godot-state-machine`.
+Defer naming, signals, Resources, autoloads, and composition details to `godot-scripts-rules` / `godot-scenes-rules`. Related: `godot-scene-organization`, `godot-components`, `godot-event-bus`, `godot-state-machine`.
 
 ## Scene tree first
 

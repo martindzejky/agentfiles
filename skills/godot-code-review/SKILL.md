@@ -5,7 +5,7 @@ description: Review GDScript/Godot 2D code for Godot-specific footguns. Use when
 
 # Godot Code Review
 
-Review against `godot-scripts` and `godot-scenes`. Do not restate naming/composition/event-bus policy at length — flag violations and point at those rules.
+Review against `godot-scripts-rules` and `godot-scenes-rules`. Do not restate naming/composition/event-bus policy at length — flag violations and point at those rules.
 
 Review GDScript gameplay code and 2D scenes. Output findings as **Critical** / **Important** / **Suggestions**.
 
@@ -13,14 +13,14 @@ Review GDScript gameplay code and 2D scenes. Output findings as **Critical** / *
 
 Any `_process` / `_physics_process` is an **automatic red flag**.
 
-Require a justification that the work must run every frame (mouse follow, interpolation, held analog movement + `move_and_slide`, etc.). Prefer signals, setters, or explicit on-change updates — see `godot-scripts` ("Signals over `_process`", "Updates as needed").
+Require a justification that the work must run every frame (mouse follow, interpolation, held analog movement + `move_and_slide`, etc.). Prefer signals, setters, or explicit on-change updates — see `godot-scripts-rules` ("Signals over `_process`", "Updates as needed").
 
 Unjustified frame loops that only "keep things in sync" = **Important** or **Critical**.
 
 Also flag:
 
 - Enabling process every frame when it could stay off until needed
-- `is_action_just_pressed` only inside process (one-shots can be missed) — prefer `_unhandled_input`
+- Global input polling that ignores UI consumption — prefer `_unhandled_input` for routed actions
 - `move_and_slide` in `_process` instead of `_physics_process`
 
 ```gdscript
@@ -42,7 +42,7 @@ var health: int:
 | `$` / `get_node` / `load` inside hot loops or process                                   | Tree walks / disk every frame                             | Critical / Important           |
 | Deep NodePaths (`$A/B/C/D`)                                                             | Fragile; prefer `@export` wiring                          | Important                      |
 | Mutating physics-related state inside physics callbacks without `set_deferred`          | "Can't change this state while flushing queries"          | Critical                       |
-| `await` then use self/node without `is_instance_valid`                                  | Use-after-free                                            | Critical                       |
+| `await` then use another node or stale state without checking its lifetime              | Target may be freed or operation cancelled                | Important / Critical if broken |
 | `CharacterBody*` locomotion via raw `position` instead of `velocity` + `move_and_slide` | Skips collision / tunnelling                              | Critical                       |
 | Mutating a shared Resource without `duplicate()` / deep duplicate                       | One instance corrupts all                                 | Critical                       |
 | Signals connected in code when they could be scene-wired                                | Prefer editor connections                                 | Important                      |

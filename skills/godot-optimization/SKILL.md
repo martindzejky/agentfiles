@@ -1,6 +1,6 @@
 ---
 name: godot-optimization
-description: Profile and fix 2D performance — Self vs Total, CanvasGroup batching, unique materials, VisibleOnScreenNotifier2D, pools, typed/Packed/StringName. Use when FPS drops, draw calls spike, or hot paths allocate.
+description: Profile and fix 2D performance — Self vs Total, draw calls, materials, VisibleOnScreenNotifier2D, pools, typed/Packed/StringName. Use when FPS drops, draw calls spike, or hot paths allocate.
 ---
 
 # Godot Optimization
@@ -21,9 +21,9 @@ Monitors: FPS, Process, Physics Process, Total Draw Calls, Video RAM, Object Cou
 
 ## Draw calls / batching
 
-- Wrap related siblings in `CanvasGroup` when you need one composite draw (especially overlapping translucency)
-- Atlas sprites; one atlas per tile layer
-- Unique `ShaderMaterial` / `material = Material.new()` breaks batches — share materials; vary uniforms
+- Use `CanvasGroup` for group compositing (especially overlapping translucency), not as a general batching optimization: it needs a backbuffer pass
+- Atlas sprites where useful; keep draw order and material compatibility in mind
+- Unique `ShaderMaterial`s can break batches — share materials; use `instance uniform` + `set_instance_shader_parameter()` for per-node values when supported
 - Cull off-screen work with `VisibleOnScreenNotifier2D`
 
 ```gdscript
@@ -55,9 +55,9 @@ See [references/pools.md](references/pools.md).
 
 ## Anti-patterns
 
-| Bad                                    | Better                        |
-| -------------------------------------- | ----------------------------- |
-| Alloc in `_process`                    | Cache / mutate in place       |
-| Unique material per instance           | Shared material + uniforms    |
-| `load()` / `instantiate()` in hot path | `@export` scene + pool        |
-| Legacy `TileMap`                       | `TileMapLayer` + single atlas |
+| Bad                                    | Better                               |
+| -------------------------------------- | ------------------------------------ |
+| Alloc in `_process`                    | Cache / mutate in place              |
+| Unique material per instance           | Shared material + instance uniforms  |
+| `load()` / `instantiate()` in hot path | `@export` scene + pool               |
+| Legacy `TileMap`                       | `TileMapLayer` with suitable atlases |

@@ -5,7 +5,7 @@ description: Build reusable private Godot components — composition, @export wi
 
 # Godot Components
 
-Align with `godot-scenes`: objects are reusable components + root glue. Components are usually **private** — other objects talk to the object's public API, not its internals.
+Align with `godot-scenes-rules`: objects are reusable components + root glue. Components are usually **private** — other objects talk to the object's public API, not its internals.
 
 Related: `godot-scene-organization`, `godot-dependency-injection`, `godot-resources`.
 

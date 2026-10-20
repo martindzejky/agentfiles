@@ -5,7 +5,7 @@ description: Quick reference for EditorPlugin addons — plugin.cfg, @tool, cust
 
 # Godot Addons
 
-Future reference for editor extensions.
+Quick reference for editor extensions.
 
 ## Layout
 
@@ -36,18 +36,24 @@ Enable: Project → Project Settings → Plugins.
 @tool
 extends Node2D
 
-func _process(_delta: float) -> void:
+@export var sprite: Sprite2D:
+  set(value):
+    sprite = value
+    if is_inside_tree():
+      update_configuration_warnings()
+
+func _ready() -> void:
   if Engine.is_editor_hint():
     update_configuration_warnings()
 
 func _get_configuration_warnings() -> PackedStringArray:
   var warnings: PackedStringArray = []
-  if $sprite.texture == null:
-    warnings.append('assign a texture on sprite')
+  if sprite == null:
+    warnings.append('assign the sprite reference')
   return warnings
 ```
 
-Guard editor-only paths with `Engine.is_editor_hint()`. Call `update_configuration_warnings()` when exports change.
+Guard editor-only paths with `Engine.is_editor_hint()`. Call `update_configuration_warnings()` when relevant exports or resources change, not every frame.
 
 ## EditorPlugin
 

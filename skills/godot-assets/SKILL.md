@@ -25,7 +25,7 @@ textures/player.png.import   ← commit (settings)
 | Lossy           | Large photos/backgrounds           |
 | VRAM Compressed | Large 2D sprites / mobile VRAM     |
 
-Also: **Fix Alpha Border** on (kills dark edges on transparency). Pixel art → filter **Nearest** (project default or per-file). Mipmaps usually off for UI/sprites unless Camera2D zooms out a lot.
+Also: **Fix Alpha Border** on (kills dark edges on transparency). Pixel art → filter **Nearest** (project default or per-CanvasItem `texture_filter`, not an import option). Mipmaps usually off for UI/sprites unless Camera2D zooms out a lot.
 
 ```
 Project → Rendering → Textures → Canvas Textures → Default Texture Filter → Nearest

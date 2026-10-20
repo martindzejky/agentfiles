@@ -10,9 +10,9 @@ This skill covers `canvas_item` shaders.
 ## Shader vs material
 
 - `.gdshader` — the code (share across nodes)
-- `ShaderMaterial` — per-instance uniforms
+- `ShaderMaterial` — values shared by all nodes using that material
 
-Share one `Shader`; use separate `ShaderMaterial`s when uniforms differ. Unique materials break draw batches — see **godot-optimization**.
+Share shaders and materials when possible. For per-node scalar/vector/color values, declare `instance uniform` and call `CanvasItem.set_instance_shader_parameter()`. Use separate materials for parameters that cannot be instance uniforms, such as textures. Unique materials can break draw batches — see **godot-optimization**.
 
 ## Minimal
 
@@ -53,6 +53,8 @@ var mat: ShaderMaterial = $sprite.material
 mat.set_shader_parameter('speed', 2.0)
 mat.set_shader_parameter('tint_color', Color.RED)
 ```
+
+These calls update every node using `mat`. For a shader declaring `instance uniform vec4 tint_color : source_color = vec4(1.0);`, use `sprite.set_instance_shader_parameter('tint_color', Color.RED)` to change only that sprite.
 
 Hints: `hint_range`, `source_color`, `filter_*`, `repeat_enable`, `hint_normal`, `hint_screen_texture`.
 
