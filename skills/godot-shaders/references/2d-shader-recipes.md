@@ -25,8 +25,10 @@ void fragment() {
 ```
 
 ```gdscript
+@export var sprite: Sprite2D
+
 func dissolve(duration: float = 1.0) -> void:
-  var mat: ShaderMaterial = $sprite.material
+  var mat := sprite.material as ShaderMaterial
   var tween := create_tween()
   tween.tween_property(mat, 'shader_parameter/dissolve_amount', 1.0, duration)
   tween.tween_callback(queue_free)

@@ -1,9 +1,9 @@
 ---
 name: godot-animation
-description: 2D animation with AnimationPlayer, AnimationTree, AnimatedSprite2D, Call Method tracks, and SpriteFrames.
+description: Author Godot animations with AnimationPlayer and AnimationTree, compose independent visual layers, and synchronize animation events. Use when editing clips, blends, or animated scene hierarchies.
 ---
 
-# Godot Animation (2D)
+# Godot Animation
 
 ## Instructions
 
@@ -21,10 +21,20 @@ description: 2D animation with AnimationPlayer, AnimationTree, AnimatedSprite2D,
 
 Start with Player. Add Tree when `play()` snaps or you need continuous blend params.
 
+## Independent animation layers
+
+- Give each animated property one owner unless an explicit blend combines its inputs. Separate AnimationPlayers or scripts should not compete for the same transform.
+- When independent effects must compose, put them on separate transform nodes. For example, `attachment → hover → reaction → sprite` lets attachment placement, lifting, and a punch effect combine without overwriting each other. Use only the layers the object needs; each layer does not need its own script.
+- Choose the rotation/scale pivot before authoring keys: a hinge, grip, or grounded base can be more appropriate than the sprite center.
+- Combine simultaneous poses such as locomotion and equipment through AnimationTree blends and track filters. Mirroring or facing logic can live separately when it owns different properties; reset tracks must respect those boundaries too.
+- A visual rig's root controls its animations and internal nodes. Gameplay calls its public pose/direction API rather than manipulating bones, sprites, or blend parameters directly.
+
+For procedural effects and cancellation on shared properties, see `godot-tweens`.
+
 ## Playback
 
 ```gdscript
-@onready var animation: AnimationPlayer = $animation
+@export var animation: AnimationPlayer
 
 func _physics_process(_delta: float) -> void:
   if velocity.length_squared() > 0.0:
@@ -46,14 +56,19 @@ animation.speed_scale = 1.0
 In the Animation panel: Add Track → Call Method → pick target → key method name/args at the frame.
 
 ```gdscript
+@export var hitbox_shape: CollisionShape2D
+@export var bullet_scene: PackedScene
+@export var projectile_parent: Node2D
+@export var muzzle: Marker2D
+
 func enable_hitbox() -> void:
   hitbox_shape.set_deferred('disabled', false)
 
 
 func spawn_projectile() -> void:
-  var bullet := bullet_scene.instantiate()
-  get_parent().add_child(bullet)
-  bullet.global_position = $muzzle.global_position
+  var bullet := bullet_scene.instantiate() as Node2D
+  bullet.position = projectile_parent.to_local(muzzle.global_position)
+  projectile_parent.add_child(bullet)
 ```
 
 Assign `hitbox_shape` as an exported `CollisionShape2D`. Deferred collision changes are safe when animation callbacks run during physics query flushing.
@@ -68,7 +83,7 @@ Assign `hitbox_shape` as an exported `CollisionShape2D`. Deferred collision chan
 Prefer Player when hitboxes/sounds must sync to the same clip.
 
 ```gdscript
-@onready var sprite: AnimatedSprite2D = $sprite
+@export var sprite: AnimatedSprite2D
 
 func _physics_process(_delta: float) -> void:
   var direction := Input.get_vector('move_left', 'move_right', 'move_up', 'move_down')

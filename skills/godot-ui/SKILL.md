@@ -7,6 +7,14 @@ description: Build Control UI — containers, anchors, themes, focus, pause menu
 
 Control layout and scaling. 2-space indent; single quotes; lowercase node names.
 
+## Gameplay boundary
+
+Gameplay objects do not reference UI. UI receives a typed object reference, reads its public state, and subscribes to its state-change signals. Read the initial state when binding; signals only report later changes.
+
+UI emits interaction requests for the owner/glue to handle. Gameplay validates commands and owns state changes; a disabled button is not the gameplay guard. Expose public eligibility queries when buttons, cursors, and hints need the same interaction rules instead of duplicating those rules in the UI. Disable input and the interactive cursor together when an action is unavailable.
+
+Keep gameplay state transitions out of UI tween callbacks. Presentation may finish later or be interrupted without leaving the object in the wrong state.
+
 ## Controls vs Node2D
 
 `Control` uses anchors + offsets relative to the parent rect. Prefer containers over manual `position`. Put HUD/menus under a `CanvasLayer` so camera transforms do not move them.
@@ -28,9 +36,14 @@ Control layout and scaling. 2-space indent; single quotes; lowercase node names.
 - Root overlay: `set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)`
 
 ```gdscript
-$panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-$health_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-$inventory_button.custom_minimum_size = Vector2(64.0, 64.0)
+@export var panel: PanelContainer
+@export var health_label: Label
+@export var inventory_button: Button
+
+func _ready() -> void:
+  panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+  health_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+  inventory_button.custom_minimum_size = Vector2(64.0, 64.0)
 ```
 
 ## Anchors
@@ -65,6 +78,8 @@ For tweening or animating controls, see **godot-tweens** (`offset_transform_*` s
 ## Pause menu
 
 ```gdscript
+@export var resume_button: Button
+
 func _ready() -> void:
   process_mode = Node.PROCESS_MODE_ALWAYS
 
@@ -73,7 +88,7 @@ func _unhandled_input(event: InputEvent) -> void:
     get_tree().paused = not get_tree().paused
     visible = get_tree().paused
     if visible:
-      $resume_button.grab_focus()
+      resume_button.grab_focus()
 ```
 
 Pause UI must be `PROCESS_MODE_ALWAYS` or it freezes with the tree.

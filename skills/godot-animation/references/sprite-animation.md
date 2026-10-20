@@ -7,7 +7,7 @@ Prefer `AnimatedSprite2D` for frame-only characters. Prefer `Sprite2D` + `Animat
 ```gdscript
 extends CharacterBody2D
 
-@onready var sprite: AnimatedSprite2D = $sprite
+@export var sprite: AnimatedSprite2D
 
 @export var speed := 200.0
 

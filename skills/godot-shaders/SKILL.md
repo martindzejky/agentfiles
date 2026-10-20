@@ -49,9 +49,12 @@ uniform sampler2D noise_texture : filter_linear_mipmap;
 ```
 
 ```gdscript
-var mat: ShaderMaterial = $sprite.material
-mat.set_shader_parameter('speed', 2.0)
-mat.set_shader_parameter('tint_color', Color.RED)
+@export var sprite: Sprite2D
+
+func _ready() -> void:
+  var mat := sprite.material as ShaderMaterial
+  mat.set_shader_parameter('speed', 2.0)
+  mat.set_shader_parameter('tint_color', Color.RED)
 ```
 
 These calls update every node using `mat`. For a shader declaring `instance uniform vec4 tint_color : source_color = vec4(1.0);`, use `sprite.set_instance_shader_parameter('tint_color', Color.RED)` to change only that sprite.

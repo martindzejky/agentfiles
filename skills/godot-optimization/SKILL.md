@@ -27,11 +27,16 @@ Monitors: FPS, Process, Physics Process, Total Draw Calls, Video RAM, Object Cou
 - Cull off-screen work with `VisibleOnScreenNotifier2D`
 
 ```gdscript
-func _ready() -> void:
-  $visible_on_screen_notifier_2d.screen_entered.connect(func() -> void: set_process(true))
-  $visible_on_screen_notifier_2d.screen_exited.connect(func() -> void: set_process(false))
+@export var visible_on_screen_notifier_2d: VisibleOnScreenNotifier2D
+
+func _on_screen_entered() -> void:
+  set_process(true)
+
+func _on_screen_exited() -> void:
   set_process(false)
 ```
+
+Wire the notifier's `screen_entered` and `screen_exited` signals to these callbacks in the scene. Start processing disabled when appropriate; do not disable physics that must continue off-screen.
 
 See [references/draw-calls.md](references/draw-calls.md).
 

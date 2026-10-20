@@ -13,10 +13,13 @@ Minimal scene with only suspect nodes. Prefer the smallest valid context — iso
 Binary-search: disable half the scripts/process callbacks, narrow until the failure vanishes.
 
 ```gdscript
-# temporary isolation
-$suspect.set_process(false)
-# or
-$suspect.set_script(null)
+@export var suspect: Node
+
+func isolate() -> void:
+  # temporary isolation
+  suspect.set_process(false)
+  # or
+  suspect.set_script(null)
 ```
 
 ## 3. Hypothesis

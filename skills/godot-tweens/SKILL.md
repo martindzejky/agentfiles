@@ -14,6 +14,10 @@ description: Code-driven Tweens in Godot — create_tween lifecycle, kill before
 - Prefer absolute targets for looping tweens; `as_relative()` drifts across loops.
 - For UI inside containers, prefer `offset_transform_*` over `position` / `scale` / `rotation` — container layout resets those on resort.
 
+## Composing effects
+
+If independent effects need to move the same artwork, use separate parent transform nodes or a deliberate animation blend rather than fighting over one property. Choose pivots before adding scale/rotation effects. Keep the effect's base transform separate so returning to rest does not erase a pose, attachment, or layout transform. See `godot-animation` for layer ownership.
+
 ## Control offset transforms
 
 `Control` nodes in containers lose `position` / `scale` / `rotation` tweaks when the container resorts. Use offset transforms instead:
@@ -25,7 +29,7 @@ description: Code-driven Tweens in Godot — create_tween lifecycle, kill before
 By default `offset_transform_visual_only = true` — the transform is visual only and does not move hit areas (buttons keep hover). Set to `false` when input should follow the offset.
 
 ```gdscript
-@onready var panel: PanelContainer = $panel
+@export var panel: PanelContainer
 
 func slide_in() -> void:
   panel.offset_transform_enabled = true
@@ -40,10 +44,13 @@ See **godot-ui** for layout/containers; use **AnimationPlayer** when many proper
 ## Create and bind
 
 ```gdscript
-var tween := create_tween()
-tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-tween.tween_property(self, 'position', Vector2(400, 300), 0.5)
-tween.tween_property($sprite, 'modulate:a', 0.0, 0.3)
+@export var sprite: Sprite2D
+
+func reveal() -> void:
+  var tween := create_tween()
+  tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+  tween.tween_property(self, 'position', Vector2(400, 300), 0.5)
+  tween.tween_property(sprite, 'modulate:a', 0.0, 0.3)
 ```
 
 Tweens bind to the calling node; freeing the node stops them.

@@ -55,6 +55,12 @@ func _get_configuration_warnings() -> PackedStringArray:
 
 Guard editor-only paths with `Engine.is_editor_hint()`. Call `update_configuration_warnings()` when relevant exports or resources change, not every frame.
 
+## Generated nodes, when a tool needs them
+
+Distinguish temporary previews from content intentionally saved into a scene. `add_child()` establishes the tree relationship; `owner` determines scene persistence. Do not assign ownership merely to display a preview. In particular, do not fall back to owning preview children by the reusable template root: every instance can then inherit them alongside its own baked children.
+
+For baked output, assign the intended scene owner explicitly. Mark the tool's generated children so regeneration replaces only its own output and preserves authored nodes. Verify repeated generation and save/reopen of both the template and a containing scene; check for duplicate children and name clashes. This guidance applies only when implementing generated editor content, not to ordinary scene setup.
+
 ## EditorPlugin
 
 Everything added in `_enter_tree()` must be removed in `_exit_tree()`.

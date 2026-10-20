@@ -33,6 +33,7 @@ The world contains various autoloads and system objects in the root, then there'
 - Components encapsulate reusable behaviours. Object-specific logic and glue should go into its root script.
 - The root script glues together the components. Components usually don't know about each other, unless one directly depends on another. There may also be some glue-like components which connect other components and are not reusable, but there are limited and well-scoped.
 - Some object scenes are not valid in total isolation. They may expect runtime data, autoload state, or supporting nodes from the full world scene. When smoke-checking such scenes, expected context/setup errors do not automatically mean the object is broken. At the same time, try to create object scenes that are as independent from external environment as possible, which is generally a good design practice.
+- Gameplay objects do not know about UI. UI observes public state/signals and emits interaction requests; root/glue routes commands to gameplay. See `godot-ui` for binding and availability rules.
 - Separate simulation/game/logic/data pieces of an object from visual pieces. Simulation pieces are components which run the game and don't know about visuals. Visuals derive their state from the simulation. For example: sprite updates based on the state of the object or a component, instead of the state imperatively updating the sprite.
 
 Usually a complete game object has these parts:

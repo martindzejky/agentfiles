@@ -50,7 +50,7 @@ Use this for a first-iteration startup check:
 godot path/to/scene.tscn --quit
 ```
 
-For a brief runtime check, use `godot path/to/scene.tscn --quit-after 60` (iterations, not seconds). Add `--headless` when no window is needed. Neither command proves interactive gameplay works; inspect errors as well as the exit status.
+For a brief runtime check, use `godot path/to/scene.tscn --quit-after 60` (iterations, not seconds). Add `--headless` when no window is needed. Neither command proves interactive gameplay works; inspect errors as well as the exit status. Use `godot-playtesting` when verifying interactions or complete scene flows.
 
 Be careful with object scenes run in isolation. Some scenes are only valid when spawned by the real game flow and may depend on:
 
