@@ -30,13 +30,19 @@ async function skillCatalog(root) {
       description.length > 120
         ? `${description.slice(0, 117).replace(/\s+\S*$/, '')}...`
         : description;
-    lines.push(`- ${name}: ${short} Read \`${path}\`.`);
+    lines.push(
+      [name, short, path]
+        .map((value) => value.replaceAll('|', '\\|'))
+        .join('|'),
+    );
   }
   return [
     '## Filesystem skills',
     '',
-    'Use relevant skills below. Read the referenced SKILL.md before applying a skill, and resolve its relative paths from its directory. This catalog provides filesystem access, not native plugin registration.',
+    'Read relevant SKILL.md files before use; resolve relative references from their directories. Filesystem skills, not native plugins.',
     '',
+    'Skill|When to use|Absolute path',
+    '---|---|---',
     ...lines,
   ].join('\n');
 }

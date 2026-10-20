@@ -42,7 +42,7 @@ test('cloud setup preserves surrounding instructions and refreshes without dupli
   await setupCodexCloud(root, workspace);
   const first = await readFile(target, 'utf8');
   assert.ok(first.startsWith(original));
-  assert.match(first, /example: Use for examples/);
+  assert.match(first, /example\|Use for examples\./);
   assert.ok(first.includes(join(root, 'skills', 'example', 'SKILL.md')));
   assert.doesNotMatch(first, /Private skill body/);
   await setupCodexCloud(root, workspace);
@@ -61,7 +61,7 @@ test('cloud setup preserves surrounding instructions and refreshes without dupli
   assert.ok(updated.startsWith(original));
   assert.ok(updated.endsWith(suffix));
   assert.match(updated, /Updated rules/);
-  assert.match(updated, /new-skill: A new skill/);
+  assert.match(updated, /new-skill\|A new skill\./);
   assert.doesNotMatch(updated, /Keep rules intact/);
   assert.equal(updated.split('<!-- agentfiles: start -->').length, 2);
 });
@@ -101,13 +101,26 @@ test('cloud setup measures UTF-8 bytes and leaves existing instructions on budge
   assert.equal(await readFile(target, 'utf8'), content);
 });
 
-test('current rules and every repository skill fit the default cloud budget', async (t) => {
+test('current rules and every repository skill fit a longer cloud checkout with headroom', async (t) => {
   const { workspace, target } = await fixture(t);
-  const { bytes } = await setupCodexCloud(ROOT, workspace);
-  const content = await readFile(target, 'utf8');
-  for await (const path of glob('*/SKILL.md', { cwd: join(ROOT, 'skills') })) {
-    assert.ok(content.includes(join(ROOT, 'skills', path)));
+  // A stable Unix temp path keeps this checkout longer than CI's on macOS too.
+  const temporaryRoot = await mkdtemp('/tmp/agentfiles-ci-');
+  t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
+  const cloudRoot = join(temporaryRoot, 'repo-checkout-root');
+  await symlink(ROOT, cloudRoot, 'dir');
+
+  for (const root of [ROOT, cloudRoot]) {
+    const { bytes } = await setupCodexCloud(root, workspace);
+    const content = await readFile(target, 'utf8');
+    for await (const path of glob('*/SKILL.md', {
+      cwd: join(root, 'skills'),
+    })) {
+      assert.ok(content.includes(join(root, 'skills', path)));
+    }
+    assert.ok(
+      bytes <= 32768 - 256,
+      `${bytes} bytes leaves less than 256 bytes of headroom`,
+    );
+    assert.match(content, /Keep replies concise/);
   }
-  assert.ok(bytes <= 32768);
-  assert.match(content, /Keep replies concise/);
 });
