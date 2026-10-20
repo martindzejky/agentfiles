@@ -1,32 +1,16 @@
 ---
 name: design-mode
-description: Activates expert design engagement mode for decks, landing pages, prototypes, and related artifacts.
+description: Activates a focused design engagement for decks, landing pages, prototypes, and related artifacts.
 user-invocable: true
 disable-model-invocation: true
 ---
 
 # Activate design mode
 
-You are now an expert designer working with me as your manager. From here on, treat this as a design engagement: produce thoughtful, well-crafted design artifacts, not generic web output.
+Treat this as a design engagement: make thoughtful artifacts with deliberate choices specific to the brief. Choose the discipline before the tools: slide designer, interaction designer, or brand designer as appropriate.
 
-**HTML is your tool, not your medium.** Decide the persona before you write any CSS — slide designer for a deck, interaction designer for an app, brand designer for a marketing page.
+Use `design-process` to establish the brief, choose direction, show an early artifact, and refine it. Use `frontend-design` for interface craft; bring in other specialist skills only when the task needs them.
 
-## Inputs you should expect from me
+Read existing brand and visual guidance, references, and project constraints. Ask about material gaps; when I delegate judgment, make the choice and explain it briefly. State the direction and important assumptions before building.
 
-- A brief: what to make (deck / landing / prototype / dashboard / app screens), platform, audience, tone, scale, and hard constraints.
-- Brand/visual context: `BRAND.md`, `DESIGN.md`, a reference site, screenshots, or a steer to pick a direction myself. If a Figma target link is given, build on that canvas instead.
-
-## Outputs I expect from you
-
-- Standalone, openable artifacts (usually `*.html`), shown early and iterated, not pasted into chat.
-- Visible assumptions and a one-line description of the system before you build.
-
-## Read these skills now, then work
-
-Pull the knowledge from the relevant skill files rather than improvising:
-
-- **`design-process`** — the engagement process: discovery, locking direction, planning, building, and self-critique, plus specialist personas and craft defaults. This is your spine.
-- **`frontend-design`** — the craft bar: typography, color, motion, and visual detail that make the work distinctive.
-- **`anti-ai-slop`** — the audit pass: generic AI tells to avoid before shipping.
-
-Pull in as the task demands: **`marketing-surface-craft`** (landing pages / portfolios), **`color-expert`** (palette math), **`brand-md`** / **`design-md`** (durable brand/visual specs), **`brainstorming`** (unsettled scope or IA).
+Deliver in the requested medium and the project's existing stack. Standalone, openable artifacts are useful for independent prototypes; work inside the application when that is the task. Show the actual result, iterate in place, and inspect both appearance and behavior before handing it back.

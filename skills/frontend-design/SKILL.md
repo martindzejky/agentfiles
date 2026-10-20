@@ -1,62 +1,55 @@
 ---
 name: frontend-design
-description: Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifacts, posters, or applications (examples include websites, landing pages, dashboards, Svelte components, HTML/CSS layouts, or when styling/beautifying any web UI). Generates creative, polished code and UI design that avoids generic AI aesthetics.
+description: Create or reshape frontend interfaces with a deliberate visual identity. Use for aesthetic direction, typography, layout, imagery, motion, and visual refinement of websites or product UI.
 license: Complete terms in LICENSE.txt
 ---
 
 # Frontend design
 
-This skill guides creation of distinctive, production-grade frontend interfaces that avoid generic "AI slop" aesthetics. Implement real working code with exceptional attention to aesthetic details and creative choices.
+Make deliberate choices specific to the product, audience, and task. Distinctiveness comes from understanding the subject and executing well, not adding a fashionable treatment to every brief. Existing brand guidance and design systems take precedence over generic advice here.
 
-The user provides frontend requirements: a component, page, application, or interface to build. They may include context about the purpose, audience, or technical constraints.
+## Ground the direction in the subject
 
-This skill owns craft (aesthetics, motion, gradients, visual detail). Agent owns process, discovery, and artifact format — not the craft bar.
+Read the brief, real content, existing interface, and available assets before styling. Use `BRAND.md` and `DESIGN.md` when present. Find what belongs to this subject: its materials, visual vocabulary, audience expectations, and the action someone came to take.
 
-## Default stack
+Distinguish a marketing page people read from a product interface people work in. A landing page may benefit from a characteristic opening image, headline, or demonstration; a working tool should make navigation, information, and actions immediately useful. Do not turn every app screen into a landing page.
 
-Unless the repo or brief clearly dictates otherwise:
+For a new direction, briefly state the palette roles, type roles, layout idea, and what gives it character. Reuse existing tokens rather than inventing a parallel theme. A short wireframe can resolve composition before implementation. Ask about missing decisions that materially affect the result; use judgment when the user delegates.
 
-1. **Standalone HTML** + inline CSS + vanilla JS — zero build step.
-2. Add **Tailwind v4** and **Motion** when utility styling or richer animation is needed.
-3. If a framework is required, default to **Svelte + SvelteKit**.
-4. If an explicit **Figma** target link is given, build on that canvas instead of HTML.
+## Typography
 
-Gradients, textures, and motion are encouraged when they serve the aesthetic
-direction — ban only generic AI-slop patterns (e.g. purple gradient on white),
-not intentional craft choices.
+Choose type for the subject, reading conditions, language coverage, and available font assets. One family can carry an entire interface; use a second when it adds a clear role. A generic font is not automatically wrong, and an unusual font does not make a design distinctive.
 
-## Design Thinking
+Build hierarchy through scale, weight, width, line height, spacing, and alignment. Treat display typography as part of the composition. Keep body measure comfortable, generally under 80 characters, and check actual wrapping at narrow widths and with real content.
 
-Before coding, understand the context and commit to a BOLD aesthetic direction:
+Avoid reflexive headline word accents, random font changes for one word, and tracked uppercase labels above every heading. Use emphasis when it communicates meaning.
 
-- **Purpose**: What problem does this interface solve? Who uses it?
-- **Tone**: Pick an extreme: brutally minimal, maximalist chaos, retro-futuristic, organic/natural, luxury/refined, playful/toy-like, editorial/magazine, brutalist/raw, art deco/geometric, soft/pastel, industrial/utilitarian, etc. There are so many flavors to choose from. Use these for inspiration but design one that is true to the aesthetic direction.
-- **Constraints**: Technical requirements (framework, performance, accessibility).
-- **Differentiation**: What makes this UNFORGETTABLE? What's the one thing someone will remember?
+## Composition and color
 
-**CRITICAL**: Choose a clear conceptual direction and execute it with precision. Bold maximalism and refined minimalism both work - the key is intentionality, not intensity.
+Visual structure carries information. Group related content; use borders, containers, dividers, and labels when they clarify relationships. Number content when order matters. Do not manufacture a sequence or card grid to decorate unrelated facts.
 
-Then implement working code (HTML/CSS/JS, Svelte, Vue, etc.) that is:
+Let the content determine the layout. Repeated items often deserve a consistent pattern; different kinds of information may need different treatments. Neither forced variation nor identical cards everywhere creates hierarchy.
 
-- Production-grade and functional
-- Visually striking and memorable
-- Cohesive with a clear aesthetic point-of-view
-- Meticulously refined in every detail
+Use a coherent palette with explicit surface, text, action, and status roles. Check actual foreground/background pairs and interaction states. Pure white, pure black, quiet neutrals, and saturated colors are all valid when they fit the direction. Texture, gradients, shadows, and ornament must earn their place.
 
-## Frontend Aesthetics Guidelines
+Spend boldness where it helps the brief. A strong opening or signature element usually benefits from quieter surroundings. Precision in spacing, alignment, and proportion matters as much as novelty.
 
-Focus on:
+## Imagery and motion
 
-- **Typography**: Choose fonts that are beautiful, unique, and interesting. Avoid generic fonts like Arial and Inter; opt instead for distinctive choices that elevate the frontend's aesthetics; unexpected, characterful font choices. Pair a distinctive display font with a refined body font.
-- **Color & Theme**: Commit to a cohesive aesthetic. Use CSS variables for consistency. Dominant colors with sharp accents outperform timid, evenly-distributed palettes.
-- **Motion**: Use animations for effects and micro-interactions. Prioritize CSS-only solutions for HTML. Use Motion library for Svelte when available. Focus on high-impact moments: one well-orchestrated page load with staggered reveals (animation-delay) creates more delight than scattered micro-interactions. Use scroll-triggering and hover states that surprise.
-- **Spatial Composition**: Unexpected layouts. Asymmetry. Overlap. Diagonal flow. Grid-breaking elements. Generous negative space OR controlled density.
-- **Backgrounds & Visual Details**: Create atmosphere and depth rather than defaulting to solid colors. Add contextual effects and textures that match the overall aesthetic. Apply creative forms like gradient meshes, noise textures, geometric patterns, layered transparencies, dramatic shadows, decorative borders, custom cursors, and grain overlays.
+Inventory available photography, illustrations, screenshots, and logos. Use real, relevant assets when they communicate better than text; an intentionally typographic design need not include images. Check crop, resolution, aspect ratio, rights, and loading behavior. Use honest placeholders when an asset or claim is unavailable.
 
-NEVER use generic AI-generated aesthetics. See the `anti-ai-slop` skill for the full catalog of tells to avoid (overused display fonts, cliched purple gradients, predictable layouts, cookie-cutter patterns) and audit against it before shipping.
+Use motion to explain an action, state change, or relationship. Non-user-triggered motion should have a clear purpose. Repeated fade-and-slide section entrances, every-card hover effects, custom cursors, and perpetual decorative loops are common defaults, not an automatic quality improvement. Respect reduced motion and preserve access to content without animation.
 
-Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
+## Words are interface content
 
-**IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.
+Write from the user's perspective, using the product's established vocabulary. Actions should say what happens: “Save changes” instead of “Submit.” Keep the same action name throughout the flow.
 
-Remember: modern coding agents (Cursor, Codex, and similar) are capable of extraordinary creative work. Don't hold back, show what can truly be created when thinking outside the box and committing fully to a distinctive vision.
+Explain failures and how to recover. Empty states should make the next useful action clear. Prefer specific content, plain verbs, and sentence case; match the brand's voice. Do not invent testimonials, usage figures, or product capabilities. Avoid visible commentary about how the design was made.
+
+## Build and inspect
+
+Follow the project's stack and component conventions. Match implementation complexity to the job; do not add a framework or animation dependency just to express a visual idea.
+
+Inspect the rendered result, including mobile and desktop when relevant. Check hierarchy, typography, cropping, spacing, contrast, and content specificity. Exercise controls and navigation; inspect loading, empty, error, focus, and disabled states that the work touches. A screenshot can reveal composition problems but cannot prove interaction works.
+
+Before delivery, remove decoration and copy that do not serve the brief. Familiar AI defaults now include cream/serif/terracotta, black/acid-green, faux-broadsheet hairlines, and rounded SaaS card kits as well as purple gradients. These are contextual warning signs, not forbidden styles. The question is whether the choices belong to this product.

@@ -1,119 +1,116 @@
-# DesignBook — Reactive Design Token Architecture Spec
+# Design Book — Procedural Tokens: Encode the Decision, Not the Color
 
-**Author:** @meodai
-**Source:** Original specification / local note
-**Type:** Architecture spec for reactive design tokens
+**Source:** [GitHub — meodai/design-book](https://github.com/meodai/design-book)
+**Author:** meodai
+**License:** AGPL-3.0 (commercial license available, see repo)
+**Article:** https://meodai.github.io/design-book/article/ ("Procedural Tokens")
+**Demo / editor:** https://meodai.github.io/design-book/
+**Install:** `npm install design-book`
 
-## What It Is
+## The Core Idea
 
-DesignBook is a TypeScript specification for a reactive design-token system with:
+Design systems are usually stored as **fixed answers** — a color picked here, a spacing value decided there, each maintained by hand. Design Book stores **how values are chosen** instead:
 
-- nested scopes
-- reference tokens
-- function tokens
-- dependency tracking
-- multiple render targets
+- A text color isn't `#ffffff` — it's _"the highest-contrast color from this palette against this background."_
+- A hover state isn't a second hex to maintain — it's _"primary mixed 15% toward black."_
+- An accent isn't a one-off pick — it's _"the most vivid color that still clears contrast, excluding the tokens reserved for error and success."_
 
-It treats a design system as a graph of relationships instead of a flat list of final values. Colors are not just stored; they can be derived, inherited, re-rendered, and recomputed when upstream tokens change.
+You don't maintain tokens anymore — you maintain **rules**. When inputs change, the system re-runs the decisions, updates dependents, and lets you inspect _why_ a value won. It's a small reactive query engine (selection, constraints, search, resolution) over a token system.
 
-## Core Idea
+The article's framing: static token systems freeze exploration — "once the system was set up, exploration moved elsewhere — back into Figma, back into a script." Procedural tokens reverse that: change a fundamental and coherent outcomes cascade. **"Consistency turns into discovery."**
 
-Separate token concerns into layers:
+**Why this matters for agents applying generated colors:** when wiring a generated palette into a UI, don't freeze one manual mapping into literals (`buttonText: #fff`). Emit the _decision_ (`bestContrastWith(buttonBg, palette)`, `nth(ramp, -1)`) so the mapping survives palette regeneration, theme swaps, and accessibility audits. The intent stays in the system instead of in design-review folklore.
 
-- **Reference tokens** for concrete named values
-- **Semantic tokens** for role and meaning
-- **Function tokens** for derived decisions like contrast, mixing, or spacing scales
-- **Scopes** for theme, brand, surface, or component-level inheritance
+## Built-in Decision Functions
 
-This makes a token system auditable and themeable. Instead of hardcoding `buttonText = #fff`, you can encode the decision as `bestContrastWith(buttonBg, palette)` and let the system recompute when the palette changes.
+**Selection (search a scope, pick the winner):**
 
-## Color-Relevant Features
+```typescript
+bestContrastWith(target, scope); // Highest WCAG contrast
+minContrastWith(target, scope, { ratio }); // Meets minimum ratio (default 4.5)
+closestColor(target, scope); // Perceptually closest
+furthestFrom(scope); // Most distant from others
+mostVivid(scope, { against, minContrast }); // Highest OKLCH chroma, optionally gated by readability
+leastVivid(scope, { against, minContrast }); // Lowest OKLCH chroma — the muted counterpart
+```
 
-### 1. Reactive dependency graph
+`mostVivid` uses OKLCH chroma, not HSL saturation, so a pale pink and a vivid mid-red don't score the same. `against` + `minContrast` gate the winner by a WCAG threshold — the "pick a link color from a generated palette without it turning unreadable" function. All scope-iterating functions accept `not: [ref('palette.error'), …]` to exclude tokens whose _role_ shouldn't be reused (the error red shouldn't become the accent just because it's the most chromatic).
 
-Every token can depend on other tokens. When a source token changes, dependents update automatically.
+**Transforms:**
 
-This is useful for color systems where one brand color change should propagate through:
+```typescript
+colorMix(c1, c2, { ratio, colorSpace }); // Interpolate
+lighten(c, { amount }) / darken(c, { amount });
+shade(c, { amount }); // Adaptive: darkens light input, lightens dark input
+relativeTo(c, 'oklch', [null, null, '+180']); // Per-channel modification
+```
 
-- semantic roles
-- hover/active states
-- on-color text
-- light/dark theme variants
+`shade` solves a real theming bug: `darken(surface)` collapses to black on an already-dark surface; `shade` flips direction based on OKLCH lightness (> 0.5 darkens, ≤ 0.5 lightens), so the variation is _always_ visible.
 
-### 2. Semantic layer over raw values
+**Positional (for generated ramps):**
 
-The spec cleanly separates raw color definitions from their roles in UI.
+```typescript
+nth(ramp, 0); // lightest      nth(ramp, -1)   // darkest (Array.at semantics)
+nth(ramp, 0.5); // midtone (floats 0–1 = relative position)
+```
 
-- raw/reference: `brand.primary`
-- semantic: `ui.button-bg`
-- derived: `ui.button-text = bestContrastWith(ui.button-bg, brand)`
+`nth` pins roles to _positions_ instead of names — `"the darkest one"` stays correct when the ramp is regenerated with a different number of stops.
 
-That matches a strong design-token pattern: reference values define what exists; semantic values define what it means.
+Also: dimension selectors (`nextLarger`/`nextSmaller` in a spacing/type/motion scale), `spacingScale`/`typographyScale`/`timing`, seeded `random(scope, { type, seed, not })`, and custom functions via `createFunctionToken` + `book.registerFunction`.
 
-### 3. Derived decisions as first-class tokens
+## Reactive Graph, Scopes, Inheritance
 
-The most important idea for color work is that decisions can be encoded, not just their outputs.
+```typescript
+const book = new DesignBook('my-system');
+const brand = book.addScope('brand');
+brand.set('primary', color('#0066cc'));
 
-Examples from the spec:
+const ui = book.addScope('ui');
+ui.set('background', ref('brand.white'));
+ui.set('text', bestContrastWith(ref('ui.background'), brand));
+ui.set(
+  'hover',
+  colorMix(ref('brand.primary'), color('#000000'), { ratio: 0.15 }),
+);
 
-- `bestContrastWith(...)`
-- `colorMix(...)`
-- `closestColor(...)`
-- `furthestFrom(...)`
+brand.set('white', color('#f5f5f5')); // ui.text recomputes automatically
+```
 
-This matters because color systems often fail when hover states, accessible text colors, and theme variants are chosen manually and then drift out of sync.
+- **Scope inheritance:** `book.addScope('dark', { extends: 'light' })` — dark overrides a few tokens, inherits the rest; deleting an override falls back to the inherited token. Inherited tokens stay in the dependency graph.
+- **Introspection:** `book.inspect('ui.hover')` returns resolved value, the function + args that produced it, dependencies, dependents, inheritance source — the system can _explain_ every value.
+- **Dependency graph API:** `getDependentsOf`, `getPrerequisitesFor`, `getEvaluationOrderFor`, `hasCycles`.
+- **Events:** `book.watch('brand.primary', cb)`, `book.on('change', …)`; batch mode with `flush()`.
+- **Typography:** `addTypography('heading-lg', {...})` — composite scopes that render as CSS classes or W3 `typography` tokens.
 
-### 4. Multiple output formats
+## Rendering — Decisions Survive Into CSS
 
-The same token graph can render to:
+The same graph renders to `css-variables`, `json`, `w3-design-tokens`, `svg` (dependency visualization), an HTML table view, or custom renderers (e.g. a Tailwind config). Notably, the CSS renderer keeps decisions **native** where possible instead of freezing resolved values:
 
-- CSS variables
-- JSON
-- W3 design tokens
-- SVG visualizations
+```css
+:root {
+  --ui-background: var(--brand-white);
+  --ui-hover: color-mix(in lab, var(--brand-primary) 85%, #000000);
+  --ui-complement: color(from var(--brand-primary) oklch l c calc(h + 180));
+}
+```
 
-That is useful when the same color logic needs to survive across code, documentation, design tools, and build outputs.
+References → `var()`, mixes → `color-mix()`, channel edits → relative color syntax — so the browser itself re-runs the decision (see [W3C CSS Color 4 and 5](w3c-css-color-4-and-5.md)).
 
-### 5. Scope inheritance
+## The Recommended Workflow (generation → rules → UI)
 
-Theme extension is built into the model. A dark theme can extend a light theme, override a few tokens, and inherit the rest.
+1. **Generate primitives** with a palette tool — [Poline](poline-esoteric-palette-generator.md), [RampenSau](rampensau-palette-generation.md), [CuspHanger](cusphanger-gamut-triangle-palettes.md)…
+2. **Define semantic tokens as relationships** over those primitives: `text = bestContrastWith(surface, primitives)`, `surface = nth(ramp, 0)`, `hover = colorMix(accent, ink, 0.12)`.
+3. **Feed components from the semantic layer** — components depend on meaning, not palette coordinates.
 
-For color systems this is a more robust model than copying large token sets and editing them by hand.
+Regenerate the palette and the semantic + component layers recompute. The palette stays exploratory; product tokens stay stable and meaningful. Design Book is strongest in that middle layer: not generating colors, but turning a generated palette into a maintainable, explainable system.
 
-## Why It Matters
+## Agent Integration
 
-This spec is valuable because it shifts color systems from:
-
-- static swatch lists
-- duplicated per-platform values
-- manually chosen contrast pairs
-- brittle light/dark overrides
-
-to:
-
-- dependency-aware token graphs
-- semantic mapping layers
-- computable color decisions
-- renderer-specific export from one source of truth
-
-It is especially relevant for agents and tooling because the system preserves intent, not just final hex strings.
+The npm package ships a Claude Code skill (`skills/design-book.md`) that teaches migrating/retrofitting a static design system onto Design Book — discovering tokens, classifying them into value / reference / procedural layers, generating the code, verifying. Includes a Figma path (Dev Mode MCP or REST API) mapping Figma variables/collections/modes to scopes, refs, and `extends`.
 
 ## Relation to Other References
 
-- **Color Router** is a concrete reactive color-management library with a similar spreadsheet/graph mindset.
-- **CSS-Native Color Generation** focuses on palette generation and browser-native interpolation.
-- **Culori** provides the color-space machinery that a system like this can build on.
-
-DesignBook sits one level above those: it is a token-architecture model for organizing color decisions across a design system.
-
-## Practical Takeaways
-
-- Prefer **reference + semantic + derived** token layers over one flat token map.
-- Treat contrast selection, state colors, and nearest-palette matching as **functions**, not one-off literals.
-- Use **scope inheritance** for light/dark/brand variations.
-- Keep a **dependency graph** so you can audit what changes when a color changes.
-- Render the same color logic into different targets instead of maintaining parallel hand-edited outputs.
-
-## Caveat
-
-This is an architecture specification, not a peer-reviewed color-science source. Its value is structural: how to build systems that preserve color intent and relationships in code.
+- **[CuspHanger](cusphanger-gamut-triangle-palettes.md)** / **[Poline](poline-esoteric-palette-generator.md)** / **[RampenSau](rampensau-palette-generation.md)** — the generation layer this consumes.
+- **[W3C CSS Color 4 and 5](w3c-css-color-4-and-5.md)** — the native CSS decision primitives the renderer targets.
+- **[APCA & Myndex](apca-myndex-contrast.md)** — contrast selection is WCAG-based today; APCA is the natural upgrade path for the `bestContrastWith` idea.
+- **[Culori](culori-color-spaces-api.md)** — color-space machinery for custom functions.

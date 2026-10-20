@@ -9,7 +9,7 @@ Help the user create or maintain a `BRAND.md` file at the project root. `BRAND.m
 
 ## Spec
 
-Reference: [brand.md spec](https://raw.githubusercontent.com/thebrandmd/brand.md/main/spec/brand-md.md) (site: <https://thebrand.md>).
+Reference: [brand.md spec](https://raw.githubusercontent.com/caiopizzol/brand.md/main/spec/brand-md.md) (site: <https://thebrand.md>).
 
 Follow the spec mildly — use its section order and vocabulary as a guide, not as a rulebook to satisfy line-for-line.
 
@@ -58,6 +58,14 @@ Follow the spec's three-layer order: Strategy → Voice → Visual. A name/origi
 
 <Category it occupies or creates. What it is not. Competitive landscape. Structural differentials. Territory it owns.>
 
+### Audience
+
+<Who it serves, their situation and needs, and who is outside the intended audience.>
+
+### References & Anti-references
+
+<Relevant brands or examples: the specific trait to borrow or avoid, not a request to copy their identity.>
+
 ### Personality
 
 <Dominant archetype. Attribute words. What it is. What it is not.>
@@ -78,15 +86,15 @@ Follow the spec's three-layer order: Strategy → Voice → Visual. A name/origi
 
 ### Tagline & Slogans
 
-<Primary tagline with usage. 2–3 alternatives. Context-specific slogans.>
+<Primary tagline with usage. Alternatives or context-specific slogans only when useful.>
 
 ### Message Pillars
 
-<4–6 pillars, each with one or two statements.>
+<The distinct message themes the brand actually needs, each with a concrete statement.>
 
 ### Phrases
 
-<5–8 ownable one-liners. If any line still works after swapping in another brand name, it is not ownable.>
+<Ownable one-liners when useful. If any line still works after swapping in another brand name, it is not ownable.>
 
 ### Tonal Rules
 
@@ -116,9 +124,10 @@ Default: omit. Include the spec's YAML frontmatter (`name`, `tagline`, `version`
 
 1. **Read context first.** `README.md` (product reality), `DESIGN.md` if present (so the brand voice can reference it), any current `BRAND.md` draft, and any parent `BRAND.md` if this is a product within a larger brand house.
 2. **Confirm scope.** Ask which spec sections to include and (for product brands) the relationship to a parent brand (branded-house, endorsed, sub-brand, independent). Default to no frontmatter; ask only if the project looks like it might consume it.
-3. **Interview the user — one question at a time.** Walk through the canonical sections in order. Cover at minimum:
+3. **Interview the user — one question at a time.** Use existing evidence first; ask about unresolved decisions rather than making the user repeat the brief. Walk through the relevant canonical sections. Cover:
    - Overview: what the brand really does, deeper than the surface feature.
    - Positioning: category, primary/secondary audience, what it is not, differentials.
+   - References and anti-references: which traits fit, which must not be copied.
    - Personality: archetype, attribute words.
    - Promise and guardrails: what the brand commits to and what it must never become.
    - Identity and tagline.
@@ -134,11 +143,7 @@ Default: omit. Include the spec's YAML frontmatter (`name`, `tagline`, `version`
    - Push back when an answer fights an earlier choice (for example, "a loud color for static errors fights the calm-error tone you just chose"). Do not agree by default.
    - Stop asking once you have enough to write a coherent section; do not run the user through every spec sub-section if the answers are already clear.
 5. **Draft the file** using the canonical structure. Keep every line earning its place — density is a virtue at any scale.
-6. **Cross-doc sweep.** Update files that should now reference `BRAND.md`:
-   - `README.md` documentation map / file index.
-   - `AGENTS.md` source-of-truth list and any "follow X for copy" lines.
-   - Agent rules that list required reads (for example `.cursor/rules/global.mdc` or project `AGENTS.md`) — update if the project uses them.
-   - Skills that touch UI or copy (for example `frontend-design` under `.cursor/skills/` or `.agents/skills/`) — make sure their constraints reference `BRAND.md` and that any conflicting generic guidance is explicitly overridden.
+6. **Keep relevant project references current.** Update an existing documentation map or source-of-truth reference when the new file makes it stale. Do not rewrite global rules or generic skills to name this project's document. Flag implementation follow-ups separately.
 7. **Flag conflicts.** If `BRAND.md` describes visuals that disagree with `DESIGN.md`, fix the brand kit to defer rather than duplicate.
 
 ## Workflow — updating an existing BRAND.md
@@ -154,6 +159,7 @@ Default: omit. Include the spec's YAML frontmatter (`name`, `tagline`, `version`
 - Dense over polite. Cut warm-up sentences, restatements, and any line that says "this section will…".
 - Concrete over abstract. "Tap to start." beats "engaging onboarding microcopy".
 - Use tables for parallel pairs (say / never say). Use bullets for short lists. Use prose for tone rules.
+- Separate approved facts from proposed positioning. Do not invent audience research, customer proof, certifications, or approved claims.
 - Never advertise the AI or the implementation; describe what the product does for the user.
 - Emojis only when the brand is explicitly playful.
 - Match register to the brand: lowercase microcopy fits a warm minimal brand, formal capitalization fits an institutional one.
@@ -176,8 +182,8 @@ Drop or add categories based on the brand's actual neighbors.
 Before handing back:
 
 - Every section that is included earns its place; there is no padding.
-- No frontmatter unless the user explicitly asked for it.
+- No frontmatter unless the user asked for it or existing tooling consumes it.
 - No hex values, no token names, no route names, no component specs.
 - No product or feature details that duplicate `README.md`.
 - Visual section is a short pointer to `DESIGN.md`, not a second palette.
-- Cross-doc references are updated.
+- Relevant existing project references are current.

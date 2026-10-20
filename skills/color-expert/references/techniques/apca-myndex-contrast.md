@@ -7,7 +7,7 @@
 
 ## What APCA Is
 
-**Accessible Perceptual Contrast Algorithm** — the replacement for WCAG 2.x contrast ratios, designed for WCAG 3. Based on decades of peer-reviewed vision science rather than simple luminance ratios.
+**Accessible Perceptual Contrast Algorithm** — a perceptual text-contrast model that accounts for polarity and typography. It is not a replacement for published WCAG 2.x conformance requirements or a final WCAG 3 standard. Use it as a supplementary readability assessment. See [WCAG contrast requirements](https://www.w3.org/TR/WCAG22/#contrast-minimum) and the [APCA project status](https://github.com/Myndex/SAPC-APCA).
 
 ## How APCA Differs from WCAG 2.x
 
@@ -91,7 +91,7 @@ Output range: **-108 to +106** (negative = light text on dark bg, positive = dar
 | Lc 72         | ~4.5:1 (normal text AA) |
 | Lc 85         | ~7:1 (AAA)              |
 
-Send lightest color as "background" input for backwards compatibility. Critical for dark mode — "WCAG 2 contrast fails most with dark colors."
+For APCA, preserve actual text/background polarity in inputs. WCAG ratios are symmetric; APCA results are not. Check the current library API before implementing calculations.
 
 ## The Numbers (from our research)
 
@@ -101,7 +101,7 @@ Of ~281T hex pairs:
 - APCA 60 → 7.33% pass (more restrictive)
 - APCA 90 → **0.08%** pass (150× more constrained than WCAG AA)
 
-APCA is stricter because it's more accurate — it rejects pairs WCAG passes that are actually unreadable, and the spatial frequency awareness means body text needs higher contrast than headings.
+These pass-rate comparisons use different targets and do not establish equivalent readability or conformance. APCA guidance varies by size, weight, and polarity; use its typography guidance alongside the applicable WCAG requirements.
 
 ## Links
 
