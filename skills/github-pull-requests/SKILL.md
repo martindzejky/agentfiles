@@ -59,19 +59,19 @@ When using `ManagePullRequest`, always pass `branch_name` (and `base_branch` whe
 - PR checks: `gh pr checks`
 - Watch checks: `gh pr checks --watch --fail-fast`
 
-**Writes — local only:**
+**Writes — local / Codex, or cloud without a hosted write tool:**
 
 - Create PR: `gh pr create`
 - Add a comment: `gh pr comment -b "message"`
 - Approve: `gh pr review --approve`
 - Request changes: `gh pr review --request-changes -b "message"`
 - Mark ready: `gh pr ready`
-- Edit title/body: `gh pr edit -t "title" -b "body"` or `-F file`
+- Edit title/body: `gh pr edit -t "title" -b "body"` or `--body-file file`
 - Do not merge: never run `gh pr merge` or enable auto-merge — the user merges
 
 **Writes — Cursor Cloud only:** see **Hosted vs local** (`ManagePullRequest`: `create_pr`, `update_pr`, `post_comment`, `resolve_comment`, `get_ci_status`, `set_pr_status`).
 
-For merge-ready PR loops (conflicts, review comments, CI), use the `autopilot` skill (`/autopilot`).
+Handle conflicts, review feedback, and CI within the requested scope. Recheck the updated branch before declaring it ready; leave merging to the user.
 
 ## Create PR
 
@@ -114,7 +114,7 @@ Closes #42
 
 Use `[x]` for steps already verified before opening the PR. Skip filler.
 
-Keep the description cumulative and current — it must reflect all commits in the PR as the branch evolves. Update when needed — local/Codex: `gh pr edit -F -`; Cursor Cloud: `ManagePullRequest` `update_pr`.
+Keep the description cumulative and current — it must reflect all commits in the PR as the branch evolves. Update when needed — local/Codex: `gh pr edit --body-file <path>`; Cursor Cloud: `ManagePullRequest` `update_pr`.
 
 For user-visible or cross-service changes (especially in cloud/autonomous runs), include verification artifacts in the description — screenshots or screen recordings of the working flow.
 
@@ -126,7 +126,7 @@ Run before creating the PR. Batch the git commands in parallel where possible.
    - `git status`
    - `git diff` and `git diff --staged`
    - whether the branch tracks a remote and is up to date with it
-   - `git log <base>..HEAD --oneline` (use the repo default branch: `main`, `master`, etc.)
+   - `git log <base>..HEAD --oneline` (verify the intended target branch; use the repository default when no other target is specified)
    - `git diff <base>...HEAD`
 
 2. **Existing PR** — `gh pr view` on the current branch. If an open PR already exists, return its URL instead of creating a duplicate.
@@ -143,12 +143,11 @@ Do not open the PR until preflight passes: changelog handled (updated + committe
 2. Push if needed: `git push -u origin HEAD`
 3. Create PR (never as draft):
 
-**Local:**
+**Local:** set `TARGET_BRANCH` to the intended target identified in preflight. Write the body to a temporary file so Markdown and literal shell characters are preserved.
 
 ```bash
-gh pr create \
-  --title "Fix recorder upload retry on slow networks" \
-  --body "$(cat <<'EOF'
+PR_BODY_FILE=$(mktemp)
+cat > "$PR_BODY_FILE" <<'EOF'
 ## Summary
 
 - Retry upload when the connection drops mid-transfer
@@ -163,12 +162,15 @@ gh pr create \
 
 Closes #42
 EOF
-)"
+gh pr create \
+  --title "Fix recorder upload retry on slow networks" \
+  --base "$TARGET_BRANCH" \
+  --body-file "$PR_BODY_FILE"
 ```
 
 **Cursor Cloud:** `ManagePullRequest` with `"action": "create_pr"`, same title and body, `"branch_name"`, `"base_branch"`, and `"draft": false`. Do not use `gh pr create`.
 
-4. Confirm the PR is not a draft: `gh pr view --json isDraft,url` — `isDraft` must be `false`.
+4. Confirm `gh pr view --json isDraft,url,baseRefName` reports `isDraft: false` and the intended target branch.
 5. Return the PR URL.
 
 Do not use `--fill` when applying the title and description conventions above.
@@ -194,7 +196,7 @@ gh pr checks --json name,bucket,state,workflow,link
 gh pr checks --watch --fail-fast
 ```
 
-For iterating until merge-ready (comments + CI), follow the `autopilot` skill (`/autopilot`).
+Check results for the current PR head. Pending, missing, skipped, or inaccessible checks are not proof of a successful run.
 
 ## Review Workflow
 
@@ -216,7 +218,7 @@ gh pr review --request-changes -b "message"
 
 Cursor Cloud: use `post_comment` when a PR comment is relevant (for example replying after addressing review feedback) or when the user asks. Do not use `gh pr review` for writes.
 
-For triaging review feedback on an open PR, use the `autopilot` skill (`/autopilot`).
+Verify review feedback against the code before implementing it. Resolve threads only after addressing their concern; use an actual in-thread reply when replying to a discussion.
 
 ## Common Mistakes
 

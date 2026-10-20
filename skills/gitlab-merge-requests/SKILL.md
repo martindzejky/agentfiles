@@ -1,6 +1,6 @@
 ---
 name: gitlab-merge-requests
-description: Work with GitLab merge requests using glab — create, review, comment, check pipelines, and merge. Use when opening or creating an MR, finishing work on a feature branch, or operating on the current branch's merge request from the terminal.
+description: Work with GitLab merge requests using glab — create, review, comment, check pipelines, and update. Use when opening or creating an MR, finishing work on a feature branch, or operating on the current branch's merge request from the terminal.
 ---
 
 # GitLab Merge Requests
@@ -14,6 +14,10 @@ Use `glab`, not `gh`.
 - In the usual feature-branch workflow, `glab` resolves the open MR for the current branch.
 - Only pass an ID or branch when intentionally targeting a different MR.
 - If unsure about flags, run `glab mr <subcommand> --help`.
+
+## Delivery policy
+
+Open ready merge requests, never drafts. If an MR is accidentally created as a draft, mark it ready and verify before finishing. Never merge or enable auto-merge; the user merges on their own.
 
 ## Quick Reference
 
@@ -31,9 +35,9 @@ Use `glab`, not `gh`.
 - Reopen a discussion: `glab mr note reopen <discussion-id>`
 - Approve current MR: `glab mr approve`
 - Mark ready: `glab mr update --ready`
-- Mark draft: `glab mr update --draft`
+- Mark draft (reference only; agent-opened MRs must stay ready): `glab mr update --draft`
 - Update title/body from commits: `glab mr update --fill --fill-commit-body --yes`
-- Merge current MR: `glab mr merge`
+- Merge current MR (reference only; the user performs the merge): `glab mr merge`
 
 ## Create MR
 
@@ -48,7 +52,7 @@ Use `glab`, not `gh`.
 EPIK-14400 Overlapping user info max-width
 ```
 
-Pattern: `{JIRA-TICKET} {Short mr name}` — ticket prefix when known, then title-case words after the ticket, no punctuation.
+Pattern: `{JIRA-TICKET} {Short mr name}` — ticket prefix when known, then a title starting with a capital letter after the ticket, no punctuation.
 
 Derive the name from branch name or commits when the ticket is already in the branch (e.g. `EPIK-14400-max-width-text` → `EPIK-14400 Overlapping user info max-width`).
 
@@ -78,8 +82,10 @@ Run before creating the MR. Batch the git commands in parallel where possible.
    - `git status`
    - `git diff` and `git diff --staged`
    - whether the branch tracks a remote and is up to date with it
-   - `git log master..HEAD --oneline`
-   - `git diff master...HEAD`
+   - `git log <base>..HEAD --oneline`
+   - `git diff <base>...HEAD`
+
+   Verify the intended target branch; use the repository default when no other target is specified. Use that target consistently for the comparison and MR creation.
 
 2. **Existing MR** — `glab mr view` on the current branch. If an open MR already exists, return its URL instead of creating a duplicate.
 
@@ -93,12 +99,11 @@ Do not open the MR until preflight passes: changelog handled (updated + committe
 
 1. Complete **Preflight** above
 2. Push if needed: `git push -u origin HEAD`
-3. Create MR:
+3. Create a ready MR. Set `TARGET_BRANCH` to the verified target and write the description to a temporary file:
 
 ```bash
-glab mr create \
-  -t "EPIK-1234 Short mr name" \
-  -d "$(cat <<'EOF'
+MR_BODY_FILE=$(mktemp)
+cat > "$MR_BODY_FILE" <<'EOF'
 ## Summary
 
 - Change one
@@ -108,14 +113,17 @@ glab mr create \
 
 - [ ] Verify thing
 EOF
-)" \
-  -b master \
+glab mr create \
+  -t "EPIK-1234 Short mr name" \
+  --description-file "$MR_BODY_FILE" \
+  -b "$TARGET_BRANCH" \
   -a martindzejky \
   --remove-source-branch=true \
   --yes
 ```
 
-4. Return the MR URL from command output.
+4. Verify `glab mr view --output json` reports `draft: false` and the intended target branch. If needed, use `glab mr update --ready` and recheck.
+5. Return the MR URL from command output.
 
 Do not use `--fill` when applying the title and description conventions above.
 
@@ -128,6 +136,7 @@ Do not use `--fill` when applying the title and description conventions above.
 - [ ] Test plan included
 - [ ] Assignee set to martindzejky
 - [ ] `--remove-source-branch=true` passed on create
+- [ ] MR verified ready with the intended target branch
 - [ ] MR URL returned to user
 
 ## Pipeline Checks
@@ -136,11 +145,13 @@ Use `glab mr view --output json` when you need MR-linked status without leaving 
 
 Look for:
 
-- `pipeline.status`
-- `head_pipeline.status`
+- `pipeline.status` (older pipeline summary)
+- `head_pipeline.status` and its `sha` / `web_url` (prefer this more complete field)
 - `detailed_merge_status`
 - `has_conflicts`
 - `web_url`
+
+A missing or inaccessible pipeline is not a successful pipeline. Check that the reported pipeline applies to the current MR head before claiming CI passed.
 
 ## Review Workflow
 
@@ -157,6 +168,7 @@ glab mr view --output json
 - Looking up the MR ID first when the current branch is already enough.
 - Using `glab mr list` for the active branch instead of `glab mr view`.
 - Using `--fill` when a custom title and description are required.
+- Creating drafts, merging, or enabling auto-merge.
 - Lowercase titles or bullets.
 - Assuming `glab mr note list` is fully stable; it is marked experimental.
 - Assuming `glab mr note -m` posts an in-thread reply. Check `glab mr note --help` first if thread-specific behavior matters.
