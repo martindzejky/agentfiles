@@ -1,6 +1,6 @@
 ---
 name: fixing-motion-performance
-description: Audit and fix animation performance issues including layout thrashing, compositor properties, scroll-linked motion, and blur effects. Use when animations stutter, transitions jank, or reviewing CSS and JS animation performance in Svelte or Tailwind UI.
+description: Audit and fix web animation performance issues including layout thrashing, compositor properties, scroll-linked motion, and blur effects. Use when animations stutter, transitions jank, or reviewing CSS and JS animation performance.
 ---
 
 # Fixing motion performance
@@ -9,7 +9,7 @@ Audit and fix animation performance issues. Apply rules within the project's exi
 
 ## When to apply
 
-- Adding or changing UI animations (CSS, WAAPI, Svelte transitions, Motion, rAF)
+- Adding or changing UI animations (CSS, WAAPI, framework transitions, rAF)
 - Refactoring janky interactions or transitions
 - Implementing scroll-linked motion or reveal-on-scroll
 - Animating layout, filters, masks, gradients, or CSS variables
@@ -23,13 +23,11 @@ When reviewing a file, report:
 - Why it matters (one short sentence)
 - A concrete fix (code-level suggestion)
 
-## Stack defaults
+## Animation approach
 
-Unless the project clearly dictates otherwise:
-
-- Prefer **CSS transitions and animations** in component `<style>` blocks or Tailwind utilities
-- Use **Svelte transitions** (`transition:`, `in:`, `out:`) for enter/exit on small elements
-- Use **Motion** (or the project's JS animation library) only when interaction requires it
+- Use the project's existing styling and animation tools
+- Prefer CSS transitions and animations when they meet the interaction's needs
+- Use JavaScript animation when interaction requires it
 - Respect `prefers-reduced-motion` — disable or shorten non-essential motion
 
 ## Rendering steps glossary
@@ -58,7 +56,7 @@ Unless the project clearly dictates otherwise:
 
 - Do not interleave layout reads and writes in the same frame
 - Do not animate layout continuously on large or meaningful surfaces
-- Do not drive animation from `scrollTop`, `scrollY`, or scroll events
+- Prefer native scroll timelines over per-scroll JavaScript; when a fallback is needed, keep it scoped and avoid synchronous layout work
 - No `requestAnimationFrame` loops without a stop condition
 - Do not mix multiple animation systems that each measure or mutate layout
 
@@ -76,7 +74,6 @@ Unless the project clearly dictates otherwise:
 - Batch all DOM reads before writes
 - Do not read layout repeatedly during an animation
 - Prefer FLIP-style transitions for layout-like effects
-- In Svelte, avoid `$effect` or reactive blocks that read layout every frame
 
 ### 4. Scroll (high)
 
@@ -90,7 +87,7 @@ Unless the project clearly dictates otherwise:
 
 - Paint-triggering animation is allowed only on small, isolated elements
 - Do not animate paint-heavy properties on large containers
-- Do not animate CSS variables for `transform`, `opacity`, or `position`
+- Prefer animating `transform` / `opacity` directly; CSS-variable animation is not automatically compositor-driven
 - Do not animate inherited CSS variables
 - Scope animated CSS variables locally and avoid inheritance
 
@@ -111,7 +108,7 @@ Unless the project clearly dictates otherwise:
 
 ### 8. View transitions (low)
 
-- Use view transitions only for navigation-level changes
+- View transitions can animate navigation or same-document DOM updates; use them when their snapshot-based behavior fits the interaction and supported browsers
 - Avoid view transitions for interaction-heavy UI
 - Avoid view transitions when interruption or cancellation is required
 - Treat size changes as potentially layout-triggering
@@ -124,40 +121,9 @@ Unless the project clearly dictates otherwise:
 
 ## Common fixes
 
-```css
-/* layout thrashing: animate transform instead of width */
-/* before */
-.panel {
-  transition: width 0.3s;
-}
-/* after */
-.panel {
-  transition: transform 0.3s;
-}
-
-/* scroll-linked: use scroll-timeline instead of JS */
-/* before */ /* scroll listener updates opacity every frame */
-/* after */
-.reveal {
-  animation: fade-in linear;
-  animation-timeline: view();
-}
-```
-
-```js
-// measurement: batch reads before writes (FLIP)
-// before — layout thrash
-el.style.left = el.getBoundingClientRect().left + 10 + 'px';
-// after — measure once, animate via transform
-const first = el.getBoundingClientRect();
-el.classList.add('moved');
-const last = el.getBoundingClientRect();
-el.style.transform = `translateX(${first.left - last.left}px)`;
-requestAnimationFrame(() => {
-  el.style.transition = 'transform 0.3s';
-  el.style.transform = '';
-});
-```
+- For a sliding panel whose layout footprint should stay fixed, animate `transform` instead of its width
+- For list reordering, use the existing animation tool's FLIP support rather than adding a hand-written layout-measurement loop
+- Preserve focus and interaction behavior when changing the technique
 
 ## Review guidance
 

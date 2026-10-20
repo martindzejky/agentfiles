@@ -80,9 +80,9 @@ playwright-cli run-code "async page => {
 ## Wait Strategies
 
 ```bash
-# Wait for network idle
+# Prefer a visible readiness condition
 playwright-cli run-code "async page => {
-  await page.waitForLoadState('networkidle');
+  await page.getByRole('button', { name: 'Save' }).waitFor({ state: 'visible' });
 }"
 
 # Wait for specific element

@@ -1,6 +1,6 @@
 ---
 name: fixing-metadata
-description: Audit and fix page metadata including titles, meta descriptions, canonical URLs, Open Graph tags, Twitter cards, favicons, JSON-LD, and robots directives. Use when adding SEO metadata, fixing social share previews, or shipping new SvelteKit pages.
+description: Audit and fix page metadata including titles, meta descriptions, canonical URLs, Open Graph tags, Twitter cards, favicons, JSON-LD, and robots directives. Use when adding SEO metadata, fixing social share previews, or shipping new web pages.
 ---
 
 # Fixing metadata
@@ -25,14 +25,11 @@ Audit and fix page metadata. Keep diffs minimal and scoped to metadata only — 
 - Changing locale, alternate languages, or canonical routing
 - Shipping new pages, marketing pages, or shareable links
 
-## Stack defaults
+## Implementation
 
-Unless the project clearly dictates otherwise:
-
-- **SvelteKit** — define per-page metadata in `+page.svelte` via `<svelte:head>`, or in `+layout.svelte` for site-wide defaults
-- Prefer one metadata source per page; avoid duplicating tags across layout and page
+- Use the project's existing metadata mechanism, with one source per page and no duplicate tags from shared layouts
 - Use absolute URLs for Open Graph images and canonical links
-- Escape and sanitize dynamic strings from load functions or form data
+- Use escaped text/attribute bindings or context-appropriate escaping. Validate URLs and metadata inputs; do not double-encode values already escaped by the framework
 
 ## Rule categories by priority
 
@@ -54,7 +51,7 @@ Unless the project clearly dictates otherwise:
 - Define metadata in one place per page; avoid competing systems
 - Do not emit duplicate title, description, canonical, or robots tags
 - Metadata must be deterministic — no random or unstable values
-- Escape and sanitize any user-generated or dynamic strings
+- Keep dynamic values in escaped text/attribute bindings; avoid raw HTML insertion for ordinary metadata
 - Every page must have safe defaults for title and description
 
 ### 2. Title and description (high)
@@ -70,6 +67,7 @@ Unless the project clearly dictates otherwise:
 - Canonical must point to the preferred URL for the page
 - Use `noindex` only for private, duplicate, or non-public pages
 - Robots meta must match actual access intent
+- `noindex` is not access control. Private pages still require authentication; robots.txt can block crawling before a crawler sees a page's `noindex`
 - Previews or staging pages should be `noindex` by default when possible
 - Paginated pages must have correct canonical behavior
 
@@ -95,7 +93,7 @@ Unless the project clearly dictates otherwise:
 - Do not add JSON-LD unless it clearly maps to real page content
 - JSON-LD must be valid and reflect what is actually rendered
 - Do not invent ratings, reviews, prices, or organization details
-- Prefer one structured data block per page unless required
+- Use the number of JSON-LD blocks or an `@graph` that fits the actual entities. Serialize safely for an HTML script context, including escaping `<` as `\u003c`; `JSON.stringify()` alone does not prevent a `</script>` breakout
 
 ### 7. Locale and alternates (low-medium)
 
@@ -112,17 +110,20 @@ Unless the project clearly dictates otherwise:
 
 ## Common pattern
 
-```svelte
-<svelte:head>
-  <title>{title}</title>
-  <meta name="description" content={description} />
-  <link rel="canonical" href={canonicalUrl} />
-  <meta property="og:title" content={title} />
-  <meta property="og:description" content={description} />
-  <meta property="og:url" content={canonicalUrl} />
-  <meta property="og:image" content={ogImageUrl} />
+```html
+<head>
+  <title>Example page</title>
+  <meta name="description" content="A short description of the example page." />
+  <link rel="canonical" href="https://example.com/page" />
+  <meta property="og:title" content="Example page" />
+  <meta
+    property="og:description"
+    content="A short description of the example page."
+  />
+  <meta property="og:url" content="https://example.com/page" />
+  <meta property="og:image" content="https://example.com/page-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
-</svelte:head>
+</head>
 ```
 
 ## Review guidance
@@ -131,3 +132,5 @@ Unless the project clearly dictates otherwise:
 - Ensure title, description, canonical, and `og:url` agree
 - Verify social cards on a real URL, not localhost
 - Prefer stable, boring metadata over clever or dynamic
+
+Docs: [Google noindex behavior](https://developers.google.com/search/docs/crawling-indexing/block-indexing).

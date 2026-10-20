@@ -1,6 +1,6 @@
 ---
 name: fixing-accessibility
-description: Audit and fix accessibility issues including ARIA labels, keyboard navigation, focus management, color contrast, and form errors. Use when adding interactive controls, forms, dialogs, or reviewing WCAG compliance in Svelte, HTML, or Tailwind UI.
+description: Audit and fix web accessibility issues including ARIA labels, keyboard navigation, focus management, color contrast, and form errors. Use when adding interactive controls, forms, dialogs, or reviewing WCAG compliance.
 ---
 
 # Fixing accessibility
@@ -24,12 +24,8 @@ When reviewing a file, report:
 - Why it matters (one short sentence)
 - A concrete fix (code-level suggestion)
 
-## Stack defaults
+## Implementation
 
-Unless the project clearly dictates otherwise:
-
-- **Svelte 5 + SvelteKit** with semantic HTML in `.svelte` templates
-- **Tailwind CSS** for styling — never remove focus outlines without a visible replacement
 - Prefer native elements (`button`, `a`, `input`, `label`) over `role`-based hacks
 - For complex widgets (menu, dialog, combobox), use the project's existing accessible components instead of hand-rolling keyboard and focus behavior
 
@@ -60,7 +56,7 @@ Unless the project clearly dictates otherwise:
 ### 2. Keyboard access (critical)
 
 - Do not use `div` or `span` as buttons without full keyboard support
-- All interactive elements must be reachable by Tab
+- All interactive functionality must be keyboard reachable. Tab moves between controls or composite widgets; arrow keys can move within widgets such as tabs, menus, and radio groups according to their pattern
 - Focus must be visible for keyboard users
 - Do not use `tabindex` greater than 0
 - Escape must close dialogs or overlays when applicable
@@ -93,7 +89,7 @@ Unless the project clearly dictates otherwise:
 - Critical form errors should use `aria-live`
 - Loading states should use `aria-busy` or status text
 - Toasts must not be the only way to convey critical information
-- Expandable controls must use `aria-expanded` and `aria-controls`
+- Custom disclosure buttons expose `aria-expanded`; use `aria-controls` when required by the widget pattern or useful for identifying the controlled element. Native disclosure elements already supply semantics
 
 ### 7. Contrast and states (medium)
 
@@ -117,7 +113,7 @@ Unless the project clearly dictates otherwise:
 
 ## Common fixes
 
-```svelte
+```html
 <!-- icon-only button: add aria-label -->
 <!-- before -->
 <button><svg>...</svg></button>
@@ -126,9 +122,9 @@ Unless the project clearly dictates otherwise:
 
 <!-- div as button: use native element -->
 <!-- before -->
-<div onclick={save}>Save</div>
+<div>Save</div>
 <!-- after -->
-<button onclick={save}>Save</button>
+<button type="button">Save</button>
 
 <!-- form error: link with aria-describedby -->
 <!-- before -->
@@ -144,3 +140,5 @@ Unless the project clearly dictates otherwise:
 - Fix critical issues first (names, keyboard, focus, scope)
 - Prefer native HTML before adding ARIA
 - Quote the exact snippet, state the failure, propose a small fix
+
+Docs: [Keyboard navigation patterns](https://www.w3.org/WAI/ARIA/apg/practices/keyboard-interface/) · [Disclosure semantics](https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/).

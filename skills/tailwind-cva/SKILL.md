@@ -10,7 +10,7 @@ Pick the smallest tool that works.
 1. **Static `class="..."`** for one-off layout and copy. No helper.
 2. **Svelte `class={[...]}` or `class={{ ... }}`** for conditionals that cannot
    collide. Since Svelte 5.16 this is [clsx](https://github.com/lukeed/clsx).
-3. **`cn()`** from `$lib/cn` when a parent `class` prop (or any later string)
+3. **`cn()`** from the project's existing helper when a parent `class` prop (or any later string)
    might collide with existing utilities (`p-2` vs `p-4`). `cn()` is
    `twMerge(clsx(...))`.
 4. **`cva()`** for reusable components with named variants (for example
@@ -18,6 +18,8 @@ Pick the smallest tool that works.
    merge the parent `class` last with `cn()`.
 
 Canonical example: the project's `button.svelte`.
+
+Resolve the helper's actual path and import alias from the project; do not create a second `cn()` or change CVA packages just to match an example. Type an explicit `class` prop with `ClassValue` from `svelte/elements` when it accepts Svelte's arrays and objects.
 
 ```svelte
 <button {...rest} class={cn(buttonVariants({ intent }), rest.class)}>

@@ -6,6 +6,12 @@ allowed-tools: Bash(playwright-cli:*)
 
 # Browser Automation with playwright-cli
 
+## Session ownership
+
+Use the available browser tool when it already controls the intended tab. Use this CLI when terminal-driven automation is appropriate and it is installed; check `playwright-cli --help` for the installed command set.
+
+Use a named session (`-s=<task>`) for concurrent work. Refresh snapshots after navigation or DOM changes before reusing element refs. Close only sessions created for this task; `close-all` / `kill-all` affect other sessions too. Keep saved authentication state and traces private, and inspect captures before sharing.
+
 ## Quick start
 
 ```bash
@@ -44,6 +50,7 @@ playwright-cli check e12
 playwright-cli uncheck e12
 playwright-cli snapshot
 playwright-cli snapshot --filename=after-click.yaml
+playwright-cli find "Sign in"
 playwright-cli eval "document.title"
 playwright-cli eval "el => el.textContent" e5
 playwright-cli dialog-accept
@@ -147,12 +154,12 @@ playwright-cli unroute
 ```bash
 playwright-cli console
 playwright-cli console warning
-playwright-cli network
+playwright-cli requests
 playwright-cli run-code "async page => await page.context().grantPermissions(['geolocation'])"
 playwright-cli tracing-start
 playwright-cli tracing-stop
 playwright-cli video-start
-playwright-cli video-stop video.webm
+playwright-cli video-stop
 ```
 
 ### Install
@@ -199,9 +206,9 @@ playwright-cli -s=mysession close  # stop a named browser
 playwright-cli -s=mysession delete-data  # delete user data for persistent session
 
 playwright-cli list
-# Close all browsers
+# Close all browsers only when all sessions belong to this task
 playwright-cli close-all
-# Forcefully kill all browser processes
+# Forcefully stop all sessions only after checking their ownership
 playwright-cli kill-all
 ```
 
@@ -236,7 +243,7 @@ playwright-cli open https://example.com
 playwright-cli click e4
 playwright-cli fill e7 "test"
 playwright-cli console
-playwright-cli network
+playwright-cli requests
 playwright-cli close
 ```
 

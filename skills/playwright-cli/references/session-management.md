@@ -4,7 +4,7 @@ Run multiple isolated browser sessions concurrently with state persistence.
 
 ## Named Browser Sessions
 
-Use `-b` flag to isolate browser contexts:
+Use `-s` flag to isolate browser contexts:
 
 ```bash
 # Browser 1: Authentication flow
@@ -78,8 +78,10 @@ playwright-cli -s=site1 snapshot
 playwright-cli -s=site2 snapshot
 playwright-cli -s=site3 snapshot
 
-# Cleanup
-playwright-cli close-all
+# Cleanup only these sessions
+playwright-cli -s=site1 close
+playwright-cli -s=site2 close
+playwright-cli -s=site3 close
 ```
 
 ### A/B Testing Sessions
@@ -148,18 +150,14 @@ playwright-cli -s=docs-scrape open https://docs.example.com
 playwright-cli -s=s1 open https://github.com
 ```
 
-### 2. Always Clean Up
+### 2. Clean Up Owned Sessions
 
 ```bash
 # Stop browsers when done
 playwright-cli -s=auth close
 playwright-cli -s=scrape close
 
-# Or stop all at once
-playwright-cli close-all
-
-# If browsers become unresponsive or zombie processes remain
-playwright-cli kill-all
+# Use close-all / kill-all only when all affected sessions belong to this task
 ```
 
 ### 3. Delete Stale Browser Data
