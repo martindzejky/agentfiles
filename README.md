@@ -47,6 +47,7 @@ There are a couple of "domain knowledge" style skills like marketing, color theo
 - https://github.com/obra/superpowers
 - https://github.com/openai/skills
 - https://github.com/anthropics/skills
+- https://github.com/pbakaus/impeccable
 - https://github.com/cursor/plugins
 - https://github.com/caiopizzol/brand.md
 - https://github.com/google-labs-code/design.md

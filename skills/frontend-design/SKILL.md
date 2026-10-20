@@ -14,6 +14,8 @@ Read the brief, real content, existing interface, and available assets before st
 
 Distinguish a marketing page people read from a product interface people work in. A landing page may benefit from a characteristic opening image, headline, or demonstration; a working tool should make navigation, information, and actions immediately useful. Do not turn every app screen into a landing page.
 
+For substantial app or dashboard work, read [product UI craft](references/product-ui-craft.md). When forms, asynchronous actions, or variable content need more attention, read [interface resilience](references/interface-resilience.md). Use only the guidance relevant to the task.
+
 For a new direction, briefly state the palette roles, type roles, layout idea, and what gives it character. Reuse existing tokens rather than inventing a parallel theme. A short wireframe can resolve composition before implementation. Ask about missing decisions that materially affect the result; use judgment when the user delegates.
 
 ## Typography
