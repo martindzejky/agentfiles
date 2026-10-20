@@ -1,6 +1,7 @@
 ---
 name: copy-editing
-description: When the user wants to edit, review, or improve existing marketing copy, or refresh outdated content. Also use when the user mentions 'edit this copy,' 'review my copy,' 'copy feedback,' 'proofread,' 'polish this,' 'make this better,' 'copy sweep,' 'tighten this up,' 'this reads awkwardly,' 'clean up this text,' 'too wordy,' 'sharpen the messaging,' 'refresh this content,' 'update this page,' 'this content is outdated,' or 'content audit.' Use this when the user already has copy and wants it improved or refreshed rather than rewritten from scratch. For writing new copy, see copywriting.
+description: Edit or refresh existing marketing copy while preserving its message and voice. Use for proofreading, tightening, copy sweeps, or outdated content; use copywriting for new copy or a full rewrite.
+license: Complete terms in LICENSE.txt
 ---
 
 # Copy Editing
@@ -10,10 +11,9 @@ You are an expert copy editor specializing in marketing and conversion copy. You
 ## Core Philosophy
 
 **Check for product marketing context first:**
+If `MARKETING.md` exists, read it first. Read `BRAND.md` if present for established voice and brand constraints. Use existing context to tailor the work and ask only about material gaps.
 
-If `MARKETING.md` exists, read it before editing. Use brand voice and customer language from that context to guide your edits. Also check out `BRAND.md` if it exists.
-
-Good copy editing isn't about rewriting—it's about enhancing. Each pass focuses on one dimension, catching issues that get missed when you try to fix everything at once.
+Good copy editing improves what's already there. Each pass focuses on one dimension, catching issues that get missed when you try to fix everything at once.
 
 **Key principles:**
 
@@ -21,6 +21,8 @@ Good copy editing isn't about rewriting—it's about enhancing. Each pass focuse
 - Multiple focused passes beat one unfocused review
 - Each edit should have a clear reason
 - Preserve the author's voice while improving clarity
+
+**Pick the mode before editing.** Diagnose the input: A, blank or slop (rebuild from the facts); B, a real voice (restore it, keep their argument and words); C, a point edit (one line, word, or section). **A point edit skips the Seven Sweeps**: change only what was asked plus the minimum around it, return just the changed lines with a reason, and leave everything else as written. Run the full sweeps for A and B. See [references/checklist.md](references/checklist.md#pick-the-edit-mode).
 
 ---
 
@@ -175,6 +177,8 @@ _So what?_
 
 **Specificity upgrades:**
 
+These numbers illustrate form only. Replace them with verified figures or use a concrete mechanism when evidence is unavailable.
+
 | Vague                 | Specific                        |
 | --------------------- | ------------------------------- |
 | Save time             | Save 4 hours every week         |
@@ -194,7 +198,7 @@ _So what?_
 
 1. Highlight vague words and phrases
 2. Ask "Can this be more specific?"
-3. Add numbers, timeframes, or examples
+3. Add supported numbers, timeframes, mechanisms, or examples; never invent precision
 4. Remove content that can't be made specific (it's probably filler)
 
 **After this sweep:** Return to Prove It, So What, Voice and Tone, then Clarity.
@@ -280,57 +284,17 @@ _So what?_
 
 ---
 
-## Expert Panel Scoring
+## Additional review perspectives
 
-Use this after completing the Seven Sweeps for an additional quality gate. For high-stakes copy (landing pages, launch emails, sales pages), a multi-persona expert review catches issues that a single perspective misses.
+For substantial launch, pricing, or sales copy, consider the perspectives that might reveal a concrete problem:
 
-### How It Works
+- Conversion copywriter: clarity, offer, benefit hierarchy, and the next action
+- UX writer: scannability, cognitive load, and how the copy fits the user flow
+- Target customer: relevance, objections, and reasons to trust the claim
+- Brand strategist: voice consistency and positioning
+- For email, also consider subject/preview alignment and deliverability; for search content, check intent and factual freshness
 
-1. **Assemble 3-5 expert personas** relevant to the copy type
-2. **Each persona scores the copy 1-10** on their area of expertise
-3. **Collect specific critiques** — not just scores, but what to fix
-4. **Revise based on feedback** — address the lowest-scoring areas first
-5. **Re-score after revisions** — iterate until all personas score 7+, with an average of 8+ across the panel
-
-### Recommended Expert Panels
-
-**Landing page copy:**
-
-- Conversion copywriter (clarity, CTA strength, benefit hierarchy)
-- UX writer (scannability, cognitive load, user flow)
-- Target customer persona (does this speak to me? do I trust it?)
-- Brand strategist (voice consistency, positioning accuracy)
-
-**Email sequence:**
-
-- Email marketing specialist (subject lines, open/click optimization)
-- Copywriter (hooks, storytelling, persuasion)
-- Spam filter analyst (deliverability red flags, trigger words)
-- Target customer persona (relevance, value, unsubscribe risk)
-
-**Sales page / long-form:**
-
-- Direct response copywriter (offer structure, objection handling, urgency)
-- Skeptical buyer persona (proof gaps, trust issues, red flags)
-- Editor (flow, readability, conciseness)
-- SEO specialist (keyword coverage, search intent alignment)
-
-### Scoring Rubric
-
-| Score | Meaning                                            |
-| ----- | -------------------------------------------------- |
-| 9-10  | Publish-ready. No meaningful improvements.         |
-| 7-8   | Strong. Minor tweaks only.                         |
-| 5-6   | Functional but has clear gaps. Needs another pass. |
-| 3-4   | Significant issues. Major revision needed.         |
-| 1-2   | Fundamentally broken. Rethink approach.            |
-
-### When to Use
-
-- **Always** for launch copy, pricing pages, and high-traffic landing pages
-- **Recommended** for email sequences, sales pages, and ad copy
-- **Optional** for blog posts, social content, and internal docs
-- **Skip** for quick updates, minor edits, and low-stakes content
+Name what needs changing and why. These are review lenses, not simulated customer evidence or numerical proof of quality. Use them when useful; a minor edit does not require an expert panel or a scoring loop.
 
 ---
 
@@ -350,16 +314,20 @@ Use these for faster reviews when a full seven-sweep process isn't needed.
 
 **Replace these:**
 
-| Weak         | Strong     |
-| ------------ | ---------- |
-| Utilize      | Use        |
-| Implement    | Set up     |
-| Leverage     | Use        |
-| Facilitate   | Help       |
-| Innovative   | New        |
-| Robust       | Strong     |
-| Seamless     | Smooth     |
-| Cutting-edge | New/Modern |
+| Weak       | Strong |
+| ---------- | ------ |
+| Utilize    | Use    |
+| Implement  | Set up |
+| Leverage   | Use    |
+| Facilitate | Help   |
+
+**Replace with the fact** (a synonym swap just makes a new tell):
+
+| Vague                     | Write the fact instead                        |
+| ------------------------- | --------------------------------------------- |
+| Innovative / cutting-edge | What it does that alternatives don't          |
+| Robust                    | The uptime, scale, or failure case it handles |
+| Seamless                  | The real setup step count or time             |
 
 **Watch for:**
 
@@ -382,6 +350,30 @@ Use these for faster reviews when a full seven-sweep process isn't needed.
 - Strong opening sentences
 - Logical flow between paragraphs
 - White space for scannability
+
+### AI-Tell Check
+
+Run this on every edit, after the sweeps. A reader who spots an AI tell tends to doubt the claims around it. The shape of a sentence gives it away more than any word does.
+
+**Fix every instance of these:**
+
+| Pattern                 | Example                                                                                                                              | Fix                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
+| Contrast reveal         | "It's not X, it's Y." "Not because X. Because Y."                                                                                    | State Y directly, with the reason                                         |
+| Negation list           | "No setup call, no templates, no waiting on IT."                                                                                     | Say what does happen; keep one absence if it matters ("No card required") |
+| Trailing pile-on        | "...the data you already have, no exports, no spreadsheets." / "..., ensuring nothing slips."                                        | End the sentence at the claim; give the benefit its own sentence          |
+| Self-answered question  | "The result? 3x faster."                                                                                                             | Delete the question, keep the answer                                      |
+| Colon reveal            | "The best part: it learns."                                                                                                          | Write a normal sentence                                                   |
+| Stock phrases           | "In today's fast-paced world," "Whether you're X or Y," "Here's the thing," "Say goodbye to," "X, reimagined," "Unlock the power of" | Cut, then open with the reader's problem or the fact                      |
+| Em dashes in short copy | Headlines, subheads, CTAs, ads, social posts, subject lines (1–2 per page max in long copy)                                          | Period, comma, or colon                                                   |
+
+**Cap these:** one fragment and one list of three per section (a hero, a page section, or one short post). Treat seamless, robust, powerful, streamline, and empower as placeholders: replace them with the fact they stand for where you can, and if two show up in one paragraph, rewrite the paragraph.
+
+**How to fix:** go back to the facts (the mechanism, number, customer, or step) and rewrite from those. Swapping in synonyms creates new tells. If the fact isn't available, mark `[NEED: ...]` instead of inventing one. Keep the brand's register. A formal sentence that makes a specific claim is fine.
+
+**Leave these alone:** FAQ questions, a single "No card required" by the CTA, a list of three when there really are three features, and a clause after a comma that adds a new fact ("Imports run nightly, keeping your existing IDs").
+
+For the full blacklist with examples, use the **copywriting** skill's AI-tells reference.
 
 ---
 
@@ -428,6 +420,11 @@ For a final QA pass before delivering edits, work through the full checklist in 
 **Symptom:** Copy tries to speak to everyone, resonates with no one
 **Fix:** Pick one audience and write directly to them
 
+### Problem: Reads as AI-Written
+
+**Symptom:** "Not X. Y." reveals, "no X, no Y, no Z" lists, long sentences trailing extra clauses, stock openers
+**Fix:** Run the AI-Tell Check above and rewrite those sentences from the underlying facts
+
 ### Problem: Feature Overload
 
 **Symptom:** Listing every capability, overwhelming the reader
@@ -441,7 +438,7 @@ When editing collaboratively:
 
 1. **Run a sweep and present findings** - Show what you found, why it's an issue
 2. **Recommend specific edits** - Don't just identify problems; propose solutions
-3. **Request the updated copy** - Let the author make final decisions
+3. **Respect the requested mode** - Apply edits when asked to edit; present suggestions when asked for feedback. Preserve the author's decisions.
 4. **Verify previous sweeps** - After each round of edits, re-check earlier sweeps
 5. **Repeat until clean** - Continue until a full sweep finds no new issues
 
@@ -452,8 +449,8 @@ This iterative process ensures each edit doesn't create new problems while respe
 ## References
 
 - [Plain English Alternatives](references/plain-english-alternatives.md): Replace complex words with simpler alternatives
-- [Content Refresh](references/content-refresh.md): Full checklist, refresh vs. rewrite matrix, and cadence guide
-- [Copy Editing Checklist](references/checklist.md): Full QA checklist across all seven sweeps
+- [Content Refresh](references/content-refresh.md): SERP gap analysis, full checklist, refresh vs. rewrite matrix, and cadence guide
+- [Copy Editing Checklist](references/checklist.md): Full QA checklist across all seven sweeps plus the AI-tell check
 
 ---
 
@@ -461,7 +458,7 @@ This iterative process ensures each edit doesn't create new problems while respe
 
 Copy editing isn't just for new content. Existing pages decay over time — outdated stats, stale examples, and drifted brand voice. Use the content refresh framework when traffic is declining, data is stale, or the product has changed.
 
-**For the full refresh checklist, refresh vs. rewrite decision matrix, and cadence guide**: See [references/content-refresh.md](references/content-refresh.md)
+**For the SERP gap analysis, full refresh checklist, refresh vs. rewrite decision matrix, and cadence guide**: See [references/content-refresh.md](references/content-refresh.md)
 
 ---
 
@@ -480,7 +477,6 @@ Copy editing isn't just for new content. Existing pages decay over time — outd
 - **copywriting**: For writing new copy from scratch (use this skill to edit after your first draft is complete)
 - **cro**: For broader page optimization beyond copy
 - **marketing-psychology**: For understanding why certain edits improve conversion
-- **ab-testing**: For testing copy variations
 
 ---
 

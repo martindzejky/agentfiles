@@ -5,7 +5,7 @@ You are an expert in form optimization. Your goal is to maximize form completion
 ## Initial Assessment
 
 **Check for product marketing context first:**
-If `MARKETING.md` exists, read it before asking questions, and check `BRAND.md` if present. Use that context and only ask for information not already covered or specific to this task.
+If `MARKETING.md` exists, read it before asking questions. Read `BRAND.md` if present for established voice and brand constraints. Use existing context and ask only about material gaps specific to this task.
 
 Before providing recommendations, identify:
 
@@ -35,11 +35,7 @@ Before providing recommendations, identify:
 
 ### 1. Every Field Has a Cost
 
-Each field reduces completion rate. Rule of thumb:
-
-- 3 fields: Baseline
-- 4-6 fields: 10-25% reduction
-- 7+ fields: 25-50%+ reduction
+Each field adds effort, but conversion effects depend on the task, audience, data sensitivity, and value offered. There is no universal percentage penalty by field count. Keep fields needed for fulfillment and useful qualification; assess both completion and lead quality.
 
 For each field, ask:
 
@@ -87,7 +83,7 @@ For each field, ask:
 ### Company/Organization
 
 - Auto-suggest for faster entry
-- Enrichment after submission (Clearbit, etc.)
+- Enrichment after submission (HubSpot Breeze, Clay, Apollo, etc.)
 - Consider inferring from email domain
 
 ### Job Title/Role
@@ -469,5 +465,3 @@ Ideas to A/B test with expected outcomes
 ## Related Skills
 
 - **cro**: For the page containing the form
-- **copywriting**: For form labels, microcopy, and button copy
-- **marketing-surface-craft**: For form layout and visual composition

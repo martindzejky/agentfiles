@@ -1,25 +1,27 @@
 ---
 name: product-marketing
-description: When the user wants to create or update their product marketing context document. Also use when the user mentions 'product context,' 'marketing context,' 'set up context,' 'positioning,' 'who is my target audience,' 'describe my product,' 'ICP,' 'ideal customer profile,' or wants to avoid repeating foundational information across marketing tasks. Use this at the start of any new project before using other marketing skills. You create and work with MARKETING.md.
+description: Create or update MARKETING.md with product positioning, audience, customer language, proof, and marketing goals. Use for foundational marketing context or ICP work; respect BRAND.md for established brand voice.
+license: Complete terms in LICENSE.txt
 ---
 
 # Product Marketing Context
 
 You help users create and maintain a product marketing context document. This captures foundational positioning and messaging information that other marketing skills reference, so users don't repeat themselves.
 
-The document is stored at `MARKETING.md`.
+The document is stored at `MARKETING.md`. Read `BRAND.md` when present; it owns established brand identity and voice. Reference its decisions rather than creating a competing voice guide. Keep context concise and include only sections useful to this product. Do not require a context document before a well-scoped copy task.
 
 ## Workflow
 
 ### Step 1: Check for Existing Context
 
-First, check if `MARKETING.md` already exists.
+First, check if `MARKETING.md` already exists and read relevant product and brand documents.
 
 **If it exists:**
 
-- Read it and summarize what's captured
-- Ask which sections they want to update
-- Only gather info for those sections
+- Read what is already captured
+- Update only the requested or demonstrably outdated sections
+- Ask about material gaps rather than repeating the context interview
+- Preserve existing format and document ownership; do not introduce version counters, changelogs, or learning ledgers by default
 
 **If it doesn't exist, offer two options:**
 
@@ -34,7 +36,7 @@ Most users prefer option 1. After presenting the draft, ask: "What needs correct
 **If auto-drafting:**
 
 1. Read the codebase: README, landing pages, marketing copy, about pages, meta descriptions, package.json, any existing docs
-2. Draft all sections based on what you find
+2. Draft applicable sections from what you find; distinguish supported facts, proposed positioning, and unknowns
 3. Present the draft and ask what needs correcting or is missing
 4. Iterate until the user is satisfied
 
@@ -122,9 +124,11 @@ The JTBD Four Forces:
 
 ### 10. Brand Voice
 
-- Tone (professional, casual, playful, etc.)
-- Communication style (direct, conversational, technical)
-- Brand personality (3-5 adjectives)
+- 3-5 voice attributes, each with what it means, what it doesn't mean, and a real line from existing copy
+- Tone by context: how the voice shifts for support, launches, errors, sales, and social
+- Brand words: terms you own, words you never use (with the reason)
+
+If `BRAND.md` already defines voice, reference it here. Otherwise build a provisional profile from the founder's own writing, approved copy, and relevant performance evidence rather than adjectives alone. See [references/brand-voice.md](references/brand-voice.md) for the extraction steps, a worked profile, before/after examples, and per-person voice guides.
 
 ### 11. Proof Points
 
@@ -139,34 +143,46 @@ The JTBD Four Forces:
 - Key conversion action (what you want people to do)
 - Current metrics (if known)
 
----
+### 13. Paid Ads (optional, only if they run ads)
+
+Capture only when paid advertising is relevant to the project.
+
+- Margin reality: the target CPA or ROAS that keeps the business profitable, and the hard floor (the ROAS below which, or CPA above which, to flag immediately)
+- Budget and pacing: monthly budget and acceptable daily variance
+- Conversion truth: which conversion actions count and what each is worth, known tracking weaknesses (lag, double counting, offline gaps), and what separates a good lead from a form fill
+- Campaign naming convention and what each campaign is for, one line each
+- What the agent may do (read, compare, flag, draft, recommend) and may not do without approval (change budgets or bids, pause or launch, edit tracking, publish ads)
 
 ## Step 3: Create the Document
 
-After gathering information, create `MARKETING.md` with this structure:
+After gathering information, create or update `MARKETING.md`. Use the following as a worksheet, omit irrelevant or empty sections, and defer to existing sources of truth rather than duplicating them:
 
 ```markdown
 # Product Marketing Context
 
-_Last updated: [date]_
-
 ## Product Overview
 
 **One-liner:**
+
 **What it does:**
+
 **Product category:**
+
 **Product type:**
+
 **Business model:**
 
 ## Target Audience
 
 **Target companies:**
+
 **Decision-makers:**
+
 **Primary use case:**
+
 **Jobs to be done:**
 
-- **Use cases:**
--
+**Use cases:**
 
 ## Personas
 
@@ -177,23 +193,29 @@ _Last updated: [date]_
 ## Problems & Pain Points
 
 **Core problem:**
+
 **Why alternatives fall short:**
 
-- **What it costs them:**
-  **Emotional tension:**
+**What it costs them:**
+
+**Emotional tension:**
 
 ## Competitive Landscape
 
 **Direct:** [Competitor] — falls short because...
+
 **Secondary:** [Approach] — falls short because...
+
 **Indirect:** [Alternative] — falls short because...
 
 ## Differentiation
 
-## **Key differentiators:**
+**Key differentiators:**
 
 **How we do it differently:**
+
 **Why that's better:**
+
 **Why customers choose us:**
 
 ## Objections
@@ -207,8 +229,11 @@ _Last updated: [date]_
 ## Switching Dynamics
 
 **Push:**
+
 **Pull:**
+
 **Habit:**
+
 **Anxiety:**
 
 ## Customer Language
@@ -216,48 +241,99 @@ _Last updated: [date]_
 **How they describe the problem:**
 
 - "[verbatim]"
-  **How they describe us:**
+
+**How they describe us:**
+
 - "[verbatim]"
-  **Words to use:**
-  **Words to avoid:**
-  **Glossary:**
-  | Term | Meaning |
-  | ---- | ------- |
-  |      |         |
+
+**Words to use:**
+
+**Words to avoid:**
+
+**Glossary:**
+
+| Term | Meaning |
+| ---- | ------- |
+|      |         |
 
 ## Brand Voice
 
-**Tone:**
-**Style:**
-**Personality:**
+Reference `BRAND.md` when it already owns voice; otherwise capture the provisional profile below.
+
+| Attribute | Means | Doesn't mean | Example line |
+| --------- | ----- | ------------ | ------------ |
+|           |       |              |              |
+
+**Tone by context:**
+
+- Support:
+- Launch:
+- Errors:
+- Sales:
+- Social:
+
+**Terms we own:**
+
+**Never use (and why):**
 
 ## Proof Points
 
 **Metrics:**
+
 **Customers:**
+
 **Testimonials:**
 
 > "[quote]" — [who]
-> **Value themes:**
->
-> | Theme | Proof |
-> | ----- | ----- |
-> |       |       |
+
+**Value themes:**
+
+| Theme | Proof |
+| ----- | ----- |
+|       |       |
 
 ## Goals
 
 **Business goal:**
+
 **Conversion action:**
+
 **Current metrics:**
+
+## Paid Ads (optional)
+
+**Target CPA / ROAS:**
+
+**Hard floor:**
+
+**Monthly budget and daily variance:**
+
+**Conversions that count:**
+
+| Action | Means | Value | Feeds bidding? |
+| ------ | ----- | ----- | -------------- |
+|        |       |       |                |
+
+**Known tracking weaknesses:**
+
+**Good lead vs. form fill:**
+
+**Campaigns:** [name] — [what it's for]
+
+**Agent may:** read, compare, flag, draft, recommend
+
+**Agent may not (without approval):** change budgets or bids, pause or launch, edit tracking, publish ads
 ```
 
 ---
 
-## Step 4: Confirm and Save
+## Step 4: Confirm and save
 
-- Show the completed document
-- Ask if anything needs adjustment
-- Save to `MARKETING.md`
+- Show the completed context or focused edits and ask about unresolved decisions
+- Save to `MARKETING.md` when creating or updating it is the task
+- Preserve existing references to `BRAND.md` and other project documents
+- Read relevant campaign lessons when the project already records them; do not invent results or create a parallel memory workflow
+- Update context when product facts or approved positioning change; do not require a version bump and changelog for every edit
 
 ---
 
@@ -267,4 +343,4 @@ _Last updated: [date]_
 - **Capture exact words**: Customer language beats polished descriptions
 - **Ask for examples**: "Can you give me an example?" unlocks better answers
 - **Validate as you go**: Summarize each section and confirm before moving on
-- **Skip what doesn't apply**: Not every product needs all sections (e.g., Personas for B2C)
+- **Skip what doesn't apply**: Not every product needs all sections (e.g., Personas for B2C, Paid Ads if they don't run ads)

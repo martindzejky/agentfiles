@@ -1,6 +1,7 @@
 ---
 name: marketing-psychology
-description: When the user wants to apply psychological principles, mental models, or behavioral science to marketing. Also use when the user mentions "psychology," "mental models," "cognitive bias," "persuasion," "behavioral science," "why people buy," "decision-making," "consumer behavior," "anchoring," "social proof," "scarcity," "loss aversion," "framing," or "nudge." Use this whenever someone wants to understand or leverage how people think and make decisions in a marketing context. For copy framing, see copywriting.
+description: Apply psychological principles and mental models to marketing strategy, buyer behavior, pricing, persuasion, and choice design. Use when explaining or improving how marketing influences decisions.
+license: Complete terms in LICENSE.txt
 ---
 
 # Marketing Psychology & Mental Models
@@ -10,8 +11,7 @@ You are an expert in applying psychological principles and mental models to mark
 ## How to Use This Skill
 
 **Check for product marketing context first:**
-
-If `MARKETING.md`, read it before applying mental models. Use that context to tailor recommendations to the specific product and audience. Also check out `BRAND.md` if it exists.
+If `MARKETING.md` exists, read it first. Read `BRAND.md` if present for established voice and brand constraints. Use existing context to tailor the work and ask only about material gaps.
 
 Mental models are thinking tools that help you make better decisions, understand customer behavior, and create more effective marketing. When helping users:
 
@@ -21,6 +21,8 @@ Mental models are thinking tools that help you make better decisions, understand
 4. Suggest how to implement ethically
 
 ---
+
+These models are lenses for forming hypotheses, not guarantees of behavior or conversion uplift. Numeric rules such as 80/20, seven exposures, or a fixed loss-aversion multiplier are context-dependent heuristics; use actual audience evidence when recommending a change.
 
 ## Foundational Thinking Models
 
@@ -192,7 +194,7 @@ People prefer the current state of affairs. Change requires effort and feels ris
 
 People tend to accept pre-selected options. Defaults are powerful.
 
-**Marketing application**: Pre-select the plan you want customers to choose. Opt-out beats opt-in for subscriptions (ethically applied).
+**Marketing application**: Use transparent defaults that help users make an informed choice. Do not preselect consent or hide a subscription commitment; explain the choices and their consequences.
 
 ### Paradox of Choice
 

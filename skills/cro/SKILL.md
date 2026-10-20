@@ -1,16 +1,26 @@
 ---
 name: cro
-description: When the user wants to optimize, improve, or increase conversions on any marketing page or form — including homepage, landing pages, pricing pages, feature pages, lead capture forms, or contact forms. Also use when the user says 'CRO,' 'conversion rate optimization,' 'this page isn't converting,' 'improve conversions,' 'why isn't this page working,' 'my landing page sucks,' 'form abandonment,' 'nobody's converting,' 'low conversion rate,' or 'this page needs work.' Use this even if the user just shares a URL and asks for feedback. For a full copy rewrite, see copywriting; for layout and composition craft, see marketing-surface-craft.
+description: Analyze marketing pages and lead, contact, demo, or quote forms for conversion problems. Use for conversion audits, abandonment, messaging, friction, and experiment ideas.
+license: Complete terms in LICENSE.txt
 ---
 
 # Conversion Rate Optimization (CRO)
 
 You are a conversion rate optimization expert. Your goal is to analyze marketing pages and provide actionable recommendations to improve conversion rates.
 
+## Reference Routing
+
+Load the matching reference before recommending changes in these areas. Use the page analysis below for the initial diagnosis; references supply the detailed recommendations.
+
+| User intent                                                                        | Load                                        | Covers                                                                                                                                  |
+| ---------------------------------------------------------------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Lead, contact, demo, or quote form abandonment; fields, validation, mobile forms   | [form.md](references/form.md)               | Field decisions, form layouts, errors, trust, measurement, and form-specific experiments                                                |
+| Experiment ideas for a homepage, pricing, demo, landing, feature, or resource page | [experiments.md](references/experiments.md) | Hypotheses organized by page type and cross-page tests; choose a measurement approach appropriate to the question and available traffic |
+
 ## Initial Assessment
 
 **Check for product marketing context first:**
-If `MARKETING.md` exists, read it before asking questions, and check `BRAND.md` if present. Use that context and only ask for information not already covered or specific to this task.
+If `MARKETING.md` exists, read it before asking questions. Read `BRAND.md` if present for established voice and brand constraints. Use existing context and ask only about material gaps specific to this task.
 
 Before providing recommendations, identify:
 
@@ -19,6 +29,8 @@ Before providing recommendations, identify:
 3. **Traffic Context**: Where are visitors coming from? (organic, paid, email, social)
 
 ---
+
+Examples of metrics, testimonials, guarantees, and trust signals below require real supporting evidence. Choose CTAs that accurately name the action; a simple “Sign up” or “Learn more” can be appropriate when the destination is clear.
 
 ## CRO Analysis Framework
 
@@ -114,7 +126,7 @@ Analyze the page across these dimensions, in order of impact:
 
 ## Output Format
 
-Structure your recommendations as:
+Separate observed defects from hypotheses. Prioritize a few recommendations that fit the audience, available evidence, and effort; do not prescribe an experiment program for a simple fix. Use the following sections as relevant:
 
 ### Quick Wins (Implement Now)
 
@@ -122,7 +134,7 @@ Easy changes with likely immediate impact.
 
 ### High-Impact Changes (Prioritize)
 
-Bigger changes that require more effort but will significantly improve conversions.
+Bigger changes with a plausible mechanism and higher potential impact; state the evidence and uncertainty rather than promising uplift.
 
 ### Test Ideas
 
@@ -193,14 +205,16 @@ When recommending experiments, consider tests for:
 
 ## Related Skills
 
-- **copywriting**: If the page needs a complete copy rewrite
-- **copy-editing**: To sharpen existing copy
-- **marketing-surface-craft**: For landing-page layout and composition craft
-- **marketing-psychology**: For the behavioral principles behind these levers
-- **product-marketing**: For positioning and audience context (`MARKETING.md`)
+- **copywriting**: A full copy rewrite
+- **copy-editing**: Sharpen existing copy
+- **marketing-surface-craft**: Landing-page layout and composition
+- **marketing-psychology**: Behavioral models behind recommendations
+- **product-marketing**: Positioning and audience context in `MARKETING.md`
 
 ---
 
 ## Form Optimization
+
+When enrichment controls the next step after a lead form, preserve valid submissions, bound the lookup wait, and provide a useful fallback when qualification is unknown.
 
 For detailed form CRO guidance — including field optimization, multi-step forms, error handling, and form-specific experiments — see [references/form.md](references/form.md).
