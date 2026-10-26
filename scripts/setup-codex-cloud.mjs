@@ -27,8 +27,8 @@ async function skillCatalog(root) {
       throw new Error(`Expected single-line name and description in ${path}`);
     }
     const short =
-      description.length > 120
-        ? `${description.slice(0, 117).replace(/\s+\S*$/, '')}...`
+      description.length > 112
+        ? `${description.slice(0, 109).replace(/\s+\S*$/, '')}...`
         : description;
     lines.push(
       [name, short, path]
