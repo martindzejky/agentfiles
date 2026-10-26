@@ -6,6 +6,8 @@ Inspect `Timeline.CreateSubtitlesFromAudio(AutoCaptionSettings)` and the project
 
 Generate captions against the actual edited timeline. Source transcript timestamps do not remain timeline timestamps after cuts/retimes. For external SRT/VTT, explicitly map cue times through the edit and preserve encoding/language. Verify the installed import route rather than inventing an `ImportSubtitles` method. If the API does not expose a suitable route, use the UI/interchange path and say so. Exported captions need a round-trip check; burn-in versus sidecar is a delivery choice.
 
+For title/caption styling, read [template and subtitle field notes](field-notes.md#titles-and-animated-captions). Use full template IDs, preserve animated/connected inputs and active gradient/image fills, and distinguish ordinary title inputs from subtitle text/word timing/preset holders. Render-check base text and highlight colors separately, word phases, gaps and safe margins. The community’s export/patch/import helper is not a native setter available here; routine caption work must not write an open project database.
+
 ## Inspect a Fusion composition
 
 Resolve item methods expose `GetFusionCompCount`, names and `GetFusionCompByIndex` (1-based). Use the existing comp for a title edit rather than adding another one.
@@ -22,7 +24,7 @@ result = [{"key": str(key), "attributes": tool.GetAttrs(),
 
 Use `fusion_api.pyi` for actual tool/input/animation methods. Find the intended tool by returned name/ID; templates may contain several Text+ tools. Inspect its input IDs, existing values, animation and comp frame origin before changing `StyledText` or other inputs. Do not assume UI labels are input IDs.
 
-For writes, group a small change with `StartUndo`/`EndUndo`, use `Lock`/`Unlock` in `try/finally`, and read inputs back. Confirm `SetInput`'s current time argument; composition time can differ from timeline/source frames. Undo grouping is not a cross-API transaction or a substitute for a duplicate timeline.
+For writes, group a small change with `StartUndo`/`EndUndo`. Reserve `Lock`/`Unlock` in `try/finally` for structural graph changes; unlock before parameter/value writes. A community report on 19.1.3.7 found locked first-value writes could read back correctly while failing to invalidate the render. Inspect actual rendered output as well as inputs; see [Fusion field notes](field-notes.md#fusion-writes-and-discovery). Confirm `SetInput`'s current time argument; composition time can differ from timeline/source frames. Undo grouping is not a cross-API transaction or a substitute for a duplicate timeline.
 
 ## Create or modify graphics
 

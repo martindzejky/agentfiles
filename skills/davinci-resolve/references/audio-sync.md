@@ -24,6 +24,8 @@ Document offsets with direction: `source_time = master_time + offset`, not an un
 
 When tightening screen+camera footage, apply the same edit mapping to both picture layers and all required audio. Inspect bounds for each source; use matching record positions and `SetClipsLinked` where appropriate. A timeline with the right duration can still have missing camera/audio or wrong source spans.
 
+Source-frame offsets, source seconds, timeline frames and WAV import-time rates have distinct domains. Before deriving ranges from getter values, read [source-frame field notes](field-notes.md#source-frames-audio-and-timecode); absolute timecode seconds must not be multiplied into file-relative frame offsets.
+
 ## Multicam
 
 Resolve 21.1 exposes `MediaPool.CreateMulticamClip(clips, MulticamOptions)` and `TimelineItem.PerformMulticamSmartSwitch`/`FlattenMulticam`. Fetch their definitions and constants for the installed build. Choose angle naming, sync mode and audio policy deliberately, then inspect the resulting angles and sync. A stack of aligned tracks is not itself a native multicam clip. Do not flatten as an incidental analysis step, and do not feed nested multicam objects to the plain-source helper.
@@ -46,3 +48,7 @@ For channel changes inspect `GetAudioMapping`/`SetAudioMapping` and `GetSourceAu
 Voice isolation, dialogue processing, narration, music and SFX may use native features or ElevenLabs; see [toolkit.md](toolkit.md). Keep processed files separate, compare duration/channel/sample-rate/delay, and align them back to the original time basis. Processing can introduce leading silence, codec delay or shifted words. Check joins and sync across the recording.
 
 Measure final output with FFmpeg `ebur128`, peaks and stream probing. These measurements cannot establish intelligibility, natural processing or whether music masks dialogue; listening remains part of finished-edit verification.
+
+## Fairlight scope
+
+Native per-clip gain/pan/isolation is not full Fairlight plugin-graph or mix-automation control. The [community audio skill](https://github.com/samuelgursky/davinci-resolve-mcp/blob/931bc2cda8fd9049982a457de9ff70836c406cd7/.agents/skills/resolve-audio/SKILL.md) identifies saved Fairlight presets as a whole-mix workaround, not a content-adaptive auto-mix. The inspected native API exposes `GetFairlightPresets` and `ApplyFairlightPresetToCurrentTimeline` (20.2.2+); applying one can replace existing mix state. Inspect the target and preserve recovery before using a requested preset. No AI Audio Assistant trigger was documented in the inspected 21.1 API. Recheck current definitions before offering that automation rather than inventing a method or treating a saved preset as equivalent.

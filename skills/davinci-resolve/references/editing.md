@@ -6,6 +6,7 @@
 2. Write explicit keep ranges with reasons, speech handles and sync offsets. For dead-air work, show the largest proposed removals and ambiguous silent demonstrations. Do not apply a generic filler list or pause threshold as the user's style. Repeated takes often need semantic comparison and listening.
 3. Build a separately named variant. Preserve the original timeline. A source-range assembly is suitable for plain footage, not reconstruction of an already graded/retimed/Fusion/nested edit.
 4. Read back source spans, record positions, duration, tracks, links and audio. Inspect first/middle/last placements and every suspicious join. Preview the actual motion and sound when available.
+5. For a saved deliverable, save through the project manager and inspect the cut again after saving; the helper does not save. Failed appends have reportedly left visible placements that vanished on save. Stop on a save/count/span discrepancy rather than replaying the full batch. See [persistence evidence](field-notes.md#saved-state-and-project-switches).
 
 ## Bundled conservative assembly helper
 
@@ -67,6 +68,8 @@ python3 scripts/validate_edit_plan.py /work/analysis/edit-plan.json
 For native execution follow [native-mcp.md](native-mcp.md): prefix `CONFIG` with the parsed plan's Python representation, then concatenate validator source and assembly source. Do not run the assembly script with the system Python or expect the MCP sandbox to load files.
 
 `native_end` is mandatory. The official 21.1 example treats 0..23 as 24 frames; community wrapper plans use exclusive ends. The example above follows the official inclusive convention. Before a substantial live edit, test one short range with both picture and sound and inspect native source/start/end/duration readback. Do not switch conventions merely to suppress a mismatch; determine the actual coordinate semantics first. The helper stops on the first readback mismatch and retains the partial timeline with its ID. It does not roll back. Inspect that result before another attempt.
+
+Native source-frame getters can disagree, and source seconds can include embedded media timecode. Review [source-time witnesses](field-notes.md#source-frames-audio-and-timecode) before diagnosing a mismatch or adapting this helper. Keep its strict stop behavior until an independent frame/time witness explains the discrepancy.
 
 Exact fractional rates use e.g. `[30000,1001]`. Source/timeline equality is checked by integer cross multiplication. The adapter must use Resolve's decimal settings representation; its readback tolerance handles that representation only, not mixed-rate conform. Never use this helper to prove mixed-rate/VFR behavior. Plan facts (`plain`, `cfr`, streams) require source inspection; the helper cannot establish them from assertions alone.
 

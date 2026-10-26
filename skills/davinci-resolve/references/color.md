@@ -2,6 +2,8 @@
 
 Confirm project color management, input interpretation, timeline/output color spaces and intended delivery before grading. Preserve the user's existing pipeline. A LUT cannot repair incorrect input tagging, and applying another transform can double-transform already normalized footage.
 
+Inspect representative Resolve-rendered frames before choosing a grade and compare matching frames afterward. Source-only samples cannot show the current Resolve pipeline. Read [color field notes](field-notes.md#color-witnesses-and-write-only-controls) for write-only controls, image-damage checks and UI-dependent thumbnail/still failures.
+
 ## Version before an experiment
 
 ```python
@@ -21,7 +23,7 @@ Use `TimelineItem.GetNodeGraph` and current Graph definitions to inspect the tar
 
 LUT operations: inspect Graph `GetLUT`/`SetLUT` and item `ExportLUT` in the current stub. Use a known installed LUT path/node and read back association. A LUT export captures only supported transform behavior, not temporal/spatial effects or the entire grade. Test a chart/representative images before treating it as a portable look.
 
-For a known DRX, inspect `Graph.ApplyGradeFromDRX(path, gradeMode, applyToAllLayers)`. Choose keyframe alignment explicitly (no keyframes, source-timecode alignment, or start-frame alignment per installed definitions). Apply to the selected version/items and compare representative frames. Treat DRX internals as opaque unless an advanced format-editing task specifically requires otherwise.
+For a known DRX, inspect `Graph.ApplyGradeFromDRX(path, gradeMode, applyToAllLayers)`. Choose keyframe alignment explicitly (no keyframes, source-timecode alignment, or start-frame alignment per installed definitions). It replaces the grade graph rather than appending to it. Preserve a recoverable version/still/DRX, apply only to the selected targets, and compare representative frames. CDL and node-enable state may have no direct getter; do not promise generic snapshot/readback restoration for write-only controls. Treat DRX internals as opaque unless an advanced format-editing task specifically requires otherwise.
 
 Use Gallery APIs and `Timeline.GrabStill` for approved reference still workflows; preserve playhead/current timeline context. Check the image shows the intended source/frame and color transform. A before/after at a different frame is not a reliable grade comparison.
 

@@ -14,6 +14,10 @@ The technical workflow guidance adapts ideas/checks from those MIT-licensed sour
 
 For advanced specifically requested work, the same repository's `docs/guides/native-drt-authoring.md`, `headless-edit-loop.md`, `color-decision-guide.md`, and `multicam-setup-guide.md` offer leads. Offline project/database/template patching is not the default route. Revalidate their assumptions against the current installation.
 
+## Field-experience additions
+
+[Field notes](field-notes.md) retain operation-specific reports from the same pinned snapshot: inherited render state/localization, persistence after save, source timebases, Fusion invalidation/discovery, interchange tradeoffs, archive crashes, title/subtitle behavior, analysis coverage/silence and grade witnesses. Each section links its evidence and preserves available build/platform qualifiers. These reports have not been reproduced locally. The existing MIT notice covers adapted guidance. No community high-level tool or direct database workflow is implied to be installed.
+
 ## What is and is not verified
 
 Bundled helpers are checked offline with standard-library tests, simulated API failures/readbacks and synthetic FFmpeg media. These establish plan validation and helper logic, not Resolve behavior. Native snippets are based on the installed docs. No Resolve live test was run when authoring this toolkit; the user chose to validate on a future real YouTube project.

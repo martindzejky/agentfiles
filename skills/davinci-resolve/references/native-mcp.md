@@ -28,10 +28,14 @@ Use host-side Python/FFmpeg for media analysis. Use `run_script_unsafe` only whe
 
 ## Targeting and failure handling
 
-Native indices for tracks/timelines and many grade nodes are 1-based. Resolve proxy attribute lookup can be permissive; `hasattr` alone is not a capability test. Use installed definitions, inspect `dir` where supported, and make a small controlled call with readback.
+Native indices for tracks/timelines and many grade nodes are 1-based. Resolve proxy attribute lookup can be permissive; `hasattr` alone is not a capability test. Use installed definitions, inspect `dir` where supported, and make a small controlled call with readback. Fusion Tool enumeration can omit real documented methods too; consult the stub before treating an absent name as unsupported. See [Fusion discovery evidence](field-notes.md#fusion-writes-and-discovery).
 
 Current 21.1 forms include `GetSettings`/`SetSettings`, `GetProperties`/`SetProperties`, and list-of-dictionary `ImportMedia`/`AppendToTimeline`. Older examples may use deprecated overloads. Setting dictionaries are not atomic; earlier keys can stick when a later one fails. Snapshot relevant settings and inspect each result. Enabling custom timeline settings uses `useCustomSettings: "1"`.
 
 Native calls do not promise transactions, automatic timeline archives, retries, confirmation tokens or object registries. Do not inherit these guarantees from the community server. If a batch partly succeeds, report the created timeline/items and stop before compounding the failure. Do not automatically delete the evidence or retry the whole batch.
 
+For construction or project switching, read [saved-state traps](field-notes.md#saved-state-and-project-switches): visible in-session items are not proof of persistence, and creating a scratch project can discard an unsaved current project.
+
 Long jobs: start once, retain the returned job ID, and poll its documented status getter in later bounded calls. A timeout does not establish that nothing happened; inspect state before retrying.
+
+When an operation needs a UI fallback, describe the required action and verify the actual screen/manual before giving menu geography. The community [editing skill](https://github.com/samuelgursky/davinci-resolve-mcp/blob/931bc2cda8fd9049982a457de9ff70836c406cd7/.agents/skills/resolve-edit/SKILL.md) records failures caused by invented retiming UI directions. An API limitation is not evidence for a guessed menu path.

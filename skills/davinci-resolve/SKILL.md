@@ -23,4 +23,4 @@ Return the requested timeline or artifact, its identity, what changed, and any l
 
 The helpers have offline tests; Resolve execution remains unverified until used with a real project. The assembly helper deliberately supports only same-rate, plain CFR sources and requires an explicit native endpoint convention. Probe one range and read it back before a full assembly. Report partial failures without implying rollback. See [editing.md](references/editing.md).
 
-Community recipes are references, not additional native tools. Version/provenance and migration caveats are in [sources.md](references/sources.md).
+Community recipes are references, not additional native tools. Topic references link to [field notes](references/field-notes.md) for operation-specific failure modes and build qualifiers. Version/provenance and migration caveats are in [sources.md](references/sources.md).

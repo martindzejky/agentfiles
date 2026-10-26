@@ -2,6 +2,10 @@
 
 Analysis informs an edit. Keep provider/version, source identity, stream/channel, language, extraction offset and time basis beside its outputs. Save sidecars and sampled frames outside the originals; reuse valid analysis rather than retranscribing on every task.
 
+## Check evidence coverage
+
+Before proposing cuts, check which source clips and regions have current transcripts/visuals. Record gaps and stale analysis; a replaced/relinked file may no longer match old descriptions. Verify important marker labels against frames. Reuse current sidecars, but do not present sparse or stale evidence as full-footage review. See [coverage lessons](field-notes.md#analysis-coverage-and-silence).
+
 ## Transcript
 
 For existing Resolve transcription, read `MediaPoolItem.GetTranscription`. To request it, inspect `TranscribeAudio`, the relevant background-status APIs and current speaker options first. Start once, poll where supported, and read the completed transcript. Native transcription `start`/`end` values are **timecode strings**, not ElevenLabs-style seconds. Preserve the actual data structure and frame/drop-frame basis.
@@ -26,6 +30,8 @@ ffmpeg -hide_banner -nostdin -i input.mov -map 0:v:0 -an \
 ffmpeg -hide_banner -nostdin -i input.mov -map 0:a:0 -vn \
   -af ebur128=peak=true -f null - 2> loudness.log
 ```
+
+Before using a silence threshold, inspect representative speech/room levels, optionally with FFmpeg `astats`, then review a short candidate pass. If the gate cannot distinguish speech from background, keep that region and report uncertainty. A fixed threshold can mark an entire quiet program as silence; the values above are detector examples, not a calibrated cut plan. See [silence lessons](field-notes.md#analysis-coverage-and-silence).
 
 Select the right audio stream/channel: camera scratch audio and a recorder can yield very different silence candidates. Handle trailing silence explicitly if converting log events into intervals. Preserve file-relative timestamps, stream start times and any `-ss` extraction offset. Never feed raw log seconds directly into a cut timeline after edits.
 
