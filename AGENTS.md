@@ -67,4 +67,4 @@ For Cursor, also check whether skills were supplied through its native discovery
 
 Edit global rules in `rules/` and skills in `skills/`; `dist/` is generated and ignored. Follow existing frontmatter conventions. Keep local installation working.
 
-Run `pnpm generate:dist`, `pnpm format`, `pnpm test`, and `git diff --check`. Use `pnpm format:fix` when needed. There is no separate build or lint step. Local work stays on `master` unless requested otherwise; leave commits to the user.
+Run `pnpm generate:dist`, `pnpm format`, `pnpm test`, and `git diff --check`. Use `pnpm format:fix` when needed. There is no separate build or lint step. Local work stays on the current branch, including `master`, unless requested otherwise; do not create a feature branch or PR by default. Leave commits and pushes to the user unless requested.

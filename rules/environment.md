@@ -3,7 +3,8 @@ description: Complete coding environment, local projects, and repo aliases
 ---
 
 You must always have a set of global user skills, workflows, rules, and subagent definitions, placed at `~/.cursor` or `/.cursor` (Cursor) and, once installed, `~/.codex` / `~/.agents` (Codex). These come from my global agentfiles at https://github.com/martindzejky/agentfiles.
-If this setup is missing or the coding environment is incomplete or broken, stop implementation, warn the user, and ask them to fix it first.
+
+During cloud startup/offline states, use readiness tools or retry read-only checks every 15–60 seconds for 10 minutes, longer while progressing. Give updates; don't ask me to retry. Then recheck setup. Report terminal failure or stalled startup with elapsed time/checks; don't reset the environment. Only stop implementation and ask me to fix missing/broken setup after readiness is confirmed.
 
 Locally, look for other cloned repositories in `~/Projects/<name>`.
 

@@ -4,15 +4,15 @@ metadata:
   environments: cloud
 ---
 
-When running in the cloud, run autonomously unless the user is only asking a question.
+Cloud execution only, not local use of remote services. Unless question-only:
 Don't wait for the user. Be proactive and autonomous.
-Follow the project's `README.md` file.
+Follow the project's `README.md`.
 
 ## Environment
 
 - For global agentfiles setup, follow [agentfiles/AGENTS.md](https://github.com/martindzejky/agentfiles/blob/master/AGENTS.md). Do not add hooks or replace platform-managed configuration.
 - In Cursor Cloud, secrets usually come from the Cursor dashboard. In other hosted environments, use that platform's secret injection.
-- If env vars fail, notify the user and stop.
+- Wait for readiness per the environment rule. If required env vars or secrets are still unavailable after setup, notify the user and stop.
 
 ## Git and PRs
 
@@ -21,19 +21,16 @@ Follow the project's `README.md` file.
 - Before a write-capable subagent runs, be on a feature branch.
 - PR titles start with a capital letter. Keep the description cumulative and current with all commits.
 - For create/update/review flow, follow the `github-pull-requests` skill. In Cursor Cloud, PR writes use `ManagePullRequest` when available; otherwise use `gh` when writes are allowed.
-- **Before every `git commit`:** read the `git-commit-style` skill and follow it exactly. If instructions conflict on commit messages, `git-commit-style` wins over generic "descriptive commit" wording.
-- **Issue-driven PRs:** When work comes from a GitHub issue, the PR description must include a **References** section with `Closes #<number>` (linked to the issue) so the issue auto-closes on merge. Use proper capitalization.
-- **Tagged on an issue/PR (Cursor Cloud):** Your final output may be posted as a bot comment on the issue. End with a short summary, link to the open PR, and any blockers. The user usually does not see WIP messages.
+- Before every commit, read and follow `git-commit-style`; it overrides generic message guidance.
+- Issue-driven PRs need a **References** section with `Closes #<number>` linked to the issue for auto-closing on merge.
+- When tagged on an issue/PR in Cursor Cloud, final output may become a bot comment. Include a short summary, open PR link, and blockers; WIP messages usually aren't visible.
 
 ## Verification gate
 
-Before commit/push/PR update, run the project's configured verification gates.
-Verify your own work using screenshots, videos, tests, or manual code checks as relevant.
-Attach verification artifacts (screenshots/recordings) to the PR for user-visible changes.
+Before commit/push/PR update, run configured gates and verify with tests, manual checks, or browser artifacts as relevant. Attach screenshots/recordings to PRs for user-visible changes.
 
 ## Browser use and videos
 
-In the cloud you have access to browser tools and screenshot and video recording and inspection tools.
-Use them to verify your work, and capture artifacts and proof for the user.
+Use cloud browser and recording tools to verify work and capture proof.
 
-**Note about animations, transitions, and motion:** the video inspection tools usually work with lower FPS, so you might not see quick animations or transitions. In that case, do not rely on video only and instead perform manual checks via code and logs.
+Video inspection has low FPS and may miss quick motion/transitions; also check code and logs.

@@ -49,10 +49,10 @@ Commits:
 
 Branches:
 
-- Prefer rebasing a feature branch on master instead of merging master to it
-- Feature branches, when ready, merge to master with a merge commit, no fast forward
+- When using feature branches, prefer rebasing a feature branch on master instead of merging master to it
+- When merging a feature branch to master, use a merge commit, no fast forward
 
 PRs:
 
-- Always open ready PRs, never drafts, this is mandatory
-- Always follow the relevant PR skill (GitHub or GitLab)
+- When requested or required, open PRs ready for review, never drafts. Local work does not require a PR.
+- When working with PRs, always follow the relevant PR skill (GitHub or GitLab)
