@@ -44,5 +44,9 @@ def inspect_timeline(project, config):
             "tracks": tracks}
 
 
-if "resolve" in globals():
+try:
+    resolve
+except NameError:
+    pass
+else:
     result = inspect_timeline(project, CONFIG)

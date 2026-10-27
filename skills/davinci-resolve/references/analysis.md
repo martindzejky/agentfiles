@@ -12,6 +12,8 @@ For existing Resolve transcription, read `MediaPoolItem.GetTranscription`. To re
 
 For ElevenLabs use [toolkit.md](toolkit.md). Prefer it when the task benefits from its transcript/diarization or Resolve transcription is unavailable. Word timings are estimates: inspect audio around suspected retakes and unusually long words. Empty speech is valid. Check truncation and fetch complete word timing output before planning cuts.
 
+An accepted native transcription request can initially report `Inactive` before initialization; inspect later status before starting another job. Neither native nor external transcripts prove an abandoned take or cough should remain merely because it has tokens. Compare repeated attempts semantically, inspect non-speech sounds and listen around boundaries. See [local evidence](field-notes.md#local-native-mcp-trial).
+
 ## Signal candidates with FFmpeg
 
 These host commands analyze one input without changing it. Thresholds are illustrative detector parameters, not personal pacing or delivery standards. Change them for the footage. FFmpeg logs filter results to stderr.

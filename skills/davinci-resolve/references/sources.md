@@ -1,6 +1,6 @@
 # Sources, versions and validation
 
-Research snapshot: 26 October 2026. Native tool metadata identified Studio 21.1.1; installed scripting README was dated 31 August 2026 and changelog 1 September 2026. The MCP documentation tools work while Resolve is closed. Query them again when implementing a recipe on another build; do not infer capability from the major version alone.
+Research snapshot: 26 October 2026; local-trial integration: 27 October 2026. Native tool metadata identified Studio 21.1.1; installed scripting README was dated 31 August 2026 and changelog 1 September 2026. The MCP documentation tools work while Resolve is closed. Query them again when implementing a recipe on another build; do not infer capability from the major version alone.
 
 ## Primary references
 
@@ -18,9 +18,11 @@ For advanced specifically requested work, the same repository's `docs/guides/nat
 
 [Field notes](field-notes.md) retain operation-specific reports from the same pinned snapshot: inherited render state/localization, persistence after save, source timebases, Fusion invalidation/discovery, interchange tradeoffs, archive crashes, title/subtitle behavior, analysis coverage/silence and grade witnesses. Each section links its evidence and preserves available build/platform qualifiers. These reports have not been reproduced locally. The existing MIT notice covers adapted guidance. No community high-level tool or direct database workflow is implied to be installed.
 
+The separate [local trial](field-notes.md#local-native-mcp-trial) records native MCP observations from macOS Studio 21.1.1.10 on 26 October, including sandbox entry points, imports/timebases, transcription startup, Fusion replacement/rendering and audio analysis. The [Fusion overlay recipe](fusion-overlay.md) distills that working graph without retaining project paths, clip IDs, personal style or media. These additions are first-hand findings, not claims from the community source.
+
 ## What is and is not verified
 
-Bundled helpers are checked offline with standard-library tests, simulated API failures/readbacks and synthetic FFmpeg media. These establish plan validation and helper logic, not Resolve behavior. Native snippets are based on the installed docs. No Resolve live test was run when authoring this toolkit; the user chose to validate on a future real YouTube project.
+Bundled helpers are checked offline with standard-library tests, restricted-builtins payload execution, simulated API failures/readbacks and synthetic FFmpeg media. These establish plan validation and helper logic, not full native behavior. The initial inspection payload entry points failed live because `globals()` was unavailable; the corrected guards have offline regression coverage. The real production tested operation-specific native edits, audio derivatives, Fusion graphics and a final render/full decode. It did not live-certify the generic same-rate assembly helper or a mixed-rate replacement for it. The integrated documentation/example code was not rerun against the completed project.
 
 At first live use, inspect storage/project and test a small range before a large write. Check source/record endpoints, nonzero timeline origin, duration, required audio/links and actual frames. Validate first/middle/last sync and render/play a short result when the task needs it. Mixed-rate/VFR media, retimes, nested/multicam, Fusion rendering and caption/interchange round trips need their own checks. Broaden the helpers only with evidence, not by weakening their preflight restrictions.
 

@@ -32,5 +32,9 @@ def inspect_session(resolve, project):
     return result
 
 
-if "resolve" in globals():
+try:
+    resolve
+except NameError:
+    pass
+else:
     result = inspect_session(resolve, project)

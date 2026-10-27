@@ -27,6 +27,8 @@ For a known DRX, inspect `Graph.ApplyGradeFromDRX(path, gradeMode, applyToAllLay
 
 Use Gallery APIs and `Timeline.GrabStill` for approved reference still workflows; preserve playhead/current timeline context. Check the image shows the intended source/frame and color transform. A before/after at a different frame is not a reliable grade comparison.
 
+`CopyGrades` does not transfer separate Fusion styling in the [local 21.1.1 trial](field-notes.md#local-native-mcp-trial). When propagating both, copy grade state and construct/transfer the intended Fusion graph separately. Retain each destination's own MediaIn; importing an entire pilot comp can carry the pilot's source association. Compare native rendered frames across target shots. A successful still export can contain a stale frame; use a short native render when source/time validation fails.
+
 ## DCTL and custom LUTs
 
 Native MCP provides `list_dctls`, `update_dctl`, and LUT generation/listing tools. Read the current tool schemas and `get_scripting_docs(document="DCTLReadme.txt")` before authoring. `update_dctl` compiles before writing, but compilation does not establish correct color math or a suitable look. Use distinct filenames, confirm overwrite intent for existing assets, and validate on ramps/charts plus representative footage. LUT generation samples a transform; out-of-domain, HDR and color-space assumptions must be explicit.

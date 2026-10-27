@@ -1,6 +1,7 @@
 """Offline behavior tests, not a simulation of Resolve's undocumented semantics."""
 
 import copy
+import builtins
 import json
 from pathlib import Path
 import runpy
@@ -294,6 +295,31 @@ class PlanTests(unittest.TestCase):
         context = {"__name__": "__main__", "resolve": object(), "project": project, "CONFIG": plan()}
         exec(compile(payload, "<native-payload>", "exec"), context)
         self.assertTrue(context["result"]["ok"])
+
+    def test_payloads_without_host_introspection_or_imports(self):
+        allowed = {key: value for key, value in vars(builtins).items()
+                   if key not in {"globals", "locals", "vars", "__import__", "open"}}
+        class Resolve:
+            def GetVersionString(self):
+                return "test"
+        for names, config in [
+            (("inspect_session.py",), None),
+            (("inspect_timeline.py",), {"project_id": "project", "timeline_id": "original"}),
+            (("validate_edit_plan.py", "assemble_ranges.py"), plan()),
+        ]:
+            with self.subTest(names=names):
+                project = Project()
+                context = {"__builtins__": allowed, "resolve": Resolve(), "project": project,
+                           "CONFIG": config}
+                payload = "\n".join((SCRIPTS / name).read_text() for name in names)
+                exec(compile(payload, "<restricted-native-payload>", "exec"), context)
+                self.assertIn("result", context)
+                if len(names) == 2:
+                    self.assertTrue(context["result"]["ok"])
+                else:
+                    self.assertEqual(project.GetTimelineCount(), 1)
+                    self.assertEqual(project.calls, 0)
+                    self.assertEqual(project.current.GetName(), "original")
 
     def test_plan_cli(self):
         with tempfile.TemporaryDirectory() as directory:

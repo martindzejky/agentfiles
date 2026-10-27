@@ -71,6 +71,8 @@ For native execution follow [native-mcp.md](native-mcp.md): prefix `CONFIG` with
 
 Native source-frame getters can disagree, and source seconds can include embedded media timecode. Review [source-time witnesses](field-notes.md#source-frames-audio-and-timecode) before diagnosing a mismatch or adapting this helper. Keep its strict stop behavior until an independent frame/time witness explains the discrepancy.
 
+The [local 21.1.1 trial](field-notes.md#local-native-mcp-trial) also found video append and still-image duration behavior that differed from example endpoint assumptions. Test the actual media type and session; a convention established for a video or WAV does not establish still duration. Mixed-rate probes are evidence for a separate adapter, not permission to bypass this helper's preflight.
+
 Exact fractional rates use e.g. `[30000,1001]`. Source/timeline equality is checked by integer cross multiplication. The adapter must use Resolve's decimal settings representation; its readback tolerance handles that representation only, not mixed-rate conform. Never use this helper to prove mixed-rate/VFR behavior. Plan facts (`plain`, `cfr`, streams) require source inspection; the helper cannot establish them from assertions alone.
 
 ## Existing layered edits

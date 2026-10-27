@@ -12,6 +12,8 @@ On macOS, official developer files are under `/Library/Application Support/Black
 
 `run_script` executes Python 3.14 with `resolve` and current `project` injected. Assign JSON-safe output to `result`. Objects from Resolve are native proxies: serialize IDs/properties, not proxy objects. `print` is captured. Filesystem/network/process access is blocked; `os`, `sys`, `pathlib` and `shutil` are unavailable. Default timeout is 10 seconds, maximum 60.
 
+The 21.1.1 native sandbox also omitted `globals()`. Bundled payloads detect the injected `resolve` through a direct name lookup guarded by `NameError`; their host imports stay outside that path. Do not assume a payload tested with unrestricted host `exec` will run in MCP. Offline restricted-builtins tests check this boundary, not the full sandbox or native proxy behavior.
+
 1. Read the recipe source with host tools.
 2. Prefix a `CONFIG = ...` **Python literal** generated with `repr` from validated data. JSON booleans/null are not Python literals. Do not interpolate unescaped paths/text into source code.
 3. Send the source text to `run_script`; do not ask the sandbox to open/import the recipe file.

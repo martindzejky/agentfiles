@@ -112,15 +112,18 @@ def validate_plan(plan):
             "duration_frames": max(e["record"] + e["out"] - e["in"] for e in ranges)}
 
 
-if __name__ == "__main__" and "resolve" not in globals():
-    import argparse
-    import json
+try:
+    resolve
+except NameError:
+    if __name__ == "__main__":
+        import argparse
+        import json
 
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("plan", help="JSON edit plan; no writes performed")
-    args = parser.parse_args()
-    try:
-        with open(args.plan, encoding="utf-8") as handle:
-            print(json.dumps(validate_plan(json.load(handle)), indent=2))
-    except (ValueError, OSError) as error:
-        parser.exit(1, str(error) + "\n")
+        parser = argparse.ArgumentParser(description=__doc__)
+        parser.add_argument("plan", help="JSON edit plan; no writes performed")
+        args = parser.parse_args()
+        try:
+            with open(args.plan, encoding="utf-8") as handle:
+                print(json.dumps(validate_plan(json.load(handle)), indent=2))
+        except (ValueError, OSError) as error:
+            parser.exit(1, str(error) + "\n")

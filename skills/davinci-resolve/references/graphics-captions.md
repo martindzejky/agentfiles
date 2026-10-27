@@ -32,4 +32,8 @@ Discover registered tools and actual inputs, then add/connect only what is neede
 
 For inserting titles, search current timeline insertion APIs and verify destination placement. Do not assume a `trackIndex` argument exists. Inspect resulting track/span; move through supported UI/interchange operations if placement is not exposed. Avoid presenting a title on the wrong track as completed work.
 
+In the [local trial](field-notes.md#local-native-mcp-trial), adjustment-clip insertion could overwrite the targeted V1 even with upper tracks available; locking footage did not reliably redirect it. Do not unlock footage and retry as a targeting workaround. A manual handoff is appropriate when the API lacks a safe placement route. Existing single graphic placeholders can instead use the measured [editable Fusion overlay recipe](fusion-overlay.md), which preserves their placement without inserting at the playhead.
+
+Installed `.drfx` archives can be inspected for template/settings identifiers, but that does not establish a working attachment method. A macro `LoadSettings` success without the expected nodes/controls and rendered effect is not completion. Inspect once after an ambiguous write; do not repeatedly paste/load into the working composition.
+
 Animation needs first/middle/last and motion checks. Verify text wrapping, fonts, alpha, safe areas and readability in every requested aspect ratio. Use requested assets or the user's asset-generation tools; do not substitute decorative templates as a personal house style.

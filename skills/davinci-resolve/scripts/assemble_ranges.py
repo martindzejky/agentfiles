@@ -121,5 +121,9 @@ def assemble_ranges(project, plan):
     return report
 
 
-if "resolve" in globals():
+try:
+    resolve
+except NameError:
+    pass
+else:
     result = assemble_ranges(project, CONFIG)

@@ -49,6 +49,20 @@ Voice isolation, dialogue processing, narration, music and SFX may use native fe
 
 Measure final output with FFmpeg `ebur128`, peaks and stream probing. These measurements cannot establish intelligibility, natural processing or whether music masks dialogue; listening remains part of finished-edit verification.
 
+For a section measurement, trim **before** the analyzer. Output `-t` alone can let a buffering analyzer consume beyond the requested window:
+
+```sh
+ffmpeg -hide_banner -nostdin -i render.mp4 -map 0:a:0 -vn \
+  -af "atrim=start=12:end=20,asetpts=PTS-STARTPTS,ebur128=peak=true" \
+  -f null - 2> section-loudness.log
+```
+
+The seconds above are illustrative; resolve the actual section and stream first. Keep floating-point samples through EQ/compression/peak control if intermediate gain could exceed fixed-point headroom, and check the rendered output. Resolve WAVs can use WAVE_FORMAT_EXTENSIBLE, unsupported by Python 3.9's `wave`; decode through FFmpeg rather than declaring the source corrupt.
+
+### Repair a word from existing speech
+
+For an authorized audio-only repair, first search the same speaker/session for a donor with compatible pronunciation, pitch and surrounding coarticulation. Keep picture/timing unchanged. Record donor and destination source seconds, account for extraction offsets, and build a separate repaired audio derivative with short joins. Avoid forcing a whole word into too short a gap or assuming transcript timings capture consonants. Compare duration, sample/channel layout and early/late sync, then render and audition the whole sentence. The local trial produced an accepted repair, but a slightly fast/cut-off word remained: intelligibility and naturalness require review, not just a duration match.
+
 ## Fairlight scope
 
 Native per-clip gain/pan/isolation is not full Fairlight plugin-graph or mix-automation control. The [community audio skill](https://github.com/samuelgursky/davinci-resolve-mcp/blob/931bc2cda8fd9049982a457de9ff70836c406cd7/.agents/skills/resolve-audio/SKILL.md) identifies saved Fairlight presets as a whole-mix workaround, not a content-adaptive auto-mix. The inspected native API exposes `GetFairlightPresets` and `ApplyFairlightPresetToCurrentTimeline` (20.2.2+); applying one can replace existing mix state. Inspect the target and preserve recovery before using a requested preset. No AI Audio Assistant trigger was documented in the inspected 21.1 API. Recheck current definitions before offering that automation rather than inventing a method or treating a saved preset as equivalent.

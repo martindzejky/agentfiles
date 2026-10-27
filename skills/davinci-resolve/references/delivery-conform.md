@@ -39,9 +39,20 @@ Queueing is separate from starting. Inspect the job's timeline, range, output an
 
 Output overwrite behavior needs checking before start. Choose a fresh filename or confirm replacement of the specific output. For subtitles inspect `ExportSubtitle`/`SubtitleFormat`; sidecar and burn-in are different deliverables. Query Quick Export's current API if using it; a queue render and Quick Export have different lifecycle/status surfaces.
 
+In the [local 21.1.1 trial](field-notes.md#local-native-mcp-trial), `ReplaceExistingFilesInPlace=False` was rejected despite the stub listing the key. Do not depend on it as overwrite protection; inspect the actual destination on the host. Snapshot clip/settings state before `StartRendering`: getters can return `None` while rendering. If a later read or result serialization fails, inspect the retained job ID/status before retrying; the render may already be running or complete. Preserve and restore only the preview settings/context changed by this task, and remove only its temporary jobs/presets.
+
 ## Output QC
 
 Probe the rendered file with `probe_media.py`; compare actual duration, dimensions, frame-rate/timebase, codec, pixel format, color tags, audio sample rate/channels and expected subtitle streams/files. Run FFmpeg black/freeze/loudness checks from [analysis.md](analysis.md) when relevant. Inspect representative rendered frames and actual transitions/first/last frames; play the output and listen to dialogue/music/joins. A completed render status is not content QC.
+
+For a final export, a full decode can reveal errors missed by sparse samples:
+
+```sh
+ffmpeg -hide_banner -nostdin -v error -xerror -i final.mp4 \
+  -map 0:v:0 -map 0:a:0 -f null -
+```
+
+This example expects both video and audio; adapt mappings to the intended deliverable. Investigate detected black/freeze sections against the approved source/edit before changing them; an intentional source interval is not an introduced export gap.
 
 ## Timeline inspection and comparison
 

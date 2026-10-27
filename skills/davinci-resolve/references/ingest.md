@@ -40,6 +40,17 @@ finally:
 
 `destination` and `paths` must be resolved inputs. Import uses the current folder, not an invented destination argument. Use `AddSubFolder(parent, name)` to create a requested bin, check its return, and retain its ID. Decide project/timeline format before the first timeline; do not silently change an existing project's frame rate. Playback-rate settings can be read-only; consult the current docs instead of retrying value variants.
 
+If import returns `None` or a partial list, inspect the bin before retrying to avoid duplicates. In the [local 21.1.1 trial](field-notes.md#local-native-mcp-trial), a valid WAV imported through the documented alternative:
+
+```python
+# Select the intended pool folder first, as above.
+clips = resolve.GetMediaStorage().AddItemListToMediaPool([{"media": path}])
+result = [{"id": c.GetUniqueId(), "properties": c.GetClipProperty()}
+          for c in clips or []]
+```
+
+Match returned items to verified paths/IDs, not list order. Metadata alone does not prove an image decodes in the timeline: render-check imported stills. If a valid WebP fails there, a separate lossless PNG derivative is a measured fallback; preserve the original and verify the replacement's span/framing.
+
 For image sequences, fetch `ImportMediaInfo` and the current `ImportMedia` documentation. Supply the documented sequence path pattern and `StartIndex`/`EndIndex`; explicitly distinguish a sequence from individual stills. Verify frame count/rate and first/last images after import.
 
 ## Metadata and annotations
