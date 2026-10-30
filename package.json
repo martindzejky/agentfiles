@@ -5,8 +5,7 @@
   "scripts": {
     "format": "prettier --check .",
     "format:fix": "prettier --write .",
-    "generate:dist": "node scripts/generate-dist.mjs",
-    "setup:codex-cloud": "node scripts/setup-codex-cloud.mjs",
+    "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.mjs"
   },
   "devDependencies": {

@@ -1,0 +1,10 @@
+#!/usr/bin/env node
+
+import { main } from './scripts/build.mjs';
+
+main().catch((error) => {
+  console.error(
+    `Build failed: ${error.message}\nRun ./build --help for usage.`,
+  );
+  process.exitCode = 1;
+});
