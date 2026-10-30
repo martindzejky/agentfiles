@@ -1,34 +1,17 @@
 # .agentfiles
 
-My personal AI agent configuration files (skills, rules) for Cursor, Codex, and similar coding agents. So my AI assistants always feel at home...
+My personal AI agent configuration files (skills, rules) for Codex and similar coding agents. So my AI assistants always feel at home...
 
-## Local installation
+With Node.js 24 or newer:
 
-Almost everything is automated thanks to a bunch of scripts and [dotbot](https://github.com/anishathalye/dotbot).
-Just clone this repository and run the install script:
-
-```
+```sh
 git clone https://github.com/martindzejky/agentfiles ~/.agentfiles
 cd ~/.agentfiles
+./build
 ./install
 ```
 
-## Cloud installation
-
-Give the setup agent this repository's URL and ask it to follow [AGENTS.md](AGENTS.md). It covers Cursor's root symlink, Codex's task-root instructions and skill catalog, and verification in a fresh hosted session.
-
-## Development
-
-Use Node.js 24 and pnpm:
-
-```sh
-pnpm install
-pnpm format
-pnpm test
-pnpm generate:dist
-```
-
-Run `pnpm format:fix` to apply Prettier formatting. Linting is not configured.
+For cloud setup or repository changes, agents should follow [AGENTS.md](AGENTS.md).
 
 ## Philosophy
 

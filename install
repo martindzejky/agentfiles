@@ -1,15 +1,9 @@
-#!/usr/bin/env bash
+#!/usr/bin/env node
 
-set -e
+import { main } from './scripts/install.mjs';
 
-CONFIG="install.conf.yaml"
-DOTBOT_DIR="dotbot"
-
-DOTBOT_BIN="bin/dotbot"
-BASEDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-cd "${BASEDIR}"
-git -C "${DOTBOT_DIR}" submodule sync --quiet --recursive
-git submodule update --init --recursive "${DOTBOT_DIR}"
-
-"${BASEDIR}/${DOTBOT_DIR}/${DOTBOT_BIN}" -d "${BASEDIR}" -c "${CONFIG}" "${@}"
+main().catch((error) => {
+  console.error(`Install failed: ${error.message}`);
+  console.error('Run ./install --help for options.');
+  process.exitCode = 1;
+});
