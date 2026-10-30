@@ -8,9 +8,11 @@ Node.js 24 or newer; use their `--help` for options and examples.
 ## Environment setup
 
 Use the platform's setup mechanism. Identify the runtime user, home, effective
-`CODEX_HOME`, and starting task directory before choosing destinations. Clone this
-repository into a persistent, readable location, preferably `~/.agentfiles`.
-Inspect an existing checkout's remote and local changes before reusing it.
+`CODEX_HOME`, and starting task directory before choosing destinations. Reuse an
+existing checkout of this repository, preferring the current workspace checkout.
+Inspect its remote and local changes before using it. If no workspace checkout
+exists, reuse another existing clone. Clone into ~/.agentfiles only when no suitable
+checkout exists. Use the selected checkout for both development and installation.
 
 Run `./build` once, then inspect `./install --dry-run`. Choose rules delivery and
 native skill installation independently:
@@ -37,10 +39,12 @@ truncate rules to fit. The rules budget is independent of the number of skills.
 
 ## Refresh and verification
 
-Keep the installation checkout separate from an active task checkout. Configure
-cloud startup to refresh it on every session, including cached sessions: confirm
-it is clean, select `master`, update with `git pull --ff-only origin master`, and
-run `./build`. Stop on conflicts or failures; never reset local changes.
+Refresh and rebuild through the platform's session startup mechanism. For a
+workspace checkout, preserve its current branch and local changes; do not
+automatically switch branches or pull. Run ./build against its current contents.
+For a dedicated installation checkout, confirm it is clean, select master,
+update with git pull --ff-only origin master, and run ./build. Stop on conflicts
+or failures; never reset local changes.
 
 Existing rules links follow the rebuilt file. Rerun the chosen install command
 after a rules build when using merges, or when skills are added or destinations
