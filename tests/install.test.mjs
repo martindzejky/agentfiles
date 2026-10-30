@@ -97,6 +97,7 @@ test('install help works without a build and invalid arguments change nothing', 
     ['--skills', 'overwrite'],
     ['--rules', 'merge'],
     ['--rules', 'manual', '--rules-file', '/unused/AGENTS.md'],
+    ['--rules', 'skip', '--rules-file', '/unused/AGENTS.md'],
     ['--skills', 'skip', '--skills-dir', '/unused/skills'],
     ['--check', '--dry-run'],
   ]) {
@@ -122,6 +123,47 @@ test('install requires the existing build and never regenerates it', async (t) =
     await readFile(join(f.root, 'dist', 'AGENTS.md'), 'utf8'),
     RULES,
   );
+});
+
+test('rules can be skipped without a build while native skills are installed and checked', async (t) => {
+  const f = await fixture(t);
+  await rm(join(f.root, 'dist'), { recursive: true });
+  await mkdir(dirname(f.rulesFile), { recursive: true });
+  await writeFile(f.rulesFile, 'Managed rules.\n');
+  const override = join(dirname(f.rulesFile), 'AGENTS.override.md');
+  await writeFile(override, 'Managed override.\n');
+  const args = ['--rules', 'skip'];
+
+  succeeded(await f.run([...args, '--dry-run']));
+  assert.notEqual((await f.run([...args, '--check'])).code, 0);
+  await absent(join(f.home, '.agents'));
+  const installed = await f.run(args);
+  succeeded(installed);
+  assert.match(installed.stdout, /Rules: skipped/);
+  assert.doesNotMatch(
+    installed.stdout,
+    /Rules destination|provider's agent-instructions/,
+  );
+  assert.equal(
+    await readlink(join(f.skillsDir, 'example')),
+    join(f.root, 'skills', 'example'),
+  );
+  succeeded(await f.run([...args, '--check']));
+  assert.equal(await readFile(f.rulesFile, 'utf8'), 'Managed rules.\n');
+  assert.equal(await readFile(override, 'utf8'), 'Managed override.\n');
+  await absent(join(f.root, 'dist'));
+});
+
+test('skipping both rules and skills needs no build and leaves destinations absent', async (t) => {
+  const f = await fixture(t);
+  await rm(join(f.root, 'dist'), { recursive: true });
+  const args = ['--rules', 'skip', '--skills', 'skip'];
+  for (const extra of [[], ['--dry-run'], ['--check']]) {
+    succeeded(await f.run([...args, ...extra]));
+  }
+  await absent(join(f.home, '.codex'));
+  await absent(join(f.home, '.agents'));
+  await absent(join(f.root, 'dist'));
 });
 
 test('local installation links rules and individual native skills and repeats safely', async (t) => {

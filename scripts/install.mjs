@@ -23,14 +23,15 @@ const START = '<!-- agentfiles: start -->';
 const END = '<!-- agentfiles: end -->';
 const HELP = `Usage: ./install [options]
 
-Install the existing ./build output and native skills. Never builds or downloads.
+Install rules from ./build and native skills. Never builds or downloads.
 Requires Node.js 24 or newer. Relative paths resolve from your current directory.
 
 Options:
-  --rules link|merge|manual  Rules delivery (default: link)
+  --rules link|merge|manual|skip  Rules delivery (default: link)
     link    Link dist/AGENTS.md; refuse unrelated files and links.
     merge   Update only the agentfiles region in an explicit --rules-file.
     manual  Print instructions for the provider's agent-instructions setting.
+    skip    Leave rules untouched; no rules build is required.
   --rules-file PATH        Destination for link or merge (merge requires it).
                            Link default: $CODEX_HOME/AGENTS.md, otherwise
                            $HOME/.codex/AGENTS.md.
@@ -49,6 +50,7 @@ Examples:
   ./install --rules merge --rules-file /workspace/AGENTS.md --skills skip
   ./install --rules manual --skills-dir /path/to/repo/.agents/skills
   ./install --rules manual --skills skip
+  ./install --rules skip
 
 Choose destinations using the runtime user's environment and platform guidance.
 Only target files and directories you are permitted to manage. Writability does
@@ -116,6 +118,7 @@ async function canonicalLocation(path) {
 }
 
 async function checkDestinations(operations, source) {
+  if (!operations.length) return;
   const locations = await Promise.all(
     operations.map((operation) => canonicalLocation(operation.target)),
   );
@@ -308,8 +311,8 @@ export async function main(argv = process.argv.slice(2)) {
     console.log(HELP);
     return;
   }
-  if (!['link', 'merge', 'manual'].includes(values.rules)) {
-    throw new Error('--rules must be link, merge, or manual.');
+  if (!['link', 'merge', 'manual', 'skip'].includes(values.rules)) {
+    throw new Error('--rules must be link, merge, manual, or skip.');
   }
   if (!['link', 'skip'].includes(values.skills)) {
     throw new Error('--skills must be link or skip.');
@@ -319,9 +322,9 @@ export async function main(argv = process.argv.slice(2)) {
       '--rules merge requires an explicit --rules-file in a location you are permitted to manage.',
     );
   }
-  if (values.rules === 'manual' && values['rules-file']) {
+  if (['manual', 'skip'].includes(values.rules) && values['rules-file']) {
     throw new Error(
-      '--rules-file does not apply to manual delivery. Read the generated rules from the printed path.',
+      '--rules-file can only be used with --rules link or merge.',
     );
   }
   if (values.skills === 'skip' && values['skills-dir']) {
@@ -337,10 +340,13 @@ export async function main(argv = process.argv.slice(2)) {
   }
 
   const source = join(ROOT, 'dist', 'AGENTS.md');
-  if (!(await inspect(source))?.isFile()) {
-    throw new Error(`Missing rules build: ${source}. Run ./build first.`);
+  let rules = null;
+  if (values.rules !== 'skip') {
+    if (!(await inspect(source))?.isFile()) {
+      throw new Error(`Missing rules build: ${source}. Run ./build first.`);
+    }
+    rules = await readFile(source, 'utf8');
   }
-  const rules = await readFile(source, 'utf8');
   const home = homedir();
   const target = resolve(
     values['rules-file'] ??
@@ -350,7 +356,7 @@ export async function main(argv = process.argv.slice(2)) {
     values['skills-dir'] ?? join(home, '.agents', 'skills'),
   );
   const operations = [];
-  if (values.rules !== 'manual') {
+  if (['link', 'merge'].includes(values.rules)) {
     await checkOverride(target);
     const operation =
       values.rules === 'merge'
@@ -371,9 +377,12 @@ export async function main(argv = process.argv.slice(2)) {
   await checkDestinations(operations, source);
 
   console.log(
-    `Rules: ${values.rules}, ${Buffer.byteLength(rules, 'utf8')} bytes, source ${source}`,
+    values.rules === 'skip'
+      ? 'Rules: skipped; existing instructions left unchanged.'
+      : `Rules: ${values.rules}, ${Buffer.byteLength(rules, 'utf8')} bytes, source ${source}`,
   );
-  if (values.rules !== 'manual') console.log(`Rules destination: ${target}`);
+  if (['link', 'merge'].includes(values.rules))
+    console.log(`Rules destination: ${target}`);
   console.log(
     values.skills === 'skip'
       ? 'Skills: skipped; native discovery must be supplied by the environment.'
