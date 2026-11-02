@@ -7,6 +7,8 @@ description: Edit and analyze video with native DaVinci Resolve MCP, reusable Py
 
 Use the native Blackmagic MCP and current scripting documentation. This skill supplies technical recipes; learn the user's editing style separately. Do not assume pacing, format, voice, music, or project organization preferences.
 
+For Fusion motion graphics, use [fusion-motion-design](../fusion-motion-design/SKILL.md) for design, animation craft, editable rigs, and visual review. Its detailed community craft library supplies a starting point; this skill and current native documentation govern technical execution.
+
 ## Start with the task
 
 Read [native-mcp.md](references/native-mcp.md) before executing Resolve scripts. For offline media analysis, read [analysis.md](references/analysis.md). The [workflow catalog](references/workflows.md) routes other tasks to focused references; load only what the task needs.
