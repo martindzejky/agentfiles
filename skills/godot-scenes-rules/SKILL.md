@@ -20,21 +20,17 @@ paths:
 
 # Composition
 
-Here is how I compose the game: world > objects > components + glue
+Follow [game-composition](../game-composition/SKILL.md) for the architecture. In Godot, this becomes world scene > object scenes > component nodes + root script glue.
 
 The world contains various autoloads and system objects in the root, then there's usually one main container with Y-sorting enabled which contains the game objects.
 
 # Game objects
 
-- Objects are made out of reusable components.
-- Objects usually have one root script which defines the class/type of the object for the others and exposes public state, functions, and signals.
-- Components are usually private and build the behaviour of the object. Objects usually don't interact with or know about internal components of other objects.
-- I prefer constructing game objects out of components declaratively, like making them from reusable well-defined lego pieces, instead of coding all behaviour in the root script.
-- Components encapsulate reusable behaviours. Object-specific logic and glue should go into its root script.
-- The root script glues together the components. Components usually don't know about each other, unless one directly depends on another. There may also be some glue-like components which connect other components and are not reusable, but there are limited and well-scoped.
-- Some object scenes are not valid in total isolation. They may expect runtime data, autoload state, or supporting nodes from the full world scene. When smoke-checking such scenes, expected context/setup errors do not automatically mean the object is broken. At the same time, try to create object scenes that are as independent from external environment as possible, which is generally a good design practice.
-- Gameplay objects do not know about UI. UI observes public state/signals and emits interaction requests; root/glue routes commands to gameplay. See `godot-ui` for binding and availability rules.
-- Separate simulation/game/logic/data pieces of an object from visual pieces. Simulation pieces are components which run the game and don't know about visuals. Visuals derive their state from the simulation. For example: sprite updates based on the state of the object or a component, instead of the state imperatively updating the sprite.
+Use the object scene's root script to define its `class_name` and expose its public methods, state, and signals. Save reusable components as separate scenes and compose them declaratively in the editor. Wire dependencies with typed exports and scene signals.
+
+Some scenes need runtime data, autoload state, or supporting world nodes. Missing setup during an isolated smoke check does not automatically mean the object is broken. Supply the expected context; see `godot-cli`.
+
+See [godot-ui](../godot-ui/SKILL.md) for UI binding and command handling.
 
 Usually a complete game object has these parts:
 

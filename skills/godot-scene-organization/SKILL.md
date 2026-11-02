@@ -13,12 +13,7 @@ Related: `godot-components`, `godot-event-bus`, `godot-brainstorming`.
 
 A scene should be understandable in isolation and reusable without rewriting. If naming needs a paragraph, split.
 
-Composition model:
-
-- **Object root** — public type/API (`class_name`), signals, shared state
-- **Components** — private reusable behaviours (often their own `.tscn`)
-- **Glue** — root (or a scoped glue component) wires exports and scene signals
-- **Visuals** — derive from simulation; do not own authoritative state
+For object boundaries and the roles of roots, components, and presentation, follow [game-composition](../game-composition/SKILL.md). Reusable components usually have their own `.tscn`; root or scoped glue scripts wire their exports and scene signals.
 
 ## Split vs keep together
 

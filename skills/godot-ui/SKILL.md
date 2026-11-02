@@ -9,9 +9,9 @@ Control layout and scaling. 2-space indent; single quotes; lowercase node names.
 
 ## Gameplay boundary
 
-Gameplay objects do not reference UI. UI receives a typed object reference, reads its public state, and subscribes to its state-change signals. Read the initial state when binding; signals only report later changes.
+Follow [game-composition](../game-composition/SKILL.md) for the UI/simulation boundary. Bind a typed object reference and read its initial public state; signals only report later changes.
 
-UI emits interaction requests for the owner/glue to handle. Gameplay validates commands and owns state changes; a disabled button is not the gameplay guard. Expose public eligibility queries when buttons, cursors, and hints need the same interaction rules instead of duplicating those rules in the UI. Disable input and the interactive cursor together when an action is unavailable.
+UI can call the bound object's public methods directly or emit interaction requests for owner/glue routing. Gameplay validates commands and owns state changes; a disabled button is not the gameplay guard. Expose public eligibility queries when buttons, cursors, and hints need the same interaction rules instead of duplicating those rules in the UI. Disable input and the interactive cursor together when an action is unavailable.
 
 Keep gameplay state transitions out of UI tween callbacks. Presentation may finish later or be interrupted without leaving the object in the wrong state.
 

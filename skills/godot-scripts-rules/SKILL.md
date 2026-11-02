@@ -214,16 +214,14 @@ get_tree().call_group('units', 'tick', 1)
 
 # Object logic
 
+Follow [game-composition](../game-composition/SKILL.md) for the underlying architecture.
+
 ## Simple objects
 
-Simple and small objects usually have one main script on the root node. This script contains both the public interface of the object (functions to interact with the object, signals, public state variables) as well the private implementation of the behaviour.
-
-Only small pieces of reusable behaviour is extracted into components of the object (such as squash, shake, wind sway, interaction effects, etc.).
+Simple objects usually have one script on the scene root. It defines the object's `class_name`, public state, methods, and signals, and implements its behaviour. Extract small reusable behaviours such as squash, shake, or wind sway into child components.
 
 ## Complex objects
 
-Bigger and more complex objects in the game usually have an internal state machine. In this case, the root script of the object only acts as the public interface of the object and defines its public type (i.e. `object is PickupItem`). It can also contain public or shared state.
+The root script defines the public type and API, can hold public or shared state, and glues the components together. Components implement the behaviour. For state-driven objects, that behaviour lives in the states, which interact with the root's shared state as needed.
 
-Then the implementation of the behaviour of the object lives in the states. They interact with the main script as needed (i.e. set shared state variables). When something happens in the root script, it calls callback functions on the current state (`state_machine.get_current().on_work_performed()`).
-
-Tiny pieces of logic can live in the root script. For example, inside a public method which mutates a state variable (i.e. add work or collect item), there can directly be the logic which updates the variable, it might emit a signal, and then it calls a callback on the current state. But mostly the behaviour logic lives inside states. States drive the behaviour of these complex objects.
+Public methods on the root delegate to components or notify the current state, such as `state_machine.get_current().on_work_performed()`. Use the project's actual state machine API; see [godot-state-machine](../godot-state-machine/SKILL.md).

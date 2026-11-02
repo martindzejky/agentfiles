@@ -5,27 +5,15 @@ description: Implement Godot finite state machines for complex objects — enum,
 
 # Godot State Machine
 
-Align with `godot-scripts-rules` complex objects: **root = public API / type / shared state; states drive behaviour.** Root may hold tiny mutators that update state, emit, then call into the current state. Prefer this over giant `if`/`match` chains on the root.
+Follow [game-composition](../game-composition/SKILL.md) for state, behaviour, and decision-making responsibilities. Inspect the project's existing stacked state machine first and reuse its API. The contract below illustrates a node-based machine; it does not replace the project's implementation.
 
 Related: `godot-components`, `godot-scene-organization`.
 
 ## Pick a shape
 
-| Approach                        | Use when                                                           |
-| ------------------------------- | ------------------------------------------------------------------ |
-| Enum + `match`                  | ≤ ~5 states, little enter/exit logic                               |
-| Node-based finite state machine | Characters / complex objects (default for this project)            |
-| Resource-configured             | Designers tune transitions/params in Inspector without new scripts |
+Use an enum only for very simple state. Prefer the existing state machine once behaviour needs enter/exit handling or several state-dependent rules. Choose based on behaviour complexity, not a fixed number of states.
 
-Upgrade off enums when enter/exit duplicates, animation sync needs hooks, or the match block sprawls.
-
-```
-Fewer than ~5 simple states?     → enum
-Multiple orthogonal concerns?    → parallel machines
-States naturally nest?           → hierarchical
-Inspector-tunable AI data?       → resource-configured
-Otherwise                        → node-based
-```
+Consider hierarchical or parallel machines only when the existing model needs them. Resource-configured state data can help when transitions and parameters need Inspector editing.
 
 ## Node finite state machine (preferred for complex objects)
 
@@ -47,12 +35,10 @@ Contract:
 ```gdscript
 # root — public API only
 func take_damage(amount: int) -> void:
-  health = maxi(health - amount, 0)
-  health_changed.emit(health)
   state_machine.get_current().on_damage_taken(amount)
 ```
 
-Animations: start in `enter`, clean up in `exit`. States own their animation lifecycle.
+Expose state changes for presentation components to observe. Keep animation playback and cleanup in those components; simulation states must still work when presentation is disabled.
 
 Internal timers for state duration/cooldowns: create in code per `godot-scripts-rules` Timers rule — do not `@export` a Timer for encapsulated timing.
 
