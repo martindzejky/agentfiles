@@ -58,7 +58,7 @@ Derive the name from branch name or commits when the ticket is already in the br
 
 ### Description
 
-Keep it short and concise — bullet points when possible. Start each bullet with a capital letter. Use prose only when the change is large, risky, or needs context that bullets would hide.
+Keep it short and concise, bullet points when possible. Start each bullet with a capital letter. Use prose only when the change is large, risky, or needs context that bullets would hide.
 
 Default structure:
 
@@ -67,12 +67,18 @@ Default structure:
 
 - {What changed}
 
+## Info
+
+- {Testing details, links}
+
 ## Test plan
 
 - [ ] {How to verify}
 ```
 
-Use `[x]` for steps already verified before opening the MR. Skip filler.
+In the info section, include details for developing or testing the MR. Include info like what API env to use, test user credentials, target URL, etc. Also include links to Figma and similar when relevant (not Jira).
+
+Test plan contains steps for the reviewer. Include all necessary steps and explanations to verify the MR.
 
 ### Preflight
 
@@ -109,6 +115,13 @@ cat > "$MR_BODY_FILE" <<'EOF'
 - Change one
 - Change two
 
+## Info
+
+- Env:
+- User:
+- URL:
+- Figma:
+
 ## Test plan
 
 - [ ] Verify thing
@@ -133,6 +146,7 @@ Do not use `--fill` when applying the title and description conventions above.
 - [ ] Title has Jira ticket when available
 - [ ] Title name starts with a capital letter after the ticket
 - [ ] Description is short; bullets start with capitals
+- [ ] Info included
 - [ ] Test plan included
 - [ ] Assignee set to martindzejky
 - [ ] `--remove-source-branch=true` passed on create
@@ -172,3 +186,4 @@ glab mr view --output json
 - Lowercase titles or bullets.
 - Assuming `glab mr note list` is fully stable; it is marked experimental.
 - Assuming `glab mr note -m` posts an in-thread reply. Check `glab mr note --help` first if thread-specific behavior matters.
+- Pre-checking testing steps based on local testing already done. Test plan steps are for the reviewer.
