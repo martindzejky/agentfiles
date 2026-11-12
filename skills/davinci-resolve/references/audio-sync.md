@@ -59,6 +59,13 @@ ffmpeg -hide_banner -nostdin -i render.mp4 -map 0:a:0 -vn \
 
 The seconds above are illustrative; resolve the actual section and stream first. Keep floating-point samples through EQ/compression/peak control if intermediate gain could exceed fixed-point headroom, and check the rendered output. Resolve WAVs can use WAVE_FORMAT_EXTENSIBLE, unsupported by Python 3.9's `wave`; decode through FFmpeg rather than declaring the source corrupt.
 
+### Sync and audition sound effects
+
+Find the audible attack in the source waveform and align it to the visual
+action. Account for any lead-in between the file start and the attack. Audition
+a representative cue with dialogue and music at their intended levels.
+Either can mask an effect that sounds clear on its own.
+
 ### Repair a word from existing speech
 
 For an authorized audio-only repair, first search the same speaker/session for a donor with compatible pronunciation, pitch and surrounding coarticulation. Keep picture/timing unchanged. Record donor and destination source seconds, account for extraction offsets, and build a separate repaired audio derivative with short joins. Avoid forcing a whole word into too short a gap or assuming transcript timings capture consonants. Compare duration, sample/channel layout and early/late sync, then render and audition the whole sentence. The local trial produced an accepted repair, but a slightly fast/cut-off word remained: intelligibility and naturalness require review, not just a duration match.

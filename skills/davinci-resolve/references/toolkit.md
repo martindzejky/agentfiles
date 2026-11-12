@@ -12,6 +12,16 @@ Use installed tools for their strengths; do not add another Resolve server or in
 | Detailed music/sound production                             | Available Ableton tools, only when the task needs them                |
 | Requested still graphics/inserts/thumbnails                 | Image generation or existing design tools and their skills            |
 
+## Record a window
+
+Set the window size or capture region for the target aspect ratio and framing.
+Record a short test with the actual scroll or interaction. Check the saved
+file's pixel dimensions with FFprobe and play it back to check framing,
+movement and visible private content. If the recorder cannot produce the exact
+delivery size, crop or scale a copy and check legibility before recording the
+batch. If the shot needs to obscure private content, keep the clean recording
+private and apply the blur in Resolve so you can adjust it during review.
+
 ## ElevenLabs handoff
 
 For connected media operations, read the installed ElevenLabs `creative-studio` skill. Discover dedicated transcription/speech tools and flow-node types for music, SFX, voice isolation, dubbing and voice conversion. Fetch the relevant model schema/guide before choosing arguments. SDK/API development skills do not establish the connector's schema. During research the connected transcription tool exposed Scribe v1 while the SDK skill described v2; do not copy model IDs or defaults between them.

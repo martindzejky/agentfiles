@@ -16,6 +16,7 @@ Read the linked reference for the requested operation. Native snippets require t
 | Move/copy/trim a finished layered edit              | [Editing](editing.md): duplicate/interchange route; do not rebuild source ranges blindly                                  |
 | Reframe, resize, transitions, fades, speed          | [Editing](editing.md): current property/transition/speed APIs and boundary checks                                         |
 | Screen/camera sync or external audio                | [Audio and sync](audio-sync.md): measured offsets/drift, linked mapping                                                   |
+| Record an application window                        | [Companion tools](toolkit.md#record-a-window): check a short test before recording the batch                              |
 | Multicam                                            | [Audio and sync](audio-sync.md): native clip creation, alignment and audio policy                                         |
 | Dialogue cleanup, levels, narration, music, SFX     | [Audio and sync](audio-sync.md) and [toolkit](toolkit.md)                                                                 |
 | Captions, title text, simple motion graphics        | [Graphics and captions](graphics-captions.md): native subtitles, Fusion tool/input discovery                              |

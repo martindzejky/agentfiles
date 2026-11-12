@@ -17,6 +17,9 @@ Execute through the existing native Resolve MCP and [davinci-resolve](../davinci
 4. **Animate and review.** Read [animation principles](references/animation-principles.md); choreograph a focal gesture, supporting movement, and readable holds. For whole-frame/reference work use [build orchestration](references/build-orchestration.md). Render, inspect risky in-betweens, watch at speed, and revise against the brief. Numeric audits supplement visual judgment.
 5. **Test editability and deliver.** Read [editable rigs](references/06-editable-rigs.md) and [validation/delivery](references/09-validation-delivery.md). Test a real text, media, or control change during animation and restore it. Name the editable result and controls, provide the requested preview/source, and distinguish structural checks, renders, playback, persistence, and user acceptance.
 
+For recorded or recreated interfaces with cursor clicks, see the [worked
+button example](references/06-editable-rigs.md#animate-an-interface-button).
+
 ## Read the detail that changes the decision
 
 Large modules have local part indexes. Open the relevant part; do not load the whole library for each task.

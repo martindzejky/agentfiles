@@ -81,6 +81,13 @@ Duplicate the target timeline with `DuplicateTimeline(new_name)` before explorat
 
 For screen/camera recordings, map every keep interval to every required layer using measured offsets. Preserve the chosen audio master and links. A full-frame camera on V2 obscures the screen on V1: choose picture-in-picture framing, alternate shots, or another deliberate composition, then inspect it. The assembly helper does not set that composition. Check drift, source bounds and first/middle/last sync; see [audio-sync.md](audio-sync.md).
 
+## B-roll joins
+
+Play through both ends of each insert in context. If an insert starts or ends
+near an A-roll cut, align the edges when the timing still fits the line or
+action. If adjacent inserts leave a brief flash of A-roll, extend one to meet
+the other when the source has usable handles.
+
 ## Clip changes
 
 For a resolved timeline item:

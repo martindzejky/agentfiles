@@ -120,6 +120,20 @@ Alternative: group-level `UserControls` with plain `Input { Value = ... }` entri
 - A group that references tools outside itself by name is not portable. Keep references inside the group or on published inputs. Test by pasting the group into a blank comp and rendering.
 - Package any shared motion library tool (08) inside the group or document it as a dependency; do not rely on a name reference to another comp or project.
 
+## Animate an interface button
+
+1. Export the static interface with room for the control. Build the button
+   with an editable fill, mask and Text+ label. Give the cursor its own
+   transform so you can adjust its path without moving the button.
+2. Keyframe cursor travel, hover, press and feedback as needed. Ease the
+   cursor and button separately. Keep the cursor hotspot on the target
+   during the press so the click reads clearly.
+3. Size the static artwork for the deepest zoom. A 2× export covers a 2×
+   zoom at timeline resolution if you keep the extra pixels through the
+   camera move. Resize after the move and check for soft edges or gaps.
+4. Play the interaction at speed and watch the cut into the next shot.
+   Verify that the label and timing are still editable.
+
 ## Recipe C1: controller with named controls (status: verified 2026-09-26 (Resolve 21.1.0.14, rendered frame 0): pasted as typed; `CTRL` exposes `Slide`, `Demo`, `Accent`, `AccentRed/Green/Blue` as real inputs; `CTRL.SetInput("AccentRed", 0.9)` changed the consumer `BTN_Fill.TopLeftRed` expression to 0.9. Inspector layout not inspected (UI))
 
 ```lua
